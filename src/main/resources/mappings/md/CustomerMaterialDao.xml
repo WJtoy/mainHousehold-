@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.CustomerMaterialDao">
+    <!--
+    <sql id="customerMaterialColumns">
+            a.id,
+            a.customer_id AS 'customer.id',
+            a.product_id AS 'product.id',
+            a.material_id AS 'material.id',
+            a.is_return,
+            a.price,
+            a.remarks
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_customer_material(
+			customer_id,
+			product_id,
+			material_id,
+			is_return,
+			price,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks
+		) VALUES (
+			#{customer.id},
+			#{product.id},
+			#{material.id},
+			#{isReturn},
+			#{price},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_customer_material
+        SET
+            is_return = #{isReturn},
+            price = #{price},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_customer_material
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <delete id="deleteByCustomerAndProduct">
+        DELETE
+        FROM  md_customer_material
+        WHERE customer_id = #{customerId}
+        AND   product_id  = #{productId}
+        AND   del_flag = 0
+    </delete>
+
+    <select id="get" resultType="CustomerMaterial">
+        SELECT
+                <include refid="customerMaterialColumns"/>
+        FROM
+              md_customer_material a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+
+    <select id="findAllList" resultType="CustomerMaterial">
+        SELECT
+                <include refid="customerMaterialColumns"/>
+        FROM
+               md_customer_material a
+        WHERE
+                a.del_flag = 0
+        LIMIT 50000
+    </select>
+
+    <select id="findList" resultType="CustomerMaterial">
+        SELECT
+               <include refid="customerMaterialColumns"/>
+        FROM
+               md_customer_material a
+        <where>
+               a.del_flag = 0
+            <if test="customer !=null and customer.id!=null and customer.id>0">
+                AND a.customer_id = #{customer.id}
+            </if>
+            <if test="product !=null and product.id !=null and product.id >0">
+                AND a.product_id = #{product.id}
+            </if>
+            <if test="material !=null and material.id!=null and material.id>0">
+                AND a.material_id = #{material.id}
+            </if>
+        </where>
+    </select>
+
+    <select id="checkIsExist" resultType="java.lang.Long">
+        SELECT
+              id
+        FROM
+              md_customer_material
+        WHERE
+              customer_id = #{customer.id}
+        AND   product_id  = #{product.id}
+        AND   material_id = #{material.id}
+        AND   del_flag = 0
+        LIMIT 1
+    </select>
+
+    <select id="getByCustomerAndProductAndMaterial" resultType="CustomerMaterial">
+        SELECT
+            <include refid="customerMaterialColumns"/>
+        FROM
+            md_customer_material a
+        WHERE
+            customer_id = #{customerId}
+            AND product_id  = #{productId}
+            AND material_id = #{materialId}
+            AND del_flag = 0
+        LIMIT 1
+    </select>
+
+    <select id="getListByCustomerAndProduct" resultType="CustomerMaterial">
+        SELECT
+            <include refid="customerMaterialColumns"/>
+        FROM
+            md_customer_material a
+        WHERE
+            customer_id = #{customerId}
+            AND product_id  = #{productId}
+            AND del_flag = 0
+        limit 2000
+    </select>
+    -->
+</mapper>

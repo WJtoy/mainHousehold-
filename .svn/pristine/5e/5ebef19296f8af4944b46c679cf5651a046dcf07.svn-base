@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+	<title>配件申请附件图片查看</title>
+	<%@ include file="/WEB-INF/views/include/head.jsp" %>
+	<meta name="decorator" content="default" />
+<style type="text/css">
+.table thead th,.table tbody td {
+	text-align: center;
+	vertical-align: middle;
+	BackColor: Transparent;
+}
+</style>
+</head>
+<body>
+<sys:message content="${message}"/>
+<c:if test="${canAction}">
+	<div align="center">
+		<c:forEach items="${attachments}" var="attachment">
+			<img alt="" title="${attachment.remarks}" src="${ctxUpload}/${attachment.filePath}" style="max-width: 900px;">
+			<hr>
+		</c:forEach>
+	</div>
+</c:if>
+</body>
+</html>

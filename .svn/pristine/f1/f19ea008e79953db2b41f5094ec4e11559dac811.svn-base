@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerChargeMasterConditionDao">
+
+	<insert id="insert">
+		INSERT INTO fi_engineercharge_master_condition(
+			id,
+			order_id,
+			order_no,
+			service_point_id,
+			payment_type,
+			status,
+			charge_order_type,
+			auto_charge_flag,
+			charge_date,
+			charge_by,
+			order_close_date,
+			insurance_no,
+			customer_time_liness,
+			time_liness,
+			quarter
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{orderNo},
+			#{servicePointId},
+			#{paymentType},
+			#{status},
+			#{chargeOrderType},
+			#{autoChargeFlag},
+			#{chargeDate},
+			#{chargeBy},
+			#{orderCloseDate},
+			#{insuranceNo},
+			#{customerTimeLiness},
+			#{timeLiness},
+			#{quarter}
+		)
+	</insert>
+	
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.customer.fi.dao.CtCustomerFinanceDao">
+    <sql id="customerFinanceColumns">
+        a.id,
+        a.payment_type,
+        a.rebate_rate,
+        a.LEVEL,
+        a.lock_flag,
+        a.public_bank,
+        a.public_account,
+        a.public_name,
+        a.public_branch,
+        a.private_bank,
+        a.private_account,
+        a.private_name,
+        a.private_branch,
+        a.credit,
+        a.credit_flag,
+        a.block_amount,
+        a.order_payment_amount,
+        a.refund_amount,
+        a.replenish_amount,
+        a.balance,
+        a.prepaid_amount,
+        a.total_amount,
+        a.unit,
+        a.create_by,
+        a.create_date,
+        a.update_by,
+        a.update_date,
+        a.remarks,
+        a.del_flag,
+        a.taxpayer_code,
+        a.deposit,
+        a.payment_type as "paymentType.value",
+        '' as "paymentType.label",
+        a.invoice_flag
+    </sql>
+
+    <select id="get" resultType="CustomerFinance">
+        select <include refid="customerFinanceColumns"/>
+        from md_customer_finance a
+        where a.id =#{id}
+    </select>
+
+    <!--根据用ID列表获取客户冻结金额-->
+    <select id="getBlockAmountByIds" resultType="CustomerFinance">
+        SELECT
+            id,
+            block_amount
+        FROM  md_customer_finance
+        <if test="ids != null and ids.size > 0">
+            WHERE id IN
+            <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <!--根据用ID列表获取客户余额-->
+    <select id="getBalanceByIds" resultType="CustomerFinance">
+        SELECT
+        id,
+        balance
+        FROM
+        md_customer_finance
+        <if test="ids != null and ids.size > 0">
+            WHERE id IN
+            <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <update id="updateBalance">
+        update md_customer_finance
+        set
+        balance = balance + #{transactionAmount},
+        <if test="transactionAmount != null and transactionAmount>0" >
+            prepaid_amount = prepaid_amount + #{transactionAmount},
+        </if>
+        update_by =#{updateBy.id},
+        update_date =now()
+        where id =#{id}
+    </update>
+</mapper>

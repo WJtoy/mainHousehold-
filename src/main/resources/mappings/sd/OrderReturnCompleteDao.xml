@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderReturnCompleteDao">
+
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into sd_order_return_complete (
+            order_id,
+            quarter,
+            data_source,
+            product_id,
+            product_name,
+            item_type,
+            old_sn,
+            new_sn,
+            json,
+            upload_flag,
+            create_by,
+            create_date,
+            update_by,
+            update_date
+        ) values(
+            #{orderId},
+            #{quarter},
+            #{dataSource},
+            #{productId},
+            #{productName},
+            #{itemType},
+            #{oldSN},
+            #{newSN},
+            #{json},
+            #{uploadFlag},
+            #{createBy},
+            #{createDate},
+            0,
+            null
+        )
+    </insert>
+
+    <update id="update">
+
+    </update>
+
+    <update id="updateSN">
+        update
+            sd_order_return_complete
+        set
+            old_sn = #{oldSN},
+            new_sn = #{newSN},
+            update_by = #{updateBy},
+            update_date = #{updateDate}
+        where
+            id = #{id}
+            and quarter = #{quarter}
+    </update>
+
+    <update id="updateEntity">
+        update
+            sd_order_return_complete
+        set
+            old_sn = #{oldSN},
+            new_sn = #{newSN},
+            json = #{json},
+            update_by = #{updateBy},
+            update_date = #{updateDate}
+        where
+            id = #{id}
+            and quarter = #{quarter}
+    </update>
+
+    <update id="uploadSuccess">
+        update
+            sd_order_return_complete
+        set
+            upload_flag = 1,
+            update_by = #{updateBy},
+            update_date = #{updateDate}
+        where
+            id = #{id}
+            and quarter = #{quarter}
+    </update>
+
+    <select id="getByOrderId" resultType="com.wolfking.jeesite.modules.sd.entity.OrderReturnComplete">
+        select
+            id,
+            order_id,
+            quarter,
+            data_source,
+            product_id,
+            product_name,
+            item_type,
+            old_sn,
+            new_sn,
+            json,
+            upload_flag
+        from
+            sd_order_return_complete
+        where
+            order_id = #{orderId}
+            and quarter = #{quarter}
+    </select>
+
+    <select id="getById" resultType="com.wolfking.jeesite.modules.sd.entity.OrderReturnComplete">
+        select
+            id,
+            data_source,
+            product_id,
+            product_name,
+            item_type,
+            old_sn,
+            new_sn,
+            json,
+            upload_flag
+        from
+            sd_order_return_complete
+        where
+            id = #{id}
+            and quarter = #{quarter}
+        limit 1
+    </select>
+
+</mapper>

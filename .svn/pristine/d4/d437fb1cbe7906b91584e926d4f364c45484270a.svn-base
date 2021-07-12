@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.APPNoticeDao">
+
+    <sql id="appNoticeColumns">
+          a.id,
+          a.platform,
+          a.user_id,
+          a.device_id,
+          a.channel_id
+    </sql>
+
+    <select id="get" resultType="APPNotice">
+        select
+              <include refid="appNoticeColumns"/>
+        FROM
+              sys_app_notice a
+        WHERE
+              a.device_id = #{deviceId}
+        LIMIT 1
+    </select>
+
+    <select id="getOneIdByUserId" resultType="Long">
+        SELECT
+              id
+        FROM
+              sys_app_notice
+        WHERE
+              user_id = #{userId}
+        AND
+              del_flag = 0
+        LIMIT 1
+    </select>
+
+    <insert id="insert">
+        INSERT INTO sys_app_notice
+          (
+            platform,user_id,device_id,channel_id,create_date
+          )
+        VALUES
+          (
+            #{platform},#{userId},#{deviceId},#{channelId},#{createDate}
+          )
+    </insert>
+
+    <update id="updateByUserId" parameterType="APPNotice">
+        UPDATE
+            sys_app_notice
+        SET
+            platform = #{platform},
+            device_id = #{deviceId},
+            channel_id = #{channelId},
+            update_date = #{updateDate}
+        WHERE
+            user_id = #{userId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sys_app_notice
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="id != null">
+                AND id = #{id}
+            </if>
+            <if test="deviceId != null and deviceId != ''.trim() ">
+                AND device_id = #{deviceId}
+            </if>
+        </trim>
+    </delete>
+
+    <!-- 按平台或用户获得列表 -->
+    <select id="getListByUserID" resultType="APPNotice">
+        SELECT
+            <include refid="appNoticeColumns"/>
+        FROM
+            sys_app_notice a
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="platform != null and platform != ''.trim() ">
+                AND platform = #{platform}
+            </if>
+            <if test="userId != null">
+                AND a.user_id = #{userId}
+            </if>
+            AND del_flag = 0
+        </trim>
+        ORDER BY
+            a.create_date DESC
+        LIMIT 20000
+    </select>
+
+    <!-- 获取指定用户最新的推送设置 -->
+    <select id="getByUserId" resultType="APPNotice">
+        SELECT
+            <include refid="appNoticeColumns"/>
+        FROM sys_app_notice a
+        WHERE a.user_id = #{userId}
+        ORDER BY a.update_date DESC
+        LIMIT 1
+    </select>
+
+</mapper>

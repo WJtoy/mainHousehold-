@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ProductPriceDao">
+   <!-- <sql id="productPriceColumns">
+            a.id,
+            a.product_id              AS "product.id",
+            &lt;!&ndash;
+            调用product微服务
+            mp.name                   AS "product.name",
+            &ndash;&gt;
+            a.service_type_id         AS "serviceType.id",
+            ms.name                   AS "serviceType.name",
+            ""                        AS "priceType.label",
+            a.price_type              AS "priceType.value",
+			a.customer_standard_price,
+			a.customer_discount_price,
+			a.engineer_standard_price,
+			a.engineer_discount_price,
+            a.remarks
+    </sql>-->
+
+    <!-- //mark on 2020-2-12
+    <sql id="productPriceLessColumns">
+            a.id,
+            a.product_id              AS "product.id",
+            a.service_type_id         AS "serviceType.id",
+            a.customer_standard_price,
+            a.customer_discount_price,
+            a.engineer_standard_price,
+            a.engineer_discount_price,
+            a.price_type              AS "priceType.value",
+            a.remarks,
+            a.del_flag
+    </sql>
+
+    <sql id="productPriceProductJoins">
+            INNER JOIN md_product mp ON a.product_id = mp.id
+    </sql>
+
+    <sql id="productPriceServiceTypeJoins">
+            INNER JOIN md_service_type ms ON a.service_type_id = ms.id
+    </sql>
+
+    <sql id="productPricePriceTypeJoins">
+            INNER JOIN sys_dict dic ON a.price_type = dic.value AND dic.type = 'PriceType'
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_product_price(
+			product_id,
+			service_type_id,
+			customer_standard_price,
+			customer_discount_price,
+			engineer_standard_price,
+			engineer_discount_price,
+			price_type,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{product.id},
+			#{serviceType.id},
+			#{customerStandardPrice},
+			#{customerDiscountPrice},
+			#{engineerStandardPrice},
+			#{engineerDiscountPrice},
+			#{priceType.value},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_product_price
+        SET
+            customer_standard_price = #{customerStandardPrice},
+			customer_discount_price = #{customerDiscountPrice},
+			engineer_standard_price = #{engineerStandardPrice},
+			engineer_discount_price = #{engineerDiscountPrice},
+            remarks = #{remarks},
+            del_flag = 0,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_product_price
+        SET
+            del_flag = #{delFlag},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+    -->
+
+    <!-- mark on 2020-2-13
+    <select id="get" resultType="ProductPrice">
+        SELECT
+                <include refid="productPriceColumns"/>
+        FROM
+                md_product_price a
+
+                调用product微服务
+                <include refid="productPriceProductJoins"/>
+
+                <include refid="productPriceServiceTypeJoins"/>
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="getByProductIDAndServiceTypeId" resultType="ProductPrice">
+        SELECT
+                <include refid="productPriceLessColumns"/>
+        FROM
+                md_product_price a
+        WHERE
+                a.product_id = #{productId}
+          AND   a.service_type_id = #{serviceTypeId}
+          AND   a.price_type = 10
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="getIdByProductIDAndServiceTypeId" resultType="Long">
+        SELECT
+                id
+        FROM
+                md_product_price a
+        WHERE
+                a.product_id = #{productId}
+          AND   a.service_type_id = #{serviceTypeId}
+          AND   a.price_type = #{priceType}
+    </select>
+
+    <select id="getByProductIDAndServiceTypeIdAndPriceType" resultType="ProductPrice">
+        SELECT
+                <include refid="productPriceLessColumns"/>
+        FROM
+                md_product_price a
+        WHERE
+                a.product_id = #{productId}
+          AND   a.service_type_id = #{serviceTypeId}
+          AND   a.price_type = #{priceType}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="getIdByProductIDAndServiceTypeIdAndPriceType" resultType="Long">
+        SELECT
+                id
+        FROM
+                md_product_price a
+        WHERE
+                a.product_id = #{productId}
+          AND   a.service_type_id = #{serviceTypeId}
+          AND   a.price_type = #{priceType}
+    </select>
+
+    <select id="findGroupList" resultType="ProductPrice">
+        SELECT
+                <include refid="productPriceLessColumns"/>
+        FROM
+                md_product_price a
+        <where>
+                <if test="priceType != null and priceType > 0">
+                    AND a.price_type = #{priceType}
+                </if>
+                <if test="serviceTypeIds != null and serviceTypeIds.size > 0">
+                    AND a.service_type_id IN
+                    <foreach item="serviceTypeId" index="index" collection="serviceTypeIds" open="("
+                             separator="," close=")">
+                        #{serviceTypeId}
+                    </foreach>
+                </if>
+                <if test="servicePointId !=null">
+                    AND EXISTS (SELECT 1 FROM md_servicepoint_product msp
+                          WHERE msp.servicepoint_id = #{servicePointId} AND msp.product_id = a.product_id)
+                </if>
+                <if test="customerId != null">
+                    AND EXISTS (SELECT 1 FROM md_customer_product mcp
+                    WHERE mcp.customer_id = #{customerId} AND mcp.product_id = a.product_id)
+                </if>
+                <if test="productIds != null and productIds.size > 0">
+                    AND a.product_id IN
+                    <foreach item="productId" index="index" collection="productIds" open="("
+                             separator="," close=")">
+                        #{productId}
+                    </foreach>
+                </if>
+                AND   a.del_flag = 0
+        </where>
+        ORDER BY
+                a.product_id, a.service_type_id
+        LIMIT 5000
+    </select>
+
+    <select id="findAllGroupList" resultType="ProductPrice">
+        SELECT
+          <include refid="productPriceLessColumns"/>
+        FROM
+        md_product_price a
+        <where>
+            <if test="priceType != null and priceType > 0">
+                AND a.price_type = #{priceType}
+            </if>
+            <if test="serviceTypeIds != null and serviceTypeIds.size > 0">
+                AND a.service_type_id IN
+                <foreach item="serviceTypeId" index="index" collection="serviceTypeIds" open="("
+                         separator="," close=")">
+                    #{serviceTypeId}
+                </foreach>
+            </if>
+            <if test="servicePointId !=null">
+                AND EXISTS (SELECT 1 FROM md_servicepoint_product msp
+                WHERE msp.servicepoint_id = #{servicePointId} AND msp.product_id = a.product_id)
+            </if>
+            <if test="customerId != null">
+                AND EXISTS (SELECT 1 FROM md_customer_product mcp
+                WHERE mcp.customer_id = #{customerId} AND mcp.product_id = a.product_id)
+            </if>
+            <if test="productIds != null and productIds.size > 0">
+                AND a.product_id IN
+                <foreach item="productId" index="index" collection="productIds" open="("
+                         separator="," close=")">
+                    #{productId}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY
+        a.product_id, a.service_type_id
+        LIMIT 5000
+    </select>
+    -->
+
+    <!--mark on 2020-2-13
+    <select id="findAllList_del" resultType="ProductPrice">
+        SELECT
+                <include refid="productPriceColumns"/>
+        FROM
+                md_product_price a
+                &lt;!&ndash;
+                调用product微服务
+                <include refid="productPriceProductJoins"/>
+                &ndash;&gt;
+                <include refid="productPriceServiceTypeJoins"/>
+        WHERE
+                a.del_flag = 0
+        ORDER BY
+                a.product_id, a.service_type_id
+    </select>
+
+    <select id="findList_del" resultType="ProductPrice">
+        SELECT
+                <include refid="productPriceColumns"/>
+        FROM
+                md_product_price a
+                &lt;!&ndash;
+                调用Product微服务
+                <include refid="productPriceProductJoins"/>
+                &ndash;&gt;
+                <include refid="productPriceServiceTypeJoins"/>
+        <where>
+            <if test="product != null and product.id != null">
+              AND   a.product_id = #{product.id}
+            </if>
+              AND   a.del_flag = 0
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.product_id, a.service_type_id
+            </otherwise>
+        </choose>
+    </select>-->
+
+</mapper>

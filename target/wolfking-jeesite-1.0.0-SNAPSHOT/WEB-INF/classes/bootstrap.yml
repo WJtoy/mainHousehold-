@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: wolfking-jeesite-spring-boot
+  http:
+    encoding: { charset: UTF-8, enable: true, force: true }
+#产品信息设置
+productName: 本地环境
+#旧工单系统链接
+hisLink: http://his.kklgo.com
+#产品版本
+version: 2.0
+#静态文件后缀
+web:
+  staticFile: .css,.js,.png,.jpg,.gif,.jpeg,.bmp,.ico,.swf,.psd,.htc,.htm,.html,.crx,.xpi,.exe,.ipa,.apk
+#演示模式: 不能操作和保存的模块： sys: area/office/user/role/menu/dict
+demoMode: false
+
+#支付宝账号信息
+AliPayPID: 2088911359573151
+AliPayKey: kfy8obz8flyec1vhun4sqj9grhuzqngh
+#发布时，使用正式的域名
+AliPayHTTP: https://test.kklgo.com
+AliPayEmail: 287673002@qq.com
+AliPayExter_Invoke_IP: 127.0.0.1
+server:
+  port: 8080
+logging:
+  level:
+    org.springframework: WARN
+    org.hibernate.validator: WARN

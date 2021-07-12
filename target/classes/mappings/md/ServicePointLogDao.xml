@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ServicePointLogDao">
+    <!--//mark on 2020-1-18
+    <sql id="servicePointLogColumns">
+        a.id,
+        a.servicepoint_id AS "servicePoint.id",
+        a.type,
+        a.title,
+        a.content,
+        a.operator,
+        a.create_by       AS "createBy.id",
+        a.create_date,
+        a.del_flag
+    </sql>
+
+    <select id="get" resultType="ServicePointLog">
+        SELECT
+          <include refid="servicePointLogColumns"/>
+        FROM md_servicepoint_log a
+        WHERE a.id = #{id}
+    </select>
+    
+    
+    <select id="getHisPlanRemarks" resultType="ServicePointLog">
+        SELECT
+          <include refid="servicePointLogColumns"/>
+        FROM  md_servicepoint_log a
+        WHERE a.servicepoint_id = #{servicePointId}
+              AND a.type = ${@com.wolfking.jeesite.modules.md.entity.ServicePointLog@SERVICE_POINT_LOG_TYPE_EDIT_SERVICEPOINT_PLAN_REMARK}
+        ORDER BY a.create_date DESC
+        LIMIT 200
+    </select>
+
+    <select id="getHisRemarks" resultType="ServicePointLog">
+        SELECT
+          <include refid="servicePointLogColumns"/>
+        FROM  md_servicepoint_log a
+        WHERE a.servicepoint_id = #{servicePointId}
+              AND a.type = ${@com.wolfking.jeesite.modules.md.entity.ServicePointLog@SERVICE_POINT_LOG_TYPE_EDIT_SERVICEPOINT_REMARK}
+        ORDER BY a.create_date DESC
+        LIMIT 200
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_servicepoint_log
+        (
+            servicepoint_id ,
+            type,
+            title ,
+            content ,
+            operator,
+            create_by ,
+            create_date ,
+            del_flag
+        ) VALUES (
+            #{servicePoint.id},
+            #{type},
+            #{title},
+            #{content},
+            #{operator},
+            #{createBy.id},
+            #{createDate},
+            #{delFlag}
+        )
+    </insert>
+    -->
+</mapper>

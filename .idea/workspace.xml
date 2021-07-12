@@ -1,0 +1,950 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ArtifactsWorkspaceSettings">
+    <artifacts-to-build>
+      <artifact name="wolfking-jeesite:war exploded" />
+    </artifacts-to-build>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a64937f9-e2a9-4799-af0c-c691969048f5" name="Default Changelist" comment="修改每日完工时效报表的jsp文件，区域可选择按省查">
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sd/task/OrderSchedules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sd/task/OrderSchedules.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sys/security/FormAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sys/security/FormAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerPerformanceRptController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerPerformanceRptController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/test/rpt/RptOrderTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/test/rpt/RptOrderTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="wolfking-jeesite" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Interface" />
+        <option value="Class" />
+        <option value="Jsp File" />
+        <option value="FxmlFile" />
+      </list>
+    </option>
+  </component>
+  <component name="LogFilters">
+    <option name="FILTER_ERRORS" value="false" />
+    <option name="FILTER_WARNINGS" value="false" />
+    <option name="FILTER_INFO" value="true" />
+    <option name="FILTER_DEBUG" value="true" />
+    <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="localRepository" value="D:\Item\maven\repository" />
+        <option name="mavenHome" value="D:/Item/maven/apache-maven-3.6.3" />
+        <option name="userSettingsFile" value="D:\Item\maven\apache-maven-3.6.3\conf\settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1eOQfECrHSH60vmhEpM2gyEk7Xb" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder0" value="0" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder1" value="1" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder2" value="2" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder3" value="3" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder4" value="4" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder5" value="5" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth0" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth1" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth2" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth3" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth4" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth5" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder0" value="0" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder1" value="1" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder2" value="2" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder3" value="3" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder4" value="4" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder5" value="5" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth0" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth1" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth2" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth3" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth4" value="75" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth5" value="308" />
+    <property name="MyBatisLogPluginparameters" value="Parameters:" />
+    <property name="MyBatisLogPluginpreparing" value="Preparing:" />
+    <property name="MyBatisLogPluginrunning" value="true" />
+    <property name="RequestMappingsPanelOrder0" value="0" />
+    <property name="RequestMappingsPanelOrder1" value="1" />
+    <property name="RequestMappingsPanelOrder2" value="2" />
+    <property name="RequestMappingsPanelWidth0" value="75" />
+    <property name="RequestMappingsPanelWidth1" value="75" />
+    <property name="RequestMappingsPanelWidth2" value="75" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="com.obroom.plugin.mybatislog.running" value="0" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../KKLPlusProviderRPT" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="project.structure.last.edited" value="Facets" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="project.propCompiler" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.wolfking.jeesite.ms.providerrpt.entity" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Tomcat Server.Tomcat 8.5.57">
+    <configuration name="MSUserUtils" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.wolfking.jeesite.ms.utils.MSUserUtils" />
+      <module name="wolfking-jeesite" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfking.jeesite.ms.utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RptOrderTest.main" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="wolfking-jeesite" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfking.jeesite.test.rpt.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.wolfking.jeesite.test.rpt" />
+      <option name="MAIN_CLASS_NAME" value="com.wolfking.jeesite.test.rpt.RptOrderTest" />
+      <option name="METHOD_NAME" value="main" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Application" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="wolfking-jeesite" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.wolfking.jeesite.Application" />
+      <option name="ACTIVE_PROFILES" value="dev" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TomeeConfiguration" factoryName="Local" ALTERNATIVE_JRE_ENABLED="false">
+      <deployment />
+      <server-settings>
+        <option name="BASE_DIRECTORY_NAME" value="_wolfking-jeesite" />
+      </server-settings>
+      <predefined_log_file enabled="true" id="Tomcat" />
+      <predefined_log_file enabled="true" id="Tomcat Catalina" />
+      <predefined_log_file id="Tomcat Manager" />
+      <predefined_log_file id="Tomcat Host Manager" />
+      <predefined_log_file id="Tomcat Localhost Access" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="57692" />
+      </RunnerSettings>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Cover">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Debug">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Run">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Tomcat 8.5.57" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 8.5.57" ALTERNATIVE_JRE_ENABLED="false" nameIsGenerated="true">
+      <option name="COMMON_VM_ARGUMENTS" value="-Dfile.encoding=UTF-8 -Xms256m -Xmx1303m -XX:PermSize=64m -XX:MaxPermSize=256m" />
+      <deployment>
+        <artifact name="wolfking-jeesite:war exploded">
+          <settings>
+            <option name="CONTEXT_PATH" value="/" />
+          </settings>
+        </artifact>
+      </deployment>
+      <server-settings>
+        <option name="BASE_DIRECTORY_NAME" value="Unnamed_wolfking-jeesite" />
+      </server-settings>
+      <predefined_log_file enabled="true" id="Tomcat" />
+      <predefined_log_file enabled="true" id="Tomcat Catalina" />
+      <predefined_log_file id="Tomcat Manager" />
+      <predefined_log_file id="Tomcat Host Manager" />
+      <predefined_log_file id="Tomcat Localhost Access" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="58842" />
+      </RunnerSettings>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Cover">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Debug">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Run">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <method v="2">
+        <option name="Make" enabled="true" />
+        <option name="BuildArtifacts" enabled="true">
+          <artifact name="wolfking-jeesite:war exploded" />
+        </option>
+      </method>
+    </configuration>
+    <configuration default="true" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" ALTERNATIVE_JRE_ENABLED="false">
+      <deployment />
+      <server-settings>
+        <option name="BASE_DIRECTORY_NAME" value="_wolfking-jeesite" />
+      </server-settings>
+      <predefined_log_file enabled="true" id="Tomcat" />
+      <predefined_log_file enabled="true" id="Tomcat Catalina" />
+      <predefined_log_file id="Tomcat Manager" />
+      <predefined_log_file id="Tomcat Host Manager" />
+      <predefined_log_file id="Tomcat Localhost Access" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="58841" />
+      </RunnerSettings>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Cover">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Debug">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Run">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Remote" ALTERNATIVE_JRE_ENABLED="false">
+      <option name="LOCAL" value="false" />
+      <deployment />
+      <server-settings>
+        <data>
+          <option name="targets">
+            <list>
+              <WatchedTargetModelImpl>
+                <option name="name" value="CONTEXT_XML" />
+                <name>CONTEXT_XML</name>
+              </WatchedTargetModelImpl>
+              <StagingTargetModelImpl>
+                <option name="name" value="STAGING" />
+                <name>STAGING</name>
+              </StagingTargetModelImpl>
+            </list>
+          </option>
+          <option name="transportHostId" />
+        </data>
+      </server-settings>
+      <predefined_log_file enabled="true" id="Tomcat" />
+      <predefined_log_file enabled="true" id="TOMCAT_LOCALHOST_LOG_ID" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="58840" />
+        <option name="LOCAL" value="false" />
+      </RunnerSettings>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.MSUserUtils" />
+      <item itemvalue="JUnit.RptOrderTest.main" />
+      <item itemvalue="Spring Boot.Application" />
+      <item itemvalue="Tomcat Server.Tomcat 8.5.57" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.RptOrderTest.main" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <option name="contentProportion" value="0.122835495" />
+          <treeState>
+            <expand>
+              <path>
+                <item name="services root" type="e789fda9:ObjectUtils$Sentinel" />
+                <item name="Tomcat Server" type="7427dc5b:ServiceModel$ServiceGroupNode" />
+              </path>
+              <path>
+                <item name="services root" type="e789fda9:ObjectUtils$Sentinel" />
+                <item name="Tomcat Server" type="7427dc5b:ServiceModel$ServiceGroupNode" />
+                <item name="Running" type="7427dc5b:ServiceModel$ServiceGroupNode" />
+              </path>
+            </expand>
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration" cleanupOnStartRun="true">
+    <configuration>C:\Users\admin\AppData\Roaming\Subversion</configuration>
+    <supportedVersion>125</supportedVersion>
+  </component>
+  <component name="SvnFileUrlMappingImpl">
+    <option name="myMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="D:\public\KKL" />
+          <option name="myCopyRoot" value="D:\public\KKL" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+    <option name="myMoreRealMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="D:\public\KKL" />
+          <option name="myCopyRoot" value="D:\public\KKL" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a64937f9-e2a9-4799-af0c-c691969048f5" name="Default Changelist" comment="" />
+      <created>1594190260908</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1594190260908</updated>
+      <workItem from="1594190266562" duration="4317000" />
+      <workItem from="1594195435681" duration="6507000" />
+      <workItem from="1594258881863" duration="18832000" />
+      <workItem from="1594345094184" duration="5279000" />
+      <workItem from="1594355403768" duration="18068000" />
+      <workItem from="1594604109623" duration="20663000" />
+      <workItem from="1594690392136" duration="4493000" />
+      <workItem from="1594776641749" duration="1636000" />
+      <workItem from="1594864038719" duration="1710000" />
+      <workItem from="1594949921051" duration="536000" />
+      <workItem from="1594950509497" duration="614000" />
+      <workItem from="1595209130100" duration="2671000" />
+      <workItem from="1595215046781" duration="456000" />
+      <workItem from="1595215623831" duration="3412000" />
+      <workItem from="1595224146074" duration="888000" />
+      <workItem from="1595225058572" duration="1780000" />
+      <workItem from="1595819125295" duration="381000" />
+      <workItem from="1595819522543" duration="4420000" />
+      <workItem from="1595900112995" duration="2109000" />
+      <workItem from="1596072965739" duration="2384000" />
+      <workItem from="1596159519875" duration="596000" />
+      <workItem from="1596419169431" duration="695000" />
+      <workItem from="1596505507342" duration="598000" />
+      <workItem from="1596591631933" duration="596000" />
+      <workItem from="1596764515450" duration="15000" />
+      <workItem from="1596764642047" duration="1269000" />
+      <workItem from="1597023642734" duration="594000" />
+      <workItem from="1597110311045" duration="599000" />
+      <workItem from="1597196623021" duration="596000" />
+      <workItem from="1597282521144" duration="599000" />
+      <workItem from="1597368866297" duration="597000" />
+      <workItem from="1597628195478" duration="598000" />
+      <workItem from="1597714216157" duration="597000" />
+      <workItem from="1597887912769" duration="1383000" />
+      <workItem from="1597974079241" duration="24054000" />
+      <workItem from="1598233314964" duration="14385000" />
+      <workItem from="1598255308230" duration="7456000" />
+      <workItem from="1598319713952" duration="20034000" />
+      <workItem from="1598405982026" duration="23739000" />
+      <workItem from="1598492704706" duration="12768000" />
+      <workItem from="1598924364311" duration="2433000" />
+      <workItem from="1599010707340" duration="638000" />
+      <workItem from="1599183608029" duration="598000" />
+      <workItem from="1599442585908" duration="599000" />
+      <workItem from="1599460965305" duration="3079000" />
+      <workItem from="1599529212461" duration="597000" />
+      <workItem from="1599535272885" duration="71000" />
+      <workItem from="1599535372153" duration="587000" />
+      <workItem from="1599535984131" duration="91000" />
+      <workItem from="1599536104407" duration="599000" />
+      <workItem from="1599615051825" duration="599000" />
+      <workItem from="1614223555140" duration="1424000" />
+      <workItem from="1614303349217" duration="599000" />
+      <workItem from="1614390178676" duration="598000" />
+      <workItem from="1614562741368" duration="591000" />
+      <workItem from="1614649289893" duration="1225000" />
+      <workItem from="1614735523844" duration="1311000" />
+      <workItem from="1614822136762" duration="749000" />
+      <workItem from="1614908395002" duration="598000" />
+      <workItem from="1614995067856" duration="2535000" />
+      <workItem from="1615167544037" duration="597000" />
+      <workItem from="1615254024299" duration="598000" />
+      <workItem from="1615340742111" duration="1355000" />
+      <workItem from="1615426910387" duration="599000" />
+      <workItem from="1615513191871" duration="599000" />
+      <workItem from="1615599601029" duration="1873000" />
+      <workItem from="1615772485370" duration="1501000" />
+      <workItem from="1615858798841" duration="1221000" />
+      <workItem from="1615945236301" duration="588000" />
+      <workItem from="1616031737377" duration="614000" />
+      <workItem from="1616118169966" duration="599000" />
+      <workItem from="1616204589560" duration="1204000" />
+      <workItem from="1616377050737" duration="589000" />
+      <workItem from="1616463436168" duration="598000" />
+      <workItem from="1616636198565" duration="597000" />
+      <workItem from="1616722281262" duration="597000" />
+      <workItem from="1616808827212" duration="585000" />
+      <workItem from="1616981781551" duration="1196000" />
+      <workItem from="1617068278703" duration="598000" />
+      <workItem from="1617154461852" duration="583000" />
+      <workItem from="1617240768035" duration="591000" />
+      <workItem from="1617254124056" duration="599000" />
+      <workItem from="1617327486156" duration="592000" />
+      <workItem from="1617673039684" duration="599000" />
+      <workItem from="1617759524739" duration="597000" />
+      <workItem from="1617846015465" duration="589000" />
+      <workItem from="1617932223959" duration="598000" />
+      <workItem from="1618018621744" duration="597000" />
+      <workItem from="1620265163898" duration="594000" />
+      <workItem from="1620281928252" duration="599000" />
+      <workItem from="1620351667466" duration="596000" />
+      <workItem from="1620437842105" duration="599000" />
+      <workItem from="1620608803024" duration="3150000" />
+      <workItem from="1620695386874" duration="1308000" />
+      <workItem from="1620781554941" duration="599000" />
+      <workItem from="1620867928632" duration="743000" />
+      <workItem from="1620954287374" duration="1722000" />
+      <workItem from="1621213619541" duration="599000" />
+      <workItem from="1621323680595" duration="964000" />
+      <workItem from="1621327255775" duration="3737000" />
+      <workItem from="1621386726008" duration="5706000" />
+      <workItem from="1621472808109" duration="15213000" />
+      <workItem from="1621559342455" duration="9719000" />
+      <workItem from="1621574139015" duration="7312000" />
+      <workItem from="1621584507270" duration="1590000" />
+      <workItem from="1621818435019" duration="1854000" />
+      <workItem from="1621904845979" duration="5848000" />
+      <workItem from="1621991457675" duration="3078000" />
+      <workItem from="1622077310973" duration="52201000" />
+      <workItem from="1622251579473" duration="27513000" />
+      <workItem from="1622509404808" duration="16980000" />
+      <workItem from="1622596199651" duration="13279000" />
+      <workItem from="1622682304272" duration="19939000" />
+      <workItem from="1623027877910" duration="76072000" />
+      <workItem from="1623729023854" duration="58395000" />
+      <workItem from="1624238911625" duration="20420000" />
+      <workItem from="1624325756958" duration="2131000" />
+      <workItem from="1624329227894" duration="9192000" />
+      <workItem from="1624411658392" duration="5851000" />
+      <workItem from="1624440568338" duration="37359000" />
+      <workItem from="1624867348017" duration="12239000" />
+      <workItem from="1625015994184" duration="1081000" />
+      <workItem from="1625017306573" duration="32328000" />
+      <workItem from="1625534866578" duration="8576000" />
+      <workItem from="1625713138284" duration="2028000" />
+      <workItem from="1625721262361" duration="18931000" />
+    </task>
+    <task id="LOCAL-00001">
+      <created>1622687154938</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1622687154938</updated>
+    </task>
+    <task id="LOCAL-00002" summary="去除限制普通客服不能导出完工报表">
+      <created>1623203708518</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1623203708518</updated>
+    </task>
+    <task id="LOCAL-00003" summary="修改业务报表，其所需账号类型是业务主管报则表数据是其下属所有业务负责的客户">
+      <created>1623838835065</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1623838835065</updated>
+    </task>
+    <task id="LOCAL-00004" summary="修改客户应收汇总报表，如是业务主管显示其下属客户数据，如是业务员显示其自己的所关客户数据">
+      <created>1624005885415</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1624005885415</updated>
+    </task>
+    <task id="LOCAL-00005" summary="修改工单费用报表，客户每日下单明细，每日冻结明细，每月冻结明细，每月下单明细，优化每日完工时效报表">
+      <created>1625017650619</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1625017650619</updated>
+    </task>
+    <task id="LOCAL-00006" summary="修改每日完工时效报表的jsp文件，区域可选择按省查">
+      <created>1625463657983</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1625463657983</updated>
+    </task>
+    <task id="LOCAL-00007" summary="开发明细报表 查询和导出去掉客户列&#10;每日完工时效报表 新增需求，无到货72H完成率,无到货周完成率,到货72H完成率,到货周完成率">
+      <created>1625823000376</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1625823000376</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="去除限制普通客服不能导出完工报表" />
+    <MESSAGE value="修改业务报表，其所需账号类型是业务主管报则表数据是其下属所有业务负责的客户" />
+    <MESSAGE value="修改客户应收汇总报表，如是业务主管显示其下属客户数据，如是业务员显示其自己的数据" />
+    <MESSAGE value="修改客户应收汇总报表，如是业务主管显示其下属客户数据，如是业务员显示其自己的所关客户数据" />
+    <MESSAGE value="修改工单费用报表，客户每日下单明细，每日冻结明细，每月冻结明细，每月下单明细，优化每日完工时效报表" />
+    <MESSAGE value="修改工单费用报表的jsp文件，区域可选择按省查" />
+    <MESSAGE value="修改每日完工时效报表的jsp文件，区域可选择按省查" />
+    <MESSAGE value="开发明细报表 查询和导出去掉客户列&#10;每日完工时效报表 新增需求，无到货72H完成率,无到货周完成率,到货72H完成率,到货周完成率" />
+    <option name="LAST_COMMIT_MESSAGE" value="开发明细报表 查询和导出去掉客户列&#10;每日完工时效报表 新增需求，无到货72H完成率,无到货周完成率,到货72H完成率,到货周完成率" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="680" y="71" key="#Tomcat_8.5.57" timestamp="1621497525703">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="680" y="71" key="#Tomcat_8.5.57/0.0.1920.1040@0.0.1920.1040" timestamp="1621497525703" />
+    <state x="552" y="194" key="#Tomcat_Server" timestamp="1621497215270">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="552" y="194" key="#Tomcat_Server/0.0.1920.1040@0.0.1920.1040" timestamp="1621497215270" />
+    <state x="399" y="251" width="1092" height="722" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1625823776719">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="399" y="251" width="1092" height="722" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1625823776719" />
+    <state x="765" y="204" key="#com.intellij.ide.util.MemberChooser" timestamp="1622165250763">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="765" y="204" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1622165250763" />
+    <state x="1171" y="243" key="#xdebugger.evaluate" timestamp="1624865786771">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="1171" y="243" key="#xdebugger.evaluate/0.0.1920.1040@0.0.1920.1040" timestamp="1624865786771" />
+    <state x="560" y="109" key="CommitChangelistDialog2" timestamp="1625822998570">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="560" y="109" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1625822998570" />
+    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog" timestamp="1625822729488">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1625822729488" />
+    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1625821104422">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1625821104422" />
+    <state width="1877" height="308" key="GridCell.Tab.0.bottom" timestamp="1626052591000">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="308" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1626052591000" />
+    <state width="1877" height="308" key="GridCell.Tab.0.center" timestamp="1626052590999">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="308" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1626052590999" />
+    <state width="1877" height="308" key="GridCell.Tab.0.left" timestamp="1626052590999">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="308" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1626052590999" />
+    <state width="1877" height="308" key="GridCell.Tab.0.right" timestamp="1626052591000">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="308" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1626052591000" />
+    <state width="1620" height="395" key="GridCell.Tab.1.bottom" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state width="1620" height="395" key="GridCell.Tab.1.center" timestamp="1626051974945">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974945" />
+    <state width="1620" height="395" key="GridCell.Tab.1.left" timestamp="1626051974945">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974945" />
+    <state width="1620" height="395" key="GridCell.Tab.1.right" timestamp="1626051974945">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974945" />
+    <state width="1620" height="395" key="GridCell.Tab.2.bottom" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state width="1620" height="395" key="GridCell.Tab.2.center" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state width="1620" height="395" key="GridCell.Tab.2.left" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state width="1620" height="395" key="GridCell.Tab.2.right" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state width="1620" height="395" key="GridCell.Tab.3.bottom" timestamp="1626051974947">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.3.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974947" />
+    <state width="1620" height="395" key="GridCell.Tab.3.center" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.3.center/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state width="1620" height="395" key="GridCell.Tab.3.left" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.3.left/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state width="1620" height="395" key="GridCell.Tab.3.right" timestamp="1626051974946">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1620" height="395" key="GridCell.Tab.3.right/0.0.1920.1040@0.0.1920.1040" timestamp="1626051974946" />
+    <state x="490" y="175" key="Maven.ArtifactSearchDialog" timestamp="1621930700337">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="490" y="175" key="Maven.ArtifactSearchDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1621930700337" />
+    <state x="762" y="242" key="RollbackChangesDialog" timestamp="1624008704784">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="762" y="242" key="RollbackChangesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1624008704784" />
+    <state x="440" y="102" width="998" height="708" key="SettingsEditor" timestamp="1625821089520">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="440" y="102" width="998" height="708" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1625821089520" />
+    <state width="968" height="528" key="XDebugger.FullValuePopup" timestamp="1624865864753">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="968" height="528" key="XDebugger.FullValuePopup/0.0.1920.1040@0.0.1920.1040" timestamp="1624865864753" />
+    <state x="640" y="344" key="com.intellij.ide.util.TipDialog" timestamp="1625728180384">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="640" y="344" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1625728180384" />
+    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1626056557736">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1626056557736" />
+    <state x="505" y="256" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1624242097731">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="505" y="256" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.0.1920.1040@0.0.1920.1040" timestamp="1624242097731" />
+    <state x="674" y="386" width="978" height="654" key="find.popup" timestamp="1625821620729">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="674" y="386" width="978" height="654" key="find.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1625821620729" />
+    <state x="616" y="240" key="run.anything.popup" timestamp="1622081520322">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="616" y="240" key="run.anything.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1622081520322" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1623722751152">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1623722751152" />
+    <state x="779" y="418" key="svn.passwordDialog" timestamp="1623203361023">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="779" y="418" key="svn.passwordDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1623203361023" />
+    <state x="790" y="311" key="svn.repositoryBrowser" timestamp="1621582495878">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="790" y="311" key="svn.repositoryBrowser/0.0.1920.1040@0.0.1920.1040" timestamp="1621582495878" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sys/web/LoginController.java</url>
+          <line>58</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sys/web/LoginController.java</url>
+          <line>85</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/md/web/ServicePriceController.java</url>
+          <line>131</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/controller/md/SecurityController.java</url>
+          <line>77</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSAreaOrderPlanDailyRptController.java</url>
+          <line>68</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSEveryDayCompleteController.java</url>
+          <line>70</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSEveryDayCompleteController.java</url>
+          <line>119</line>
+          <option name="timeStamp" value="21" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/service/MSEveryDayCompleteService.java</url>
+          <line>89</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/service/ReportExportTaskService.java</url>
+          <line>62</line>
+          <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/service/MSEveryDayCompleteService.java</url>
+          <line>62</line>
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/service/MSEveryDayCompleteService.java</url>
+          <line>80</line>
+          <option name="timeStamp" value="28" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/fi/web/ChargeCreateController.java</url>
+          <line>231</line>
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sd/service/OrderService.java</url>
+          <line>1595</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSEveryDayCompleteController.java</url>
+          <line>103</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSAreaOrderPlanDailyRptController.java</url>
+          <line>66</line>
+          <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCancelledOrderNewRptController.java</url>
+          <line>101</line>
+          <option name="timeStamp" value="35" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/service/MSCancelledOrderNewRptService.java</url>
+          <line>46</line>
+          <option name="timeStamp" value="36" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerMonthPlanRptController.java</url>
+          <line>66</line>
+          <option name="timeStamp" value="37" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerOrderPlanDailyRptController.java</url>
+          <line>95</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerOrderPlanDailyRptController.java</url>
+          <line>67</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerOrderPlanDailyRptController.java</url>
+          <line>83</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerPerformanceRptController.java</url>
+          <line>101</line>
+          <option name="timeStamp" value="44" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerReceivableSummaryRptController.java</url>
+          <line>70</line>
+          <option name="timeStamp" value="46" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerReceivableSummaryRptController.java</url>
+          <line>68</line>
+          <option name="timeStamp" value="47" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSCustomerReceivableSummaryRptController.java</url>
+          <line>71</line>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/CustomerNewOrderDailyRptController.java</url>
+          <line>52</line>
+          <option name="timeStamp" value="55" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/CustomerNewOrderMonthRptController.java</url>
+          <line>53</line>
+          <option name="timeStamp" value="56" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/CustomerNewOrderMonthRptController.java</url>
+          <line>64</line>
+          <option name="timeStamp" value="57" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/CustomerNewOrderMonthRptController.java</url>
+          <line>68</line>
+          <option name="timeStamp" value="64" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/providerrpt/controller/MSGradedOrderRptController.java</url>
+          <line>241</line>
+          <option name="timeStamp" value="65" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/main/webapp/static/area/AreaFourLevel.js</url>
+          <line>438</line>
+          <option name="timeStamp" value="51" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/main/webapp/static/area/AreaFourLevel.js</url>
+          <line>126</line>
+          <option name="timeStamp" value="52" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/main/webapp/static/area/AreaFourLevel.js</url>
+          <line>11</line>
+          <option name="timeStamp" value="53" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/main/webapp/static/area/AreaFourLevel.js</url>
+          <line>5</line>
+          <option name="timeStamp" value="54" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

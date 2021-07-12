@@ -1,0 +1,146 @@
+package com.wolfking.jeesite.modules.sd.service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.wolfking.jeesite.common.utils.QuarterUtils;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.CacheDataTypeEnum;
+import com.wolfking.jeesite.modules.md.entity.Product;
+import com.wolfking.jeesite.modules.md.entity.ServiceType;
+import com.wolfking.jeesite.modules.md.service.ServiceTypeService;
+import com.wolfking.jeesite.modules.md.utils.ProductUtils;
+import com.wolfking.jeesite.modules.md.utils.ServiceTypeSimpleAdapter;
+import com.wolfking.jeesite.modules.sd.dao.OrderItemDao;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.entity.OrderItem;
+import com.wolfking.jeesite.modules.sd.utils.OrderItemUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+@Service
+@Slf4j
+public class OrderItemService {
+
+    @Resource
+    private OrderItemDao orderItemDao;
+
+    @Autowired
+    private ServiceTypeService serviceTypeService;
+
+    /**
+     * 更新工单的orderitem
+     *
+     * @param quarter    分片标志，允许为null
+     * @param orderId    工单id
+     * @param orderItems orderitem列表
+     */
+    @Transactional(readOnly = false)
+    public Integer updateOrderItems(String quarter, long orderId, List<OrderItem> orderItems) {
+        if (orderItems != null && orderItems.size() > 0) {
+            String json = OrderItemUtils.toOrderItemsJson(orderItems);
+            return orderItemDao.updateOrderItemJson(quarter, orderId, json);
+        }
+        return 0;
+    }
+
+    /**
+     * 删除工单的orderitem
+     *
+     * @param quarter 分片标志，允许为null
+     * @param orderId 工单id
+     * @return
+     */
+    @Transactional(readOnly = false)
+    public Integer deleteOrderItems(String quarter, long orderId) {
+        return orderItemDao.updateOrderItemJson(quarter, orderId, null);
+    }
+
+    /**
+     * 查询工单的orderitem列表
+     */
+    public Order getOrderItems(String quarter, long orderId) {
+        Order order = orderItemDao.getOrderItems(quarter, orderId);
+        if (order != null) {
+            order.setItems(OrderItemUtils.fromOrderItemsJson(order.getOrderItemJson()));
+        }
+        return order;
+    }
+
+
+    //region 转存历史数据
+
+    /**
+     * 按时间区域查询orderitem
+     * 去掉sd_orderitem读写 by ryan at 2018-09-03
+     *
+     * @param quarter   分片标志，允许为null
+     * @param beginDate
+     * @param endDate
+     * @return
+
+    private List<OrderItem> getOrderItemList(String quarter, Date beginDate, Date endDate) {
+        return orderItemDao.getOrderItemsByCreateDate(quarter, beginDate, endDate);
+    }
+     */
+
+    /**
+     * 按工单的创建时间来批量转存orderitem
+     * 去掉sd_orderitem读写 by ryan at 2018-09-03
+     *
+     * @param beginDate
+     * @param endDate
+
+    public void updateOrderItemsJson(Date beginDate, Date endDate) {
+        String quarter = null;
+        if (QuarterUtils.getSeasonQuarter(beginDate).equals(QuarterUtils.getSeasonQuarter(endDate))) {
+            quarter = QuarterUtils.getSeasonQuarter(beginDate);
+        }
+        List<OrderItem> orderItems = getOrderItemList(quarter, beginDate, endDate);
+        Map<Long, List<OrderItem>> orderItemMap = Maps.newHashMap();
+
+        for (OrderItem item : orderItems) {
+            if (orderItemMap.containsKey(item.getOrderId())) {
+                orderItemMap.get(item.getOrderId()).add(item);
+            } else {
+                orderItemMap.put(item.getOrderId(), Lists.newArrayList(item));
+            }
+        }
+        for (Long orderId : orderItemMap.keySet()) {
+            updateOrderItems(quarter, orderId, orderItemMap.get(orderId));
+//            deleteOrderItems(quarter, orderId);
+        }
+    }
+    */
+    /* 去掉sd_orderitem读写 by ryan at 2018-09-03
+    public void updateOrderItemsJson(String quarter, List<Long> orderIds) {
+        if (StringUtils.isNotEmpty(quarter) && orderIds != null && orderIds.size() > 0) {
+            List<OrderItem> orderItems = orderItemDao.getOrderItemsByOrderIds(quarter, orderIds);
+            Map<Long, List<OrderItem>> orderItemMap = Maps.newHashMap();
+
+            for (OrderItem item : orderItems) {
+                if (orderItemMap.containsKey(item.getOrderId())) {
+                    orderItemMap.get(item.getOrderId()).add(item);
+                } else {
+                    orderItemMap.put(item.getOrderId(), Lists.newArrayList(item));
+                }
+            }
+            for (Long orderId : orderItemMap.keySet()) {
+                updateOrderItems(quarter, orderId, orderItemMap.get(orderId));
+            }
+        }
+    }
+    */
+
+    //endregion 转存历史数据
+
+}

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerChargeConditionDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_engineercharge_condition(
+			id,
+			order_id,
+			order_no,
+			customer_id,
+			service_point_id,
+			engineer_id,
+			product_category_id,
+			product_id,
+			service_type_id,
+			payment_type,
+			status,
+			charge_order_type,
+			auto_charge_flag,
+			charge_date,
+			charge_by,
+			order_close_date,
+			quarter
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{orderNo},
+			#{customerId},
+			#{servicePointId},
+			#{engineerId},
+			#{productCategoryId},
+			#{productId},
+			#{serviceTypeId},
+			#{paymentType},
+			#{status},
+			#{chargeOrderType},
+			#{autoChargeFlag},
+			#{chargeDate},
+			#{chargeBy},
+			#{orderCloseDate},
+			#{quarter}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_engineercharge_condition SET
+			engineer_status = #{engineerStatus}
+		WHERE id = #{id}
+	</update>
+
+	<update id="close">
+		UPDATE fi_engineercharge_condition SET
+			status = 20
+		WHERE id IN
+		<foreach item="chargeConditionId" index="index" collection="chargeConditionIds" open="(" separator="," close=")">
+			#{chargeConditionId}
+		</foreach>
+	</update>
+
+	<delete id="delete">
+		DELETE FROM fi_engineercharge_condition
+		WHERE id = #{id}
+	</delete>
+
+	<select id="get" resultType="EngineerChargeCondition">
+		SELECT
+			id,
+			order_id,
+			order_no,
+			customer_id,
+			service_point_id,
+			engineer_id,
+			product_category_id,
+			product_id,
+			service_type_id,
+			payment_type,
+			charge_order_type,
+			auto_charge_flag,
+			charge_date,
+			charge_by,
+			order_close_date,
+			quarter
+		FROM
+			fi_engineercharge_condition
+		WHERE
+			id = #{id}
+	</select>
+
+	<select id="selectConditionInfo" parameterType="EngineerChargeCondition" resultType="EngineerChargeCondition">
+		SELECT
+			id
+		FROM
+			fi_engineercharge_condition
+		<where>
+			<if test="orderNo != null">
+				AND order_no = #{orderNo}
+			</if>
+			<if test="productCategoryId != null">
+				AND product_category_id = #{productCategoryId}
+			</if>
+			<if test="productId != null">
+				AND product_id = #{productId}
+			</if>
+			<if test="orderCloseBeginDate != null">
+				AND order_close_date >= #{orderCloseBeginDate}
+			</if>
+			<if test="orderCloseEndDate != null">
+				AND #{orderCloseEndDate} >= order_close_date
+			</if>
+			<if test="chargeBeginDate != null">
+				AND charge_date >= #{chargeBeginDate}
+			</if>
+			<if test="chargeEndDate != null">
+				AND #{chargeEndDate} >= charge_date
+			</if>
+			<if test="servicePointId != null">
+				AND service_point_id = #{servicePointId}
+			</if>
+			<if test="status != null">
+				AND status = #{status}
+			</if>
+		</where>
+	</select>
+
+	<!-- 补10月网点按品类应付数据 -->
+	<select id="getOneByOrderNoAndServicePointIdForUpdatePayable" resultType="EngineerChargeCondition">
+		SELECT
+			product_category_id,
+			payment_type
+		FROM
+			fi_engineercharge_condition
+		WHERE
+			quarter = '20194'
+			AND order_no = #{orderNo}
+			AND service_point_id = #{servicePointId}
+		LIMIT 1
+	</select>
+</mapper>

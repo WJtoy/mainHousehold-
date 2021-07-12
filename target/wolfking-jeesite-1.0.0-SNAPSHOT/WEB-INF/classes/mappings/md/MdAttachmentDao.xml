@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.MdAttachmentDao">
+    <sql id="mdAttachmentColumns">
+        a.id,
+        a.file_path,
+        a.create_by,
+        a.create_date,
+        a.update_by,
+        a.update_date,
+        a.remarks,
+        a.del_flag
+    </sql>
+
+    <select id="get" resultType="MdAttachment">
+        select <include refid="mdAttachmentColumns"/>
+        FROM md_attachment a
+        where a.del_flag = 0 AND a.id=#{id}
+        order by a.id
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    insert into md_attachment
+    (
+        file_path,
+        create_by,
+        create_date,
+        update_by,
+        update_date,
+        remarks,
+        del_flag
+    )
+	values
+	(
+        #{filePath},
+        #{createBy.id},
+        NOW(),
+        #{updateBy.id},
+        NOW(),
+        #{remarks},
+        #{delFlag}
+	)
+    </insert>
+    <update id="update">
+        update md_attachment
+        set
+        id = #{id},
+        file_path = #{filePath},
+        update_by = #{updateBy},
+        update_date = NOW(),
+        remarks = #{remarks},
+        del_flag = #{delFlag}
+        where
+        id = #{id}
+    </update>
+
+</mapper>

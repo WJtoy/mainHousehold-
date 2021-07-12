@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.ServicePointFinanceDao">
+
+    <!--根据用ID列表获取网点余额-->
+    <select id="getBalanceByIds" resultType="ServicePointFinance">
+        SELECT id,
+               balance
+        FROM   md_servicepoint_finance
+        <if test="ids != null and ids.size > 0">
+            WHERE id IN
+            <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="findServicePointIdsFromFinance" resultType="Long">
+        SELECT
+        msf.id                  AS 'id'
+        FROM  md_servicepoint_finance msf
+        <where>
+            <if test="invoiceFlag != null and invoiceFlag >=0">
+                AND msf.invoice_flag = #{invoiceFlag}
+            </if>
+            <if test="discountFlag != null and discountFlag >=0">
+                AND msf.discount_flag = #{discountFlag}
+            </if>
+        </where>
+        LIMIT 2000;
+    </select>
+
+</mapper>

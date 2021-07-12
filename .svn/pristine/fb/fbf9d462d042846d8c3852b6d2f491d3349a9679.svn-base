@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 配件 -->
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.KefuOrderMaterialDao">
+
+    <resultMap id="MaterialFormHead" type="MaterialMaster">
+        <id property="id" column="id"/>
+        <result property="dataSource" column="data_source" />
+        <result property="quarter" column="quarter" />
+        <result property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="masterNo" column="master_no"/>
+        <result property="thrdNo" column="thrd_no"/>
+        <result property="orderDetailId" column="order_detail_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="applyId" column="apply_id"/>
+        <result property="totalPrice" column="totalprice"/>
+        <result property="expressNo" column="express_no"/>
+        <result property="returnFlag" column="return_flag"/>
+        <result property="remarks" column="remarks"/>
+        <result property="createDate" column="create_date"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="quarter" column="quarter"/>
+        <result property="returnFlag" column="return_flag"/>
+        <!-- user -->
+        <result property="userName" column="user_name"/>
+        <result property="userPhone" column="user_phone"/>
+        <result property="userAddress" column="user_address"/>
+        <result property="pendingContent" column="pending_content"/>
+        <association property="customer"  column="master_customer" javaType="Customer" >
+            <result property="id" column="customer_id"/>
+        </association>
+        <association property="product"  column="master_product" javaType="Product" >
+            <result property="id" column="product_id"/>
+        </association>
+        <association property="pendingType"  column="master_pendingType" javaType="Dict" >
+            <result property="value" column="pending_type"/>
+        </association>
+        <association property="area"  column="master_area" javaType="Area" >
+            <result property="id" column="area_id"/>
+        </association>
+        <association property="subArea"  column="master_subArea" javaType="Area" >
+            <result property="id" column="sub_area_id"/>
+        </association>
+        <association property="applyType"  column="master_applyType" javaType="Dict" >
+            <result property="value" column="applyType"/>
+        </association>
+        <association property="status"  column="master_status" javaType="Dict" >
+            <result property="value" column="status_value"/>
+        </association>
+        <association property="expressCompany"  column="master_expressCompany" javaType="Dict" >
+            <result property="value" column="express_company"/>
+        </association>
+        <association property="createBy"  column="detail_createBy" javaType="User" >
+            <id property="id" column="create_by"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="MaterialMasterResult" type="MaterialMaster">
+        <id property="id" column="id"/>
+        <result property="dataSource" column="data_source" />
+        <result property="quarter" column="quarter" />
+        <result property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="masterNo" column="master_no"/>
+        <result property="thrdNo" column="thrd_no"/>
+        <result property="orderDetailId" column="order_detail_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="productIds" column="product_ids"/>
+        <result property="productNames" column="product_names"/>
+        <result property="applyId" column="apply_id"/>
+        <result property="totalPrice" column="totalprice"/>
+        <result property="expressNo" column="express_no"/>
+        <result property="returnFlag" column="return_flag"/>
+        <result property="remarks" column="remarks"/>
+        <result property="createDate" column="create_date"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="quarter" column="quarter"/>
+        <result property="returnFlag" column="return_flag"/>
+        <result property="orderCreator" column="order_creator"/>
+        <result property="signAt" column="sign_at"/>
+        <!-- user -->
+        <result property="userName" column="user_name"/>
+        <result property="userPhone" column="user_phone"/>
+        <result property="userAddress" column="user_address"/>
+        <result property="pendingContent" column="pending_content"/>
+        <!-- 收件人信息 -->
+        <result property="receiver" column="receiver"/>
+        <result property="receiverPhone" column="receiver_phone"/>
+        <result property="receiverProvinceId" column="receiver_province_id"/>
+        <result property="receiverCityId" column="receiver_city_id"/>
+        <result property="receiverAreaId" column="receiver_area_id"/>
+        <result property="receiverAddress" column="receiver_address"/>
+        <result property="receiverType" column="receiver_type"/>
+        <association property="customer"  column="master_customer" javaType="Customer" >
+            <result property="id" column="customer_id"/>
+        </association>
+        <association property="product"  column="master_product" javaType="Product" >
+            <result property="id" column="product_id"/>
+        </association>
+        <association property="pendingType"  column="master_pendingType" javaType="Dict" >
+            <result property="value" column="pending_type"/>
+        </association>
+        <association property="area"  column="master_area" javaType="Area" >
+            <result property="id" column="area_id"/>
+        </association>
+        <association property="subArea"  column="master_subArea" javaType="Area" >
+            <result property="id" column="sub_area_id"/>
+        </association>
+        <association property="applyType"  column="master_applyType" javaType="Dict" >
+            <result property="value" column="applyType"/>
+        </association>
+        <association property="status"  column="master_status" javaType="Dict" >
+            <result property="value" column="status_value"/>
+        </association>
+        <association property="expressCompany"  column="master_expressCompany" javaType="Dict" >
+            <result property="value" column="express_company"/>
+            <result property="label" column="expressCompany_label"/>
+        </association>
+        <association property="createBy"  column="detail_createBy" javaType="User" >
+            <id property="id" column="create_by"/>
+        </association>
+        <collection property="attachments" ofType="MaterialAttachment">
+            <id property="id" column="attachment_id"/>
+            <result property="filePath" column="attachment_filePath"/>
+            <result property="remarks" column="attachment_remarks"/>
+        </collection>
+        <collection property="items" ofType="MaterialItem">
+            <id property="id" column="item_id"/>
+            <result property="qty" column="item_qty"/>
+            <result property="price" column="item_price"/>
+            <result property="totalPrice" column="item_totalprice"/>
+            <result property="returnFlag" column="item_return_flag"/>
+            <association property="material"  column="item_material" javaType="Material" >
+                <id property="id" column="material_id"/>
+            </association>
+            <association property="product"  column="item_product" javaType="Product" >
+                <id property="id" column="item_product_id"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <resultMap id="MaterialMasteItemResult" type="MaterialItem">
+        <id property="id" column="item_id"/>
+        <result property="qty" column="item_qty"/>
+        <result property="price" column="item_price"/>
+        <result property="totalPrice" column="item_totalprice"/>
+        <result property="useQty" column="use_qty"/>
+        <result property="rtvQty" column="rtv_qty"/>
+        <result property="rtvFlag" column="rtv_flag"/>
+        <result property="returnFlag" column="return_flag"/>
+        <association property="material"  column="item_material" javaType="Material" >
+            <id property="id" column="material_id"/>
+        </association>
+        <association property="product"  column="item_product" javaType="Product" >
+            <id property="id" column="product_id"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="ToFixResult" type="MaterialMaster">
+        <id property="id" column="id"/>
+        <result property="dataSource" column="data_source" />
+        <result property="quarter" column="quarter" />
+        <result property="orderId" column="order_id"/>
+        <result property="createDate" column="create_date"/>
+        <association property="customer"  column="master_customer" javaType="Customer" >
+            <result property="id" column="customer_id"/>
+        </association>
+        <collection property="items" ofType="MaterialItem">
+            <id property="id" column="item_id"/>
+            <association property="product"  column="item_product" javaType="Product" >
+                <id property="id" column="item_product_id"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <!-- Kefu列表 -->
+    <!-- 用户负责区域 -->
+    <sql id="RegionFilter">
+        <choose>
+            <when test="regionFilterType == 'province'.toString() and provinceList != null and provinceList.size > 0">
+                <choose>
+                    <when test="provinceList.size == 1">
+                        and m.province_id = #{provinceList[0]}
+                    </when>
+                    <otherwise>
+                        AND m.province_id IN <foreach collection="provinceList" item="provinceId" index="index" open="(" close=")" separator=",">${provinceId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'city'.toString() and cityList != null and cityList.size > 0">
+                <choose>
+                    <when test="cityList.size == 1">
+                        and m.city_id = #{cityList[0]}
+                    </when>
+                    <otherwise>
+                        AND m.city_id IN <foreach collection="cityList" item="cityId" index="index" open="(" close=")" separator=",">${cityId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'area'.toString() and areaList != null and areaList.size > 0">
+                <choose>
+                    <when test="areaList.size == 1">
+                        and m.area_id = #{areaList[0]}
+                    </when>
+                    <otherwise>
+                        AND m.area_id IN <foreach collection="areaList" item="areaId" index="index" open="(" close=")" separator=",">${areaId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+        </choose>
+    </sql>
+    <!-- 客户类型 -->
+    <sql id="customerTypeFilter">
+        <if test="customerType != null">
+            inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = m.customer_id
+        </if>
+    </sql>
+    <!-- 可突击订单 -->
+    <!--<sql id="rushFilter">
+        <if test="rushType != null">
+            and m.can_rush = #{rushType}
+        </if>
+    </sql>-->
+
+    <sql id="kefuTypeFilter">
+        <if test="kefuType != null">
+            and m.kefu_type = #{kefuType}
+        </if>
+    </sql>
+
+
+    <sql id="kefuListSql">
+        SELECT
+            m.id,
+            m.data_source,
+            m.quarter,
+            m.order_id,
+            m.master_no,
+            m.thrd_no,
+            m.order_no,
+            m.customer_id as 'customer.id',
+            m.product_ids,
+            m.product_names,
+            m.applytype as 'applyType.value',
+            m.status AS 'status.value',
+            m.totalprice,
+            m.user_name,
+            m.user_phone,
+            m.area_id as 'area.id',
+            m.sub_area_id as 'subArea.id',
+            m.user_address,
+            m.create_by as 'createBy.id',
+            m.create_date,
+            m.update_by as 'updateBy.id',
+            m.update_date,
+            m.close_by as 'closeBy.id',
+            m.close_date,
+            m.close_remark,
+            m.remarks,
+            m.return_flag,
+            m.pending_type as 'pendingType.value',
+            m.pending_date,
+            m.pending_content,
+            m.order_creator,
+            m.express_no
+        from sd_materialmaster m
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = m.product_category_id AND mpu.user_id = #{createBy.id}
+            <choose>
+                <when test="customerType != null and customerType == 1">
+                    inner join sys_user_customer uc
+                    on uc.user_id = #{createBy.id} and m.customer_id = uc.customer_id
+                </when>
+                <when test="customerType != null">
+                    inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = m.customer_id
+                </when>
+            </choose>
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND m.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND m.user_phone = #{userPhone}
+                    </if>
+                    <if test="status != null and status > 0">
+                        <choose>
+                            <!-- 完成包含关闭和异常收件 -->
+                            <when test="status == 4">
+                                and m.status in (4,6)
+                            </when>
+                            <otherwise>
+                                and m.status = #{status}
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND m.quarter = #{quarter}
+                    </if>
+                </when>
+                <otherwise>
+                    m.create_date between #{beginDate} and #{endDate}
+                    <if test="status != null and status > 0">
+                        <choose>
+                            <!-- 完成包含关闭和异常收件 -->
+                            <when test="status == 4">
+                                and m.status in (4,6)
+                            </when>
+                            <otherwise>
+                                and m.status = #{status}
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="expressNo != null and expressNo != ''.trim()">
+                        AND m.express_no = #{expressNo}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        and m.customer_id = #{customer.id}
+                    </if>
+                    <if test="pendingType != null and pendingType >= 0">
+                        and m.pending_type = #{pendingType}
+                    </if>
+                    <if test="applyType != null and applyType > 0">
+                        and m.applytype = #{applyType}
+                    </if>
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </otherwise>
+            </choose>
+            <!-- 可突击订单 -->
+            <include refid="kefuTypeFilter"/>
+            and m.del_flag = 0
+        </where>
+    </sql>
+
+    <!-- 按状态查询 -->
+    <select id="findKefuMaterialList" resultType="MaterialMaster">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="kefuListSql" />
+                ORDER BY m.id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="kefuListSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="kefuListSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="kefuListSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        ORDER BY u.id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="kefuListSql"/>
+                        order by m.id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+
+
+    <sql id="kefuReturnListSql">
+        SELECT
+        m.id,
+        m.quarter,
+        m.order_id,
+        m.order_no,
+        m.customer_id as 'customer.id',
+        m.product_ids,
+        m.product_names,
+        m.apply_type as 'applyType.value',
+        m.user_name,
+        m.user_phone,
+        m.area_id as 'area.id',
+        m.sub_area_id as 'subArea.id',
+        m.user_address,
+        m.express_no,
+        m.express_company as 'expressCompany.value',
+        m.send_by as 'updateBy.id',
+        m.send_date as 'updateDate'
+        from sd_material_return m
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = m.product_category_id AND mpu.user_id = #{createBy.id}
+            <choose>
+                <when test="customerType != null and customerType == 1">
+                    inner join sys_user_customer uc
+                    on uc.user_id = #{createBy.id} and m.customer_id = uc.customer_id
+                </when>
+                <when test="customerType != null">
+                    inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = m.customer_id
+                </when>
+            </choose>
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND m.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND m.user_phone = #{userPhone}
+                    </if>
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND m.quarter = #{quarter}
+                    </if>
+                       AND m.status = 3
+                </when>
+                <otherwise>
+                    m.create_date between #{beginDate} and #{endDate}
+
+                    <if test="expressNo != null and expressNo != ''.trim()">
+                        AND m.express_no = #{expressNo}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        and m.customer_id = #{customer.id}
+                    </if>
+                    <if test="applyType != null and applyType > 0">
+                        and m.apply_type = #{applyType}
+                    </if>
+                    AND m.status = 3
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </otherwise>
+            </choose>
+            <!-- 可突击订单 -->
+            <include refid="kefuTypeFilter"/>
+        </where>
+    </sql>
+
+
+    <select id="waitSignMaterialReturnList" resultType="MaterialReturn">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="kefuReturnListSql" />
+                ORDER BY m.id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="kefuReturnListSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="kefuReturnListSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="kefuReturnListSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        ORDER BY u.id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="kefuReturnListSql"/>
+                        order by m.id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

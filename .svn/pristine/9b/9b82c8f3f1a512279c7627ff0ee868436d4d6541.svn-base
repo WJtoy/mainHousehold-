@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.md.dao.B2BServicePointBatchLogDao">
+
+    <sql id="servicePointBatchLogColumns">
+        a.id,
+        a.city_id AS 'city.id',
+        a.servicepoint_success_count AS 'servicePointSuccessCount',
+        a.servicepoint_failure_count AS 'servicePointFailureCount',
+		a.coverservice_success_count AS 'coverServiceSuccessCount',
+		a.coverservice_failure_count AS 'coverServiceFailureCount',
+		a.capacity_success_count,
+		a.capacity_failure_count,
+		a.worker_success_count,
+		a.worker_failure_count,
+        a.process_comment,
+        a.create_by AS 'createBy.id',
+        a.create_date,
+        a.update_by AS 'updateBy.id',
+        a.update_date
+    </sql>
+
+    <select id="getAllServicePointBatchLogs" resultType="B2BServicePointBatchLog">
+        SELECT
+              <include refid="servicePointBatchLogColumns"/>
+        FROM  b2b_tmall_servicepoint_batchlog a
+        LIMIT 2000
+    </select>
+
+    <select id="getServicePointBatchLogByCityId" parameterType="Long" resultType="B2BServicePointBatchLog">
+        SELECT
+              <include refid="servicePointBatchLogColumns"/>
+        FROM  b2b_tmall_servicepoint_batchlog a
+        WHERE a.city_id = #{cityId}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="B2BServicePointBatchLog" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO b2b_tmall_servicepoint_batchlog (
+            city_id,
+            servicepoint_success_count,
+            servicepoint_failure_count,
+		    coverservice_success_count,
+		    coverservice_failure_count,
+            capacity_success_count,
+            capacity_failure_count,
+            worker_success_count,
+            worker_failure_count,
+            process_comment,
+            create_by,
+            create_date,
+            update_by,
+            update_date
+        )
+        VALUES (
+            #{city.id},
+            #{servicePointSuccessCount},
+            #{servicePointFailureCount},
+            #{coverServiceSuccessCount},
+            #{coverServiceFailureCount},
+            #{capacitySuccessCount},
+            #{capacityFailureCount},
+            #{workerSuccessCount},
+            #{workerFailureCount},
+            #{processComment},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate}
+        )
+    </insert>
+
+    <update id="update" parameterType="B2BServicePointBatchLog">
+        UPDATE b2b_tmall_servicepoint_batchlog
+        SET
+            servicepoint_success_count = #{servicePointSuccessCount},
+            servicepoint_failure_count = #{servicePointFailureCount},
+            coverservice_success_count = #{coverServiceSuccessCount},
+            coverservice_failure_count = #{coverServiceFailureCount},
+            capacity_success_count = #{capacitySuccessCount},
+            capacity_failure_count = #{capacityFailureCount},
+            worker_success_count = #{workerSuccessCount},
+            worker_failure_count = #{workerFailureCount},
+            process_comment = #{processComment},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

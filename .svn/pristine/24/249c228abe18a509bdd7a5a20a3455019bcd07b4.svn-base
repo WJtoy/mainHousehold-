@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderFeeDao">
+
+	<!-- 对账后更新财务网点其他扣费 -->
+	<update id="updateFeeAfterCharge">
+		update
+			sd_order_fee
+		<set>
+			engineer_tax_fee = #{engineerTaxFee},
+			engineer_info_fee = #{engineerInfoFee},
+			engineer_total_charge = engineer_total_charge + #{engineerTaxFee} + #{engineerInfoFee},
+		</set>
+		where
+			order_id = #{orderId}
+			and quarter = #{quarter}
+	</update>
+
+	<!-- 更新好评费 -->
+	<update id="updatePraiseFee">
+		update
+			sd_order_fee
+		<set>
+			<if test="praiseFee != null">
+			praise_fee = #{praiseFee},
+			order_charge = order_charge + #{praiseFee},
+			</if>
+			<if test="engineerPraiseFee != null">
+				engineer_praise_fee = #{engineerPraiseFee},
+				engineer_total_charge = engineer_total_charge + #{engineerPraiseFee}
+			</if>
+		</set>
+		where
+			order_id = #{orderId}
+			and quarter = #{quarter}
+	</update>
+
+</mapper>

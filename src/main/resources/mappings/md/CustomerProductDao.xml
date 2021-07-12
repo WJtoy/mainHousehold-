@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.CustomerProductDao">
+
+
+   <!-- <sql id="customerProductColumns">
+       a.customer_id AS "customer.id",
+       a.product_id AS "product.id"
+    </sql>
+
+
+    <select id="findAllList" resultType="Customer">
+      select <include refid="customerProductColumns"/>
+      FROM md_customer_product a
+      order by a.product_id limit 20000
+    </select>
+
+    <select id="getByCustomer" resultType="CustomerProduct">
+        select <include refid="customerProductColumns"/>
+        FROM md_customer_product a
+        where a.customer_id=#{customer.id}
+        order by a.product_id limit 20000
+    </select>
+
+    <select id="getByProduct" resultType="CustomerProduct">
+        select <include refid="customerProductColumns"/>
+        FROM md_customer_product a
+        where a.product_id=#{product.id}
+        order by a.product_id limit 20000
+    </select>
+
+    &lt;!&ndash; 查询网点负责的产品ID清单 &ndash;&gt;
+    <select id="getProductIdsById" resultType="Product">
+        SELECT
+              m.product_id        AS "id"
+        FROM
+              md_customer_product m
+        WHERE
+              m.customer_id = #{id}
+        ORDER BY
+              m.product_id
+    </select>
+
+    &lt;!&ndash; 读取客户与产品分类的产品列表 &ndash;&gt;
+    <select id="getCustomerProductsByIds" parameterType="CustomerPrice" resultType="CustomerProduct">
+        SELECT
+            mcp.customer_id         AS "customer.id",
+            mc.code                 AS "customer.code",
+            mc.name                 AS "customer.name",
+            mcp.product_id          AS "product.id",
+            mp.name                 AS "product.name",
+            mp.sort                 AS "product.sort",
+            mp.product_category_id  AS "product.productCategory.id"
+        FROM
+            md_customer_product mcp
+        INNER JOIN
+            md_customer mc
+        ON  mcp.customer_id = mc.id
+        INNER JOIN
+            md_product mp
+        ON  mcp.product_id = mp.id
+        <where>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND mcp.customer_id = #{customer.id}
+            </if>
+            <if test="productCategory !=null and productCategory.id != null">
+                AND mp.product_category_id = #{productCategory.id}
+            </if>
+            <if test="product != null and product.id != null">
+                AND mcp.product_id = #{product.id}
+            </if>
+            <if test="customer != null and customer.sales != null and customer.sales.id != 0">
+                AND mc.sales_id = #{customer.sales.id}
+            </if>
+        </where>
+        ORDER BY
+            mc.name,
+            mp.sort
+    </select>
+
+    <select id ="getCustomerProductsByIdsWithOutCustomer" parameterType="CustomerPrice" resultType="CustomerProduct">
+        SELECT
+            mcp.customer_id         AS "customer.id",
+            mcp.product_id          AS "product.id",
+            mp.name                 AS "product.name",
+            mp.sort                 AS "product.sort",
+            mp.product_category_id  AS "product.productCategory.id"
+        FROM
+            md_customer_product mcp
+            INNER JOIN
+            md_product mp
+            ON  mcp.product_id = mp.id
+        <where>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND mcp.customer_id = #{customer.id}
+            </if>
+            <if test="productCategory !=null and productCategory.id != null">
+                AND mp.product_category_id = #{productCategory.id}
+            </if>
+            <if test="product != null and product.id != null">
+                AND mcp.product_id = #{product.id}
+            </if>
+        </where>
+        ORDER BY
+           mcp.customer_id,
+           mp.sort
+    </select>
+
+    <select id ="getCustomerProductsByIdsWithoutCustomerAndProduct" parameterType="CustomerPrice" resultType="CustomerProduct">
+        SELECT
+            mcp.customer_id         AS "customer.id",
+            mcp.product_id          AS "product.id"
+        FROM
+          md_customer_product mcp
+        <where>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND mcp.customer_id = #{customer.id}
+            </if>
+            <if test="product != null and product.id != null">
+                AND mcp.product_id = #{product.id}
+            </if>
+            <if test="productIds != null and productIds.size>0">
+                AND  mcp.product_id in
+                <foreach collection="productIds" item="id" index="index" open="(" close=")" separator=",">
+                    #{productIds[${index}]}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <insert id="save" useGeneratedKeys="true"  keyProperty="id">
+        <selectKey keyProperty="count" resultType="int" order="BEFORE">
+            select count(*) from md_customer_product where customer_id=#{customer.id} AND product_id = #{product.id}
+        </selectKey>
+        <if test="count==0">
+            insert into md_customer_product values(#{customer.id},#{product.id})
+        </if>
+        <if test="count > 0">
+            select <include refid="customerProductColumns"/> from md_customer_product where customer_id=#{customer.id} AND product_id = #{product.id}
+        </if>
+    </insert>
+
+    <update id="deleteByCustomer">
+        DELETE FROM md_customer_product
+        WHERE customer_id = #{customerId}
+    </update>
+
+    <insert id="assignProducts">
+        INSERT INTO
+            md_customer_product
+            (customer_id,product_id)
+        VALUES
+        <foreach collection="products" item="product" index="index"
+                 open="" close="" separator=",">
+            (#{id},#{product})
+        </foreach>
+    </insert>
+-->
+</mapper>

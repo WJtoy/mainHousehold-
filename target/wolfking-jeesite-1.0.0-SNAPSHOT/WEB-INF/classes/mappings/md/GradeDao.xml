@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.GradeDao">
+     <!--
+    <resultMap id="GradeResult" type="Grade" >
+        <id property="id" column="id"/>
+        <result property="name" column="name" />
+        <result property="point" column="point" />
+        <result property="dictType" column="dict_type" />
+        <result property="sort" column="sort" />
+        <result property="remarks" column="remarks" />
+        <result property="delFlag" column="del_flag" />
+        <collection property="itemList" ofType="GradeItem">
+            <id property="id" column="item_id"/>
+            <result property="remarks" column="item_remarks"/>
+            <result property="point" column="item_point"/>
+            <result property="dictValue" column="dict_value"/>
+            <result property="grade.id" column="md_grade_id"/>
+            <association property="grade"  column="md_grade_id" javaType="Grade" >
+                <id property="id" column="id" />
+                <result property="name" column="name"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <sql id="gradeColumns">
+        a.id,
+        a.name,
+        a.point,
+        a.dict_type,
+        a.sort,
+        a.create_by as "createBy.id",
+        a.create_date,
+        a.update_by as "updateBy.id",
+        a.update_date,
+        a.remarks,
+        a.del_flag
+    </sql>
+
+    <select id="get" resultType="Grade">
+        select <include refid="gradeColumns"/>
+        from md_grade a
+        where a.id = #{id}
+        and a.del_flag = 0
+    </select>
+
+    <select id="findAllList" resultType="Grade">
+        select <include refid="gradeColumns"/>
+        from md_grade a
+        where a.del_flag = 0
+        order by a.sort
+    </select>
+
+    <select id="findAllEnabledGradeAndItems" resultMap="GradeResult">
+        select
+        g.id,
+        g.name,
+        g.point,
+        g.dict_type,
+        g.sort,
+        g.remarks,
+        g.del_flag,
+        i.id as "item_id",
+        i.dict_value,
+        i.point as "item_point",
+        i.remarks as "item_remarks"
+        from md_grade g
+        inner join md_grade_item i on g.id = i.md_grade_id and i.del_flag = 0
+        where g.del_flag = 0
+        order by g.sort,i.point desc
+    </select>
+
+    <select id="findList" resultType="Grade">
+        select <include refid="gradeColumns"/>
+        from md_grade a
+        where a.del_flag = 0
+        <if test="name != null and name !=''.toString()">
+            and a.name like
+            <if test="dbName == 'oracle'.toString()">'%'||#{name}||'%'</if>
+            <if test="dbName == 'mssql'.toString()">'%'+#{name}+'%'</if>
+            <if test="dbName == 'mysql'.toString()">CONCAT('%', #{name}, '%')</if>
+        </if>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''.toString()">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.sort,a.name
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_grade(
+        name,
+        point,
+        dict_type,
+        sort,
+        create_by,
+        create_date,
+        update_by,
+        update_date,
+        remarks,
+        del_flag
+        ) VALUES (
+        #{name},
+        #{point},
+        #{dictType},
+        #{sort},
+        #{createBy.id},
+        now(),
+        #{updateBy.id},
+        now(),
+        #{remarks},
+        #{delFlag}
+        )
+    </insert>
+
+
+    <update id="update">
+        UPDATE md_grade
+        SET
+            name = #{name},
+            point = #{point},
+            dict_type = #{dictType},
+            sort = #{sort},
+            update_by = #{updateBy.id},
+            update_date = now(),
+            remarks = #{remarks},
+            del_flag = #{delFlag}
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="delete">
+        UPDATE md_grade SET
+        del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+    -->
+</mapper>

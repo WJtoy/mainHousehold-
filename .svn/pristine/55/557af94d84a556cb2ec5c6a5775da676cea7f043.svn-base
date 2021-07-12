@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.Log2Dao">
+
+	<!-- mark on 2020-7-11
+	<select id="findList" resultType="Log2">
+		SELECT 
+			a.id,
+			a.type,
+			a.create_by,
+			a.create_date,
+			a.remote_addr,
+			a.user_agent,
+			a.request_uri,
+			a.method,
+			a.params,
+			a.exception,
+			a.title,
+			a.quarter,
+			u.id AS "createBy.id",
+			u.name AS "createBy.name",
+			c.name AS "createBy.company.name",
+			o.name AS "createBy.office.name"
+		FROM sys_log2 a
+		JOIN sys_user u ON u.id = a.create_by
+		JOIN sys_office c ON c.id = u.company_id
+		JOIN sys_office o ON o.id = u.office_id
+		WHERE a.create_date BETWEEN #{beginDate} AND #{endDate}
+		<if test="title != null and title != ''.toString()">
+			AND a.title LIKE 
+					<if test="dbName == 'oracle'.toString()">'%'||#{title}||'%'</if>
+					<if test="dbName == 'mssql'.toString()">'%'+#{title}+'%'</if>
+					<if test="dbName == 'mysql'.toString()">CONCAT('%', #{title}, '%')</if>
+		</if>
+		<if test="createBy != null and createBy.id != null and createBy.id != ''.toString()">
+			AND a.create_by = #{createBy.id}
+		</if>
+		<if test="requestUri != null and requestUri != ''.toString()">
+			AND a.request_uri LIKE 
+					<if test="dbName == 'oracle'.toString()">'%'||#{requestUri}||'%'</if>
+					<if test="dbName == 'mssql'.toString()">'%'+#{requestUri}+'%'</if>
+					<if test="dbName == 'mysql'.toString()">CONCAT('%', #{requestUri}, '%')</if>
+		</if>
+		<if test="exception != null and exception != ''.toString()">
+			AND a.type = #{TYPE_EXCEPTION}
+		</if>
+		ORDER BY a.create_date DESC
+	</select>
+
+	<select id="getParamsForInsertEngineerCurrencyMessage" resultType="String">
+		SELECT params FROM sys_log2 WHERE QUARTER = '20194' AND request_uri = 'FI:CreateEngineerCurrencyReceiver' AND create_date >= '2019-11-06 15:13:31' ORDER BY id DESC LIMIT 50000;
+	</select>
+	
+	<insert id="insert" parameterType="Log2">
+		INSERT INTO sys_log2(
+			type,
+			title,
+			create_by, 
+			create_date, 
+			remote_addr, 
+			user_agent, 
+			request_uri, 
+			method, 
+			params, 
+			exception,
+			quarter
+		) VALUES (
+			#{type},
+			#{title}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{remoteAddr}, 
+			#{userAgent}, 
+			#{requestUri}, 
+			#{method}, 
+			#{params}, 
+			#{exception},
+			#{quarter}
+		)
+	</insert>
+
+	<select id="getParamsForCancelB2BOrderFailure" resultType="String">
+		SELECT params FROM sys_log2
+		WHERE QUARTER = '20201'
+				AND title = 'B2BCenterOrderService.saveFailureLog'
+				AND request_uri = 'cancelB2BOrder'
+		ORDER BY id
+		LIMIT 1000;
+	</select>
+	-->
+	
+</mapper>

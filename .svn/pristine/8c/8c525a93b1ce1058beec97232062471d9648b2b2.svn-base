@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.KefuOrderDao">
+
+    <resultMap id="OrderResult" type="Order" >
+        <id property="id" column="order_id"/>
+        <result property="orderNo" column="order_no" />
+        <result property="repeateNo" column="repeate_no" />
+        <result property="quarter" column="quarter" />
+        <association property="dataSource"  column="data_source" javaType="Dict" >
+            <result property="value" column="data_source"/>
+        </association>
+        <association property="orderCondition"  column="orderCondition" javaType="OrderCondition" >
+            <result property="subStatus" column="sub_status"/>
+            <result property="userName" column="user_name"/>
+            <result property="servicePhone" column="service_phone"/>
+            <result property="phone2" column="phone2"/>
+            <result property="serviceAddress" column="service_address"/>
+            <result property="trackingFlag" column="tracking_flag"/>
+            <result property="trackingDate" column="tracking_date"/>
+            <result property="trackingMessage" column="tracking_message"/>
+            <result property="appointmentDate" column="appointment_date"/>
+            <result property="feedbackId" column="feedback_id"/>
+            <result property="feedbackFlag" column="feedback_flag"/>
+            <result property="feedbackTitle" column="feedback_title"/>
+            <result property="finishPhotoQty" column="finish_photo_qty"/>
+            <result property="partsFlag" column="parts_flag"/>
+            <result property="appAbnormalyFlag" column="app_abnormaly_flag"/>
+            <!--<result property="isComplained" column="is_complained"/>  -->
+            <result property="operationAppFlag" column="operation_app_flag"/>
+            <result property="replyFlagCustomer" column="reply_flag_customer"/>
+            <result property="replyFlag" column="reply_flag"/>
+            <result property="replyFlagKefu" column="reply_flag_kefu"/>
+            <result property="gradeFlag" column="grade_flag"/>
+            <result property="createDate" column="create_date"/>
+            <association property="area"  column="area" javaType="Area" >
+                <id property="id" column="area_id"/>
+                <result property="name" column="area_name"/>
+            </association>
+            <association property="status"  column="status" javaType="Dict" >
+                <result property="value" column="status"/>
+            </association>
+            <association property="pendingType"  column="pendingType" javaType="Dict" >
+                <result property="value" column="pending_type"/>
+            </association>
+            <association property="servicePoint"  column="servicePoint" javaType="ServicePoint" >
+                <id property="id" column="servicepoint_id"/>
+            </association>
+            <association property="engineer"  column="engineer" javaType="User" >
+                <id property="id" column="engineer_id"/>
+            </association>
+            <association property="urgentLevel" column="urgent_level" javaType="UrgentLevel">
+                <id property="id" column="urgent_level_id"/>
+            </association>
+        </association>
+        <association property="orderStatus"  column="orderStatus" javaType="OrderStatus" >
+            <result property="acceptDate" column="accept_date"/>
+            <result property="planDate" column="plan_date"/>
+            <result property="complainFlag" column="complain_flag"/>
+        </association>
+        <association property="b2bShop"  column="order_b2bShop" javaType="B2bCustomerMap" >
+            <result property="shopId" column="shop_id"/>
+        </association>
+        <association property="orderType"  column="order_type" javaType="Dict" >
+            <result property="label" column="order_type_label"/>
+            <result property="value" column="order_type"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="OrderFinishResult" type="Order" >
+        <id property="id" column="order_id"/>
+        <result property="orderNo" column="order_no" />
+        <result property="repeateNo" column="repeate_no" />
+        <result property="quarter" column="quarter" />
+        <association property="dataSource"  column="data_source" javaType="Dict" >
+            <result property="value" column="data_source"/>
+        </association>
+        <association property="orderCondition"  column="orderCondition" javaType="OrderCondition" >
+            <result property="subStatus" column="sub_status"/>
+            <result property="userName" column="user_name"/>
+            <result property="servicePhone" column="service_phone"/>
+            <result property="phone2" column="phone2"/>
+            <result property="serviceAddress" column="service_address"/>
+            <result property="trackingFlag" column="tracking_flag"/>
+            <result property="trackingDate" column="tracking_date"/>
+            <result property="trackingMessage" column="tracking_message"/>
+            <result property="appointmentDate" column="appointment_date"/>
+            <result property="feedbackId" column="feedback_id"/>
+            <result property="feedbackFlag" column="feedback_flag"/>
+            <result property="feedbackTitle" column="feedback_title"/>
+            <result property="finishPhotoQty" column="finish_photo_qty"/>
+            <result property="partsFlag" column="parts_flag"/>
+            <result property="appAbnormalyFlag" column="app_abnormaly_flag"/>
+         <!-- <result property="isComplained" column="is_complained"/> -->
+            <result property="operationAppFlag" column="operation_app_flag"/>
+            <result property="replyFlagCustomer" column="reply_flag_customer"/>
+            <result property="replyFlag" column="reply_flag"/>
+            <result property="replyFlagKefu" column="reply_flag_kefu"/>
+            <result property="gradeFlag" column="grade_flag"/>
+            <result property="chargeFlag" column="charge_flag"/>
+            <result property="createDate" column="create_date"/>
+            <result property="pendingFlag" column="pending_flag"/>
+            <result property="rushOrderFlag" column="rush_order_flag"/>
+            <association property="area"  column="area" javaType="Area" >
+                <id property="id" column="area_id"/>
+                <result property="name" column="area_name"/>
+            </association>
+            <association property="status"  column="status" javaType="Dict" >
+                <result property="value" column="status"/>
+            </association>
+            <association property="pendingType"  column="pendingType" javaType="Dict" >
+                <result property="value" column="pending_type"/>
+            </association>
+            <association property="servicePoint"  column="servicePoint" javaType="ServicePoint" >
+                <id property="id" column="servicepoint_id"/>
+            </association>
+            <association property="engineer"  column="engineer" javaType="User" >
+                <id property="id" column="engineer_id"/>
+            </association>
+            <association property="urgentLevel" column="urgent_level" javaType="UrgentLevel">
+                <id property="id" column="urgent_level_id"/>
+            </association>
+        </association>
+        <association property="orderStatus"  column="orderStatus" javaType="OrderStatus" >
+            <result property="acceptDate" column="accept_date"/>
+            <result property="planDate" column="plan_date"/>
+            <result property="engineerInvoiceDate" column="engineer_invoice_date"/>
+        </association>
+        <association property="b2bShop"  column="order_b2bShop" javaType="B2bCustomerMap" >
+            <result property="shopId" column="shop_id"/>
+        </association>
+        <association property="orderType"  column="order_type" javaType="Dict" >
+            <result property="label" column="order_type_label"/>
+            <result property="value" column="order_type"/>
+        </association>
+    </resultMap>
+
+    <!-- 用户负责区域 -->
+    <sql id="RegionFilter">
+        <choose>
+            <when test="regionFilterType == 'province'.toString() and provinceList != null and provinceList.size > 0">
+                <choose>
+                    <when test="provinceList.size == 1">
+                        and soc.province_id = #{provinceList[0]}
+                    </when>
+                    <otherwise>
+                        AND soc.province_id IN <foreach collection="provinceList" item="provinceId" index="index" open="(" close=")" separator=",">${provinceId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'city'.toString() and cityList != null and cityList.size > 0">
+                <choose>
+                    <when test="cityList.size == 1">
+                        and soc.city_id = #{cityList[0]}
+                    </when>
+                    <otherwise>
+                        AND soc.city_id IN <foreach collection="cityList" item="cityId" index="index" open="(" close=")" separator=",">${cityId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'area'.toString() and areaList != null and areaList.size > 0">
+                <choose>
+                    <when test="areaList.size == 1">
+                        and soc.area_id = #{areaList[0]}
+                    </when>
+                    <otherwise>
+                        AND soc.area_id IN <foreach collection="areaList" item="areaId" index="index" open="(" close=")" separator=",">${areaId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+        </choose>
+
+    </sql>
+    <!-- 用户负责所有区域 -->
+    <sql id="allUserRegion">
+        <if test="regionFilterCount > 1">
+            <trim prefix="AND" prefixOverrides="AND|OR">
+                AND (
+                <if test="areaList != null">
+                    <choose>
+                        <when test="areaList.size == 1">
+                            o.area_id = #{areaList[0]}
+                        </when>
+                        <otherwise>
+                            o.area_id IN
+                            <foreach collection="areaList" item="areaItem" index="index" open="(" close=")"
+                                     separator=",">${areaItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="cityList != null">
+                    <choose>
+                        <when test="cityList.size == 1">
+                            or o.city_id = #{cityList[0]}
+                        </when>
+                        <otherwise>
+                            or o.city_id IN
+                            <foreach collection="cityList" item="cityItem" index="index" open="(" close=")"
+                                     separator=",">${cityItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="provinceList != null">
+                    <choose>
+                        <when test="provinceList.size == 1">
+                            or o.province_id = #{provinceList[0]}
+                        </when>
+                        <otherwise>
+                            or o.province_id IN
+                            <foreach collection="provinceList" item="provinceItem" index="index" open="(" close=")"
+                                     separator=",">${provinceItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                )
+            </trim>
+        </if>
+    </sql>
+    <sql id="dataSourceFilter">
+        <choose>
+            <when test="searchDataSources != null and searchDataSources.size>0">
+                and so.data_source IN <foreach collection="searchDataSources" item="dataSource" index="index" open="(" close=")" separator=",">#{searchDataSources[${index}]}</foreach>
+            </when>
+            <when test="exclueDataSources != null and exclueDataSources.size>0">
+                and so.data_source not IN <foreach collection="exclueDataSources" item="dataSource" index="index" open="(" close=")" separator=",">#{exclueDataSources[${index}]}</foreach>
+            </when>
+        </choose>
+    </sql>
+    <!-- 可突击订单 -->
+    <sql id="rushFilter">
+        <if test="rushType != null">
+            and soc.can_rush = #{rushType}
+        </if>
+    </sql>
+    
+
+    <!-- 待审核退单列表 -->
+    <sql id="returnApproveSql">
+        SELECT
+        soc.order_id              AS "id",
+        soc.quarter,
+        soc.order_no,
+        soc.order_service_type    AS "orderCondition.orderServiceType",
+        soc.create_date           AS "orderCondition.createDate",
+        sos.cancel_apply_date     AS "orderStatus.cancelApplyDate",
+        sos.cancel_apply_by       AS "orderStatus.cancelApplyBy.id",
+        ''                        AS "orderStatus.cancelApplyBy.name",
+        sos.cancel_responsible    AS "orderStatus.cancelResponsible.value",
+        sos.cancel_apply_comment  AS "orderStatus.cancelApplyComment",
+        soc.user_name             AS "orderCondition.userName",
+        soc.phone1                AS "orderCondition.phone1",
+        soc.phone2                AS "orderCondition.phone2",
+        soc.area_id               AS "orderCondition.area.id",
+        soc.area_name             AS "orderCondition.area.name",
+        soc.address               AS "orderCondition.address",
+        soc.status                AS "orderCondition.status.value",
+        so.description,
+        so.data_source            AS "dataSource.value",
+        sof.expect_charge         AS "orderFee.expectCharge",
+        sof.blocked_charge        AS "orderFee.blockedCharge",
+        soc.order_id
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="returnBy!=null and returnBy!=''.toString() ">
+            LEFT JOIN sys_user suc ON suc.id = sos.cancel_apply_by
+        </if>
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            <choose>
+                <when test="customerType != null and customerType == 1">
+                    inner join sys_user_customer uc
+                    on uc.user_id = #{createBy.id} and soc.customer_id = uc.customer_id
+                </when>
+                <when test="customerType != null">
+                    inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = soc.customer_id
+                </when>
+            </choose>
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    AND soc.status = 60
+                    <!-- 数据源筛选 -->
+                    <include refid="dataSourceFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <choose>
+                        <when test="beginDate != null and endDate != null">
+                            <![CDATA[ AND sos.cancel_apply_date between #{beginDate} and #{endDate}]]>
+                        </when>
+                        <when test="beginDate != null">
+                            <![CDATA[ AND sos.cancel_apply_date >= #{beginDate} ]]>
+                        </when>
+                        <when test="endDate != null">
+                            <![CDATA[ AND sos.cancel_apply_date <= #{endDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    AND soc.status = 60
+                    <!-- 数据源筛选 -->
+                    <include refid="dataSourceFilter" />
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <if test="returnBy!=null and returnBy!=''.toString() ">
+                        AND suc.name LIKE CONCAT(#{returnBy}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+            <!-- 可突击订单 -->
+            <include refid="rushFilter"/>
+        </where>
+    </sql>
+
+    <select id="getOrderReturnApproveList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="returnApproveSql" />
+                ORDER BY soc.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="returnApproveSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="returnApproveSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="returnApproveSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        ORDER BY u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="returnApproveSql"/>
+                        order by soc.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 新迎燕的待审核退单列表 合并到 getOrderReturnApproveList -->
+
+    <!-- 审单异常列表 -->
+    <sql id="exceptionHandlingSql">
+        SELECT
+            soc.order_id                  AS "id",
+            soc.quarter,
+            soc.order_no,
+            so.data_source                AS "dataSource.value",
+            soc.customer_id               AS "orderCondition.customer.id",
+            soc.kefu_id                   AS "orderCondition.kefu.id",
+            ''                            AS "orderCondition.kefu.name",
+            soc.service_times             AS "orderCondition.serviceTimes",
+            soc.status                    AS "orderCondition.status.value",
+            soc.close_date                AS "orderCondition.closeDate",
+            sof.engineer_service_charge   AS "orderFee.engineerServiceCharge",
+            sof.engineer_express_charge   AS "orderFee.engineerExpressCharge",
+            sof.engineer_travel_charge    AS "orderFee.engineerTravelCharge",
+            sof.engineer_material_charge  AS "orderFee.engineerMaterialCharge",
+            sof.engineer_other_charge     AS "orderFee.engineerOtherCharge",
+            sof.engineer_total_charge     AS "orderFee.engineerTotalCharge",
+            soc.close_date
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id > 1">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            <choose>
+                <when test="customerType != null and customerType == 1">
+                    inner join sys_user_customer uc
+                    on uc.user_id = #{createBy.id} and soc.customer_id = uc.customer_id
+                </when>
+                <when test="customerType != null">
+                    inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = soc.customer_id
+                </when>
+            </choose>
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{servicePhone}
+                    </if>
+                    AND soc.pending_flag = 1
+                    <!-- AND soc.status = 80 -->
+                    AND soc.grade_flag > 0
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    soc.pending_flag = 1
+                    AND soc.grade_flag > 0
+                    <choose>
+                        <when test="completeBegin != null and completeEnd != null">
+                            AND soc.close_date between #{completeBegin} and #{completeEnd}
+                        </when>
+                        <when test="completeBegin != null ">
+                            <![CDATA[ AND soc.close_date >= #{completeBegin} ]]>
+                        </when>
+                        <when test="completeEnd != null ">
+                            <![CDATA[ AND soc.close_date <= #{completeEnd} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="productQty != null and productQty>0">
+                        AND soc.total_qty = #{productQty}
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                    </if>
+                    <!-- 产品类别 -->
+                    <if test="category != null and category.id !=null ">
+                        AND soc.product_category_id = #{category.id}
+                    </if>
+                    <!-- 产品 -->
+                    <if test="productIds != null and productIds.size > 0">
+                        AND
+                        <foreach collection="productIds" item="productId" index="index" open="(" close=")" separator="or">
+                            locate(',${productId},',soc.product_ids)>0
+                        </foreach>
+                    </if>
+                </otherwise>
+            </choose>
+            <!-- 可突击订单 -->
+            <include refid="rushFilter"/>
+        </where>
+    </sql>
+
+    <select id="getExceptionHandlingList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="exceptionHandlingSql" />
+                ORDER BY soc.close_date
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="exceptionHandlingSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="exceptionHandlingSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="exceptionHandlingSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        ORDER BY u.close_date
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="exceptionHandlingSql"/>
+                        order by soc.close_date
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取工单的上门服务项 -->
+    <select id="getOrderDetailByOrderIds" resultType="OrderDetail">
+        SELECT
+              sod.id,
+              sod.order_id,
+              sod.service_times,
+              sod.service_type_id           AS "serviceType.id",
+              sod.qty,
+              sod.product_id                AS "product.id",
+              sod.servicepoint_id           AS "servicePoint.id",
+              sod.engineer_id               AS "engineer.id",
+              sod.engineer_service_charge,
+              sod.engineer_express_charge,
+              sod.engineer_travel_charge,
+              sod.engineer_material_charge,
+              sod.engineer_other_charge
+        FROM  sd_orderdetail sod
+        <where>
+            sod.quarter = #{quarter}
+            AND sod.del_flag = 0
+            <choose>
+                <when test="orderIds.size == 1">
+                    AND sod.order_id = #{orderIds[0]}
+                </when>
+                <otherwise>
+                    AND sod.order_id IN
+                    <foreach item="orderId" index="index" collection="orderIds" open="(" separator="," close=")">
+                        #{orderId}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+
+</mapper>

@@ -1,0 +1,142 @@
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<!DOCTYPE html>
+<head>
+<title>客户充值(微服务方式)</title>
+<meta name="decorator" content="default" />
+<%@ include file="/WEB-INF/views/include/head.jsp" %>
+<script type="text/javascript">
+    top.layer.closeAll();
+    var clickTag = 0;
+	$(document).ready(function(){
+		// 上线前，最小值调整为:500
+		$("#inputForm").validate({
+			rules: {
+				amount:{ min: 500, max : 10000000}
+			},
+            messages: {
+                amount : { required: "请输入充值金额", min: "充值最小金额不能低于500.", max: "充值最大金额不能高于10000000."}
+            },
+			submitHandler : function(form)
+			{
+                if(clickTag == 1){
+                    return false;
+                }
+                clickTag = 1;
+                var $btnSubmit = $("#btnSubmit");
+                $btnSubmit.attr('disabled', 'disabled');
+				// loading('正在提交，请稍等...');
+				form.submit();
+			},
+			errorContainer : "#messageBox",
+			errorPlacement : function(error, element)
+			{
+				$("#messageBox").text("输入有误，请先更正。");
+				if (element.is(":checkbox")
+						|| element.is(":radio")
+						|| element.parent().is(
+								".input-append"))
+				{
+					error.appendTo(element.parent()
+							.parent());
+				} else
+				{
+					error.insertAfter(element);
+				}
+			}
+		});
+	});
+
+    $(function () {
+        $("input:radio[name=charge]").change(function () {
+            var res= $(this).val();
+            if(res=="0")
+            {
+                $("#customAmountDiv").show();
+                $("#amount").val("500");
+                $("#amount").select().focus();
+            }else
+            {
+                $("#customAmountDiv").hide();
+                $("#amount").val(res);
+            }
+        });
+    });
+</script>
+	<style type="text/css">
+		body{ text-align:center}
+		.divcss5{margin:0 auto;padding:10px 10px;width:700px;}
+		.form-horizontal .form-actions {padding-left: 0px !important;}
+	</style>
+</head>
+<body>
+	<br />
+	<div class="divcss5">
+		<sys:message content="${message}"/>
+		<form:form id="inputForm" modelAttribute="customerCurrency" action="${ctx}/fi/recharge/customer/submitForm" method="post" class="form-horizontal">
+			<form:hidden path="id" htmlEscape="true" />
+			<form:hidden path="customer.id" htmlEscape="true" />
+			<div class="control-group">
+				<label class="control-label">客户:</label>
+				<div class="controls">
+					<form:input path="customer.name" readonly="true" cssStyle="width:390px;"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">充值金额:</label>
+				<div class="controls">
+<%--                    <input name="charge" id="charge1" type="radio" value="0.10" checked="checked"><label for="charge1">0.10</label>--%>
+					<input name="charge" id="charge2" type="radio" value="500" checked="checked"><label for="charge2">500</label>
+					<input name="charge" id="charge3" type="radio" value="1000"><label for="charge3">1000</label>
+					<input name="charge" id="charge4" type="radio" value="2000"><label for="charge4">2000</label>
+					<input name="charge" id="charge5" type="radio" value="5000"><label for="charge5">5000</label>
+					<input name="charge" id="charge6" type="radio" value="10000"><label for="charge6">10000</label>
+					<input name="charge" id="charge7" type="radio" value="0"><label for="charge7">自定义金额</label>
+				</div>
+			</div>
+			<div id="customAmountDiv" style="display: none;" class="control-group">
+				<label class="control-label">自定义金额:</label>
+				<div class="controls">
+					<input id="amount" name="amount" type="text" value="500" htmlEscape="false"  maxlength="10" class="required number"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">备注:</label>
+				<div class="controls">
+					<textarea style="text-align: left;width:390px;" id="remarks" name="remarks"
+						htmlEscape="false" rows="3" maxlength="200" class="input-xlarge" ></textarea>
+				</div>
+			</div>
+			<div class="control-group" style="margin-left: -20px;">
+				<label class="control-label"></label>
+				<div class="controls">
+                    <input checked="checked" id="bc_zfb" type="radio" name="BC" value="ZFB" />
+                    <label for="bc_zfb"><img alt="ALipay" src="${ctxStatic}/images/bank/zhifubao.png" /></label>
+
+                    <input type="radio" id="bc_ccb" name="BC" value="CCB" />
+                    <label for="bc_ccb"><img alt="CCB" src="${ctxStatic}/images/bank/95533.png" /> </label>
+
+                    <input type="radio" id="bc_icbcb2c" name="BC" value="ICBCB2C" />
+                    <label for="bc_icbcb2c"><img alt="ICBC" src="${ctxStatic}/images/bank/95588.png" /> </label>
+				</div>
+			</div>
+			<div class="control-group" style="margin-left: -20px;">
+				<label class="control-label"></label>
+				<div class="controls">
+				    <input type="radio" id="bc_abc" name="BC" value="ABC" />
+                    <label for="bc_abc"><img alt="ABC" src="${ctxStatic}/images/bank/95599.png" /> </label>
+                    <input type="radio" id="bc_bocb2c" name="BC" value="BOCB2C" />
+                    <label for="bc_bocb2c"><img alt="BOC" src="${ctxStatic}/images/bank/95566.png" /> </label>
+                    <input type="radio" id="bc_cmb" name="BC" value="CMB" />
+                    <label for="bc_cmb"><img alt="CMB" src="${ctxStatic}/images/bank/95555.png" /></label>
+				</div>
+			</div>
+			<c:if test="${canRecharge != null && canRecharge == true}">
+			<div class="form-actions">
+				<input id="btnSubmit" class="btn btn-primary" type="submit" value="充值" />&nbsp;
+			</div>
+			</c:if>
+		</form:form>
+	</div>
+</body>
+</html>

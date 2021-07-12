@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.CustomerCurrencyDao">
+	<sql id="customerCurrencyColumns">
+		a.id,
+		a.customer_id as "customer.id",
+		a.currency_type,
+		a.currency_no,
+		a.before_balance,
+		a.balance,
+		a.amount,
+		a.payment_type,
+		a.action_type,
+		a.create_by,
+		a.create_date,
+		a.update_by,
+		a.update_date,
+		a.remarks,
+		a.quarter
+	</sql>
+
+	<select id="get" resultType="CustomerCurrency">
+		select <include refid="customerCurrencyColumns"/>
+		from fi_customercurrency a
+		where a.id =#{id}
+	</select>
+
+	<select id="getByCurrencyNo" resultType="CustomerCurrency">
+		select <include refid="customerCurrencyColumns"/>
+		from fi_customercurrency a
+		where a.currency_no = #{currencyNo}
+		<if test="actionType != null">
+			and a.action_type = #{actionType}
+		</if>
+	</select>
+
+	<select id="checkRepeate" resultType="java.lang.Long">
+		/*#mycat:db_type=master*/
+		select
+			id
+		from fi_customercurrency
+		where
+			currency_no = #{currencyNo}
+			<if test="actionTypes != null and actionTypes.length>0">
+				<choose>
+					<when test="actionTypes.length == 1">
+						and action_type = #{actionTypes[0]}
+					</when>
+					<otherwise>
+						and action_type IN
+						<foreach item="actionType" index="index" collection="actionTypes" open="(" separator="," close=")">
+							#{actionType}
+						</foreach>
+					</otherwise>
+				</choose>
+			</if>
+		limit 1
+	</select>
+
+	<select id="getByOrderNoAndActionTypes" resultType="CustomerCurrency">
+		select <include refid="customerCurrencyColumns"/>
+		from fi_customercurrency a
+		where a.currency_no = #{orderNo}
+		<if test="actionTypes != null">
+            <choose>
+                <when test="actionTypes.length == 1">
+                    and a.action_type = #{actionTypes[0]}
+                </when>
+                <otherwise>
+                    and a.action_type IN
+                    <foreach item="actionType" index="index" collection="actionTypes" open="(" separator="," close=")">
+                        #{actionType}
+                    </foreach>
+                </otherwise>
+            </choose>
+		</if>
+	</select>
+
+	<select id="getLastBalance" parameterType="Map" resultType="CustomerCurrency">
+		select <include refid="customerCurrencyColumns"/>
+		from fi_customercurrency a
+		<where>
+			<![CDATA[ action_type<60 or action_type = 90  ]]>        <!-- TODO: 新增线下充值 90 -->
+			<if test="currentDate!=null">
+				<![CDATA[ AND create_date<#{currentDate}]]>
+			</if>
+			<if test="customerId != null ">
+				AND customer_id=#{customerId}
+			</if>
+		</where>
+		ORDER BY a.id DESC
+		LIMIT 1
+	</select>
+
+	<select id="findCurrencyList"  parameterType="CustomerCurrency" resultType="CustomerCurrency">
+		SELECT
+			a.id,
+			a.customer_id,
+			a.customer_id 		AS "customer.id",
+			<!--
+			改成微服务调用了
+			c.name 				AS "customer.name",
+			0        			AS "customerFinance.balance",
+			c.payment_type		AS "customerFinance.paymentType.value",
+			-->
+			a.currency_type,
+			a.currency_no,
+			a.before_balance,
+			a.balance,
+			a.amount,
+			a.payment_type,
+			a.action_type,
+			a.create_date,
+			a.update_date,
+			a.remarks
+		FROM
+			fi_customercurrency a
+		<!--
+		改成微服务了
+		LEFT JOIN
+			md_customer c
+		ON 	a.customer_id=c.id
+		-->
+		<where>
+			<choose>
+				<when test="quarters != null and quarters.size == 1">
+					AND a.quarter = #{quarters[0]}
+				</when>
+				<when test="quarters != null and quarters.size > 1">
+					AND a.quarter in
+					<foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+						#{quarters[${index}]}
+					</foreach>
+				</when>
+				<otherwise></otherwise>
+			</choose>
+			<if test="createDate != null and updateDate!=null ">
+				<![CDATA[ AND a.create_date>=#{createDate}
+                AND a.create_date<#{updateDate}]]>
+			</if>
+			<if test="customer != null and customer.id!= null and customer.id >0">
+				AND a.customer_id=#{customer.id}
+			</if>
+			<if test="currencyNo!= null and currencyNo!='' ">
+				AND a.currency_no=#{currencyNo}
+			</if>
+			<if test="currencyType!= null ">
+				AND a.currency_type=#{currencyType}
+			</if>
+			<if test="actionType != null">
+				<choose>
+					<when test="actionType == 1020">             <!-- TODO: 新增线下充值 90 -->
+						AND (a.action_type = 10 or a.action_type = 20 or a.action_type = 90)
+					</when>
+					<when test="actionType == 3040">
+						AND (a.action_type = 30 or a.action_type = 40)
+					</when>
+					<otherwise>
+						AND a.action_type=#{actionType}
+					</otherwise>
+				</choose>
+			</if>
+			<!--
+			改成微服务了
+			<if test="customer != null and customer.sales != null and customer.sales.id != 0">
+				AND c.sales_id = #{customer.sales.id}
+			</if>
+			-->
+			<![CDATA[ AND (a.action_type <60 OR a.action_type>70) ]]>
+		</where>
+		ORDER BY
+			customer_id,a.create_date DESC
+	</select>
+
+	<!-- 获取客户的冻结流水信息 -->
+	<select id="getCustomerBlockAmountList" parameterType="Map" resultType="CustomerCurrency">
+		SELECT  fcc.id,
+				fcc.customer_id AS 'customer.id',
+				fcc.currency_type,
+				fcc.currency_no,
+				fcc.before_balance,
+				fcc.balance,
+				fcc.amount,
+				fcc.payment_type,
+				fcc.action_type,
+				fcc.create_date,
+				fcc.update_date,
+				fcc.remarks,
+				0 AS 'customerFinance.blockAmount'
+		FROM 	fi_customercurrency fcc
+				<!--LEFT JOIN md_customer mc on mc.id = fcc.customer_id -->
+	  	<where>
+				fcc.action_type = 70
+				AND fcc.create_date >= #{beginDate} AND <![CDATA[ fcc.create_date < #{endDate} ]]>
+			<if test="customerId != null">
+				AND fcc.customer_id = #{customerId}
+			</if>
+			<if test="currencyType != null">
+				AND fcc.currency_type = #{currencyType}
+			</if>
+			<if test="currencyNo != null and currencyNo != ''">
+				AND fcc.currency_no = #{currencyNo}
+			</if>
+			<!--
+			<if test="salesId != null">
+				AND mc.sales_id = #{salesId}
+			</if>
+			-->
+		</where>
+		ORDER BY fcc.id DESC
+	</select>
+
+	
+	<insert id="insert">
+		INSERT INTO fi_customercurrency(
+			id,
+			customer_id,
+			currency_type,
+			currency_no,
+			before_balance,
+			balance,
+			amount,
+			payment_type,
+			action_type,
+			create_by, 
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			quarter
+		) VALUES (
+			#{id},
+			#{customer.id},
+			#{currencyType},
+			#{currencyNo},
+			#{beforeBalance},
+			#{balance},
+			#{amount},
+			#{paymentType},
+			#{actionType},
+			#{createBy.id},
+			#{createDate},
+			<choose>
+				<when test="updateBy==null || updateBy.id == null">
+					#{createBy.id},
+				</when>
+				<otherwise>
+					#{updateBy.id},
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="updateDate==null">
+					null,
+				</when>
+				<otherwise>
+					#{updateDate},
+				</otherwise>
+			</choose>
+			#{remarks},
+			#{quarter}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_customercurrency SET
+			update_by = #{updateBy},
+			update_date = #{updateDate}, 
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+
+	<update id="updateActionType">
+		update fi_customercurrency
+		set before_balance= #{beforeBalance},
+			balance =#{balance},
+			amount=#{amount},
+			action_type=#{actionType},
+			update_by=#{updateBy.id},
+			update_date=now()
+		  where id=#{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE fi_customercurrency SET
+			del_flag = #{DEL_FLAG_DELETE},
+			update_by = #{updateBy},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+</mapper>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerCurrencyDepositDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_engineercurrency_deposit(
+			id,
+			service_point_id,
+			currency_type,
+			currency_no,
+			before_balance,
+			balance,
+			amount,
+			payment_type,
+			action_type,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			quarter
+		) VALUES (
+			#{id},
+			#{servicePoint.id},
+			#{currencyType},
+			#{currencyNo},
+			#{beforeBalance},
+			#{balance},
+			#{amount},
+			#{paymentType},
+			#{actionType},
+			#{createBy.id},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{remarks},
+			#{quarter}
+		)
+	</insert>
+
+	<!-- 查询网点质保金明细 -->
+	<select id="findCurrencyList"  parameterType="EngineerDepositVM" resultType="EngineerCurrencyDeposit">
+		SELECT
+			a.id,
+			a.service_point_id,
+			a.service_point_id 		AS "servicePoint.id",
+			a.currency_type,
+			a.currency_no,
+			a.before_balance,
+			a.balance,
+			a.amount,
+			a.payment_type,
+			a.action_type,
+			a.create_date,
+			a.update_date,
+			a.remarks
+		FROM
+			fi_engineercurrency_deposit a
+		<where>
+			<choose>
+				<when test="quarters != null and quarters.size == 1">
+					AND a.quarter = #{quarters[0]}
+				</when>
+				<when test="quarters != null and quarters.size > 1">
+					AND a.quarter in
+					<foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+						#{quarters[${index}]}
+					</foreach>
+				</when>
+				<otherwise></otherwise>
+			</choose>
+			<if test="startDate != null and endDate != null ">
+				AND a.create_date between #{startDate} AND #{endDate}
+			</if>
+			<if test="servicePointId != null and servicePointId >0">
+				AND a.service_point_id = #{servicePointId}
+			</if>
+			<if test="currencyNo != null and currencyNo != '' ">
+				AND a.currency_no= #{currencyNo}
+			</if>
+			<if test="currencyType != null ">
+				AND a.currency_type = #{currencyType}
+			</if>
+			<if test="actionType != null and actionType > 0">
+				AND a.action_type = #{actionType}
+			</if>
+		</where>
+		ORDER BY
+			service_point_id,a.create_date DESC
+	</select>
+
+	<!-- 从主库按相关充值单号查询流水id -->
+	<select id="getCurrencyIdByCurrencyNoFromMaster" resultType="java.lang.Long">
+		/*#mycat:db_type=master*/
+		select id
+		from
+			fi_engineercurrency_deposit
+		where
+			currency_no = #{currencyNo}
+		limit 1
+	</select>
+
+</mapper>

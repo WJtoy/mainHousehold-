@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.mq.dao.OrderCreateMessageDao">
+
+    <resultMap id="OrderConditionMap" type="OrderCondition">
+        <id property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no" />
+        <result property="quarter" column="quarter" />
+        <result property="createDate" column="create_date" />
+        <result property="orderCharge" column="expect_charge" />
+        <association property="createBy"  column="order_create_by" javaType="User" >
+            <id property="id" column="create_by" />
+        </association>
+        <association property="kefu"  column="order_kefu" javaType="User" >
+            <id property="id" column="kefu_id"/>
+            <result property="name" column="kefu_name"/>
+        </association>
+        <association property="area"  column="order_area" javaType="Area" >
+            <id property="id" column="area_id"/>
+            <result property="name" column="area_name"/>
+            <association property="parent"  column="city" javaType="Area" >
+                <id property="id" column="city_id"/>
+                <result property="name" column="city_name"/>
+                <association property="parent"  column="province" javaType="Area" >
+                    <id property="id" column="province_id"/>
+                    <result property="name" column="province_name"/>
+                </association>
+            </association>
+        </association>
+        <association property="customer" column="order_customer" javaType="Customer" >
+            <id property="id" column="customer_id" />
+            <result property="code" column="customer_code" />
+            <result property="name" column="customer_name" />
+            <result property="contractDate" column="contract_date" />
+            <result property="remarks" column="customer_remarks" />
+            <association property="finance" column="customer_finance" javaType="CustomerFinance">
+                <association property="paymentType" column="finance_paymentType" javaType="Dict">
+                    <result property="value" column="payment_type" />
+                </association>
+            </association>
+            <association property="sales"  column="order_customer_sales" javaType="User" >
+                <id property="id" column="sales_id" />
+                <result property="name" column="sales_name" />
+            </association>
+        </association>
+    </resultMap>
+
+    <sql id="messageColumns">
+        a.id,
+        a.order_id,
+        a.quarter,
+        a.type,
+        a.retry_times,
+        a.status,
+        a.trigger_by as "trigger_by.id",
+        '' as "trigger_by.name",
+        a.trigger_date,
+        a.retry_times,
+        a.remarks,
+        a.json,
+        a.create_date,
+        a.update_date
+    </sql>
+
+    <!-- 待重送记录 -->
+    <select id="getResendList" resultType="com.wolfking.jeesite.modules.mq.entity.OrderCreateBody">
+        select <include refid="messageColumns" />
+        from mq_order_create a
+        <where>
+            <if test="logType != null">
+                and a.type = #{logType}
+            </if>
+            and a.status =40
+            <![CDATA[ AND a.retry_times < 3 ]]>
+        </where>
+        order by a.id
+        <if test="num != null and num>0">
+            limit #{num}
+        </if>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO mq_order_create
+        (
+         id,order_id,quarter,type,retry_times,status,trigger_by,trigger_date,remarks
+         ,json,create_date,update_date
+        )
+        VALUES
+        (
+         #{id},#{orderId},#{quarter},#{type},#{retryTimes},#{status},#{triggerBy.id},#{triggerDate},#{remarks}
+         ,#{json},#{createDate},#{updateDate}
+        )
+    </insert>
+
+    <update id="update">
+        update mq_order_create
+        set
+          <if test="retryTimes != null and retryTimes>0">
+          retry_times = retry_times + 1,
+          </if>
+          status = #{status},
+          remarks = #{remarks},
+          update_date = #{updateDate}
+        where id = #{id}
+    </update>
+
+    <select id="get" resultType="com.wolfking.jeesite.modules.mq.entity.OrderCreateBody">
+        SELECT
+        <include refid="messageColumns"/>
+        FROM
+          mq_order_create a
+        WHERE
+          a.id = #{id}
+          AND a.status = 40
+        limit 1
+    </select>
+
+    <select id="getByOrderId" resultType="com.wolfking.jeesite.modules.mq.entity.OrderCreateBody">
+        SELECT
+        <include refid="messageColumns"/>
+        FROM
+          mq_order_create a
+        <where>
+          <if test="quarter != null and quarter != ''.trim()">
+              a.quarter = #{quarter}
+          </if>
+          AND a.order_id = #{orderId}
+          AND a.status = 40
+        </where>
+        limit 1
+    </select>
+
+
+    <!-- 报表重新统计 --> <!-- PaymentType切换为微服务 -->
+    <!-- mark on 2020-2-11
+    <select id="getReportResendMessage" resultMap="OrderConditionMap">
+        select
+        o.order_id,
+        o.quarter,
+        o.order_no,
+        o.create_date,
+        o.create_by,
+        o.kefu_id,
+        '' as kefu_name,
+        f.expect_charge,
+        o.area_id,
+        x.name as area_name,
+        c.id as city_id,
+        c.name as city_name,
+        s.id as province_id,
+        s.name as province_name,
+        o.customer_id,
+        cu.code as customer_code,
+        cu.name as customer_name,
+        cu.contract_date,
+        cu.sales_id,
+        '' as sales_name,
+        cf.payment_type
+        from sd_order_condition o
+        inner join sd_order_fee f on o.order_id = f.order_id
+        inner join sys_area x on o.area_id = x.id
+        inner join sys_area c on x.parent_id = c.id
+        inner join sys_area s on c.parent_id = s.id
+        inner join md_customer cu on o.customer_id = cu.id
+        inner join md_customer_finance cf on cu.id = cf.id
+        where o.create_date between #{startDate} and #{endDate}
+        order by o.order_id
+        <if test="topNum != null and topNum>0">
+            limit #{topNum}
+        </if>
+    </select>
+    -->
+
+    <!-- 按订单id列表处理 -->
+    <!-- mark on 2020-2-11
+    <select id="getReportResendMessageByOrderIds" resultMap="OrderConditionMap">
+    select
+        o.order_id,
+        o.quarter,
+        o.order_no,
+        o.create_date,
+        o.create_by,
+        o.kefu_id,
+        '' as kefu_name,
+        f.expect_charge,
+        o.area_id,
+        x.name as area_name,
+        c.id as city_id,
+        c.name as city_name,
+        s.id as province_id,
+        s.name as province_name,
+        o.customer_id,
+        cu.code as customer_code,
+        cu.name as customer_name,
+        cu.contract_date,
+        cu.sales_id,
+        '' as sales_name,
+        cf.payment_type
+    from sd_order_condition o
+    inner join sd_order_fee f on o.order_id = f.order_id
+    inner join sys_area x on o.area_id = x.id
+    inner join sys_area c on x.parent_id = c.id
+    inner join sys_area s on c.parent_id = s.id
+    inner join md_customer cu on o.customer_id = cu.id
+    inner join md_customer_finance cf on cu.id = cf.id
+    where o.quarter = #{quarter}
+        and o.order_id in <foreach collection="ids" item="orderId" index="index" open="(" close=")" separator=",">${orderId}</foreach>
+    order by o.order_id
+    </select>
+    -->
+</mapper>

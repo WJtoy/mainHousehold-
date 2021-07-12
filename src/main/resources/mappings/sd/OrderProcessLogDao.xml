@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderProcessLogDao">
+    <sql id="orderProcesslogColumns">
+        a.id,
+        a.order_id,
+        a.action,
+        a.action_comment,
+        a.status,
+        a.status_value,
+        a.status_flag,
+        a.close_flag,
+        a.visibility_flag,
+        a.create_by,
+        a.create_date
+    </sql>
+
+
+    <select id="findList" resultType="com.wolfking.jeesite.modules.sd.entity.OrderProcessLog">
+        SELECT
+        <include refid="orderProcesslogColumns"/>
+        FROM sd_orderprocesslog a
+        WHERE a.del_flag = 0
+        ORDER BY a.create_date
+    </select>
+
+    <select id="findListByOrderId"  resultType="com.wolfking.jeesite.modules.sd.entity.OrderProcessLog">
+        SELECT
+        <include refid="orderProcesslogColumns"/>
+        FROM sd_orderprocesslog a
+        <where>
+        <if test="orderId != null">
+            a.order_id=#{orderId}
+        </if>
+        </where>
+        ORDER BY a.create_date DESC
+        limit 300
+    </select>
+
+</mapper>

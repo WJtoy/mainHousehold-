@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.FeedbackDao">
+
+	<resultMap id="FeedbackResult" type="Feedback" >
+		<id property="id" column="id"/>
+		<result property="quarter" column="quarter" />
+		<result property="feedFrom" column="feed_from" />
+		<result property="title" column="title" />
+		<result property="remarks" column="remarks" />
+		<result property="replyFlag" column="reply_flag" />
+		<result property="closeFlag" column="close_flag" />
+		<result property="closeDate" column="close_date" />
+		<result property="createDate" column="create_date" />
+		<result property="delFlag" column="del_flag" />
+		<!--<result property="attachment1" column="attachment1" />-->
+		<result property="nextFloor" column="next_floor" />
+		<result property="attachmentCount" column="attachment_count" />
+		<association property="order"  column="feedback_order" javaType="Order" >
+			<result property="id" column="order_id"/>
+			<result property="orderNo" column="order_no"/>
+		</association>
+		<association property="customer" column="feedback_customer" javaType="Customer">
+			<result property="id" column="customer_id"/>
+		</association>
+		<association property="closeBy"  column="closeby" javaType="User" >
+			<id property="id" column="close_by" />
+			<result property="name" column="close_name"/>
+		</association>
+		<association property="createBy"  column="order_create_by" javaType="User" >
+			<id property="id" column="create_by" />
+			<result property="name" column="create_name"/>
+			<result property="userType" column="create_userType"/>
+		</association>
+		<association property="updateBy"  column="update_by" javaType="User" >
+			<id property="id" column="update_by" />
+			<result property="name" column="update_name"/>
+		</association>
+		<collection property="items" ofType="FeedbackItem">
+			<id property="id" column="item_id"/>
+			<result property="feedbackId" column="feedback_id"/>
+			<result property="floor" column="floor"/>
+			<result property="contentType" column="content_type"/>
+			<result property="remarks" column="item_remarks"/>
+			<result property="userType" column="user_type"/>
+			<result property="createDate" column="item_create_date"/>
+			<association property="createBy"  column="update_by" javaType="User" >
+				<id property="id" column="item_create_by" />
+				<result property="name" column="item_create_name"/>
+			</association>
+		</collection>
+	</resultMap>
+
+	<!-- 问题反馈/feedback -->
+	<sql id="selectFeedback">
+		SELECT
+			f.quarter,
+			f.id,
+			f.customer_id as "customer.id",
+			f.feed_from,
+			f.order_id as "order.id",
+			f.order_no as "order.orderNo",
+			f.title,
+			f.remarks,
+			f.reply_flag,
+			f.close_flag,
+			f.close_date,
+			f.close_by as "closeBy.id",
+			'' as "closeBy.name",
+			f.create_by as "createBy.id",
+			'' as "createBy.name",
+			0 as "createBy.userType",
+			f.update_by as "updateBy.id",
+			'' as "updateBy.name",
+			f.update_date,
+			f.del_flag,
+			f.next_floor,
+			f.attachment_count
+		FROM sd_feedback f
+	</sql>
+
+	<select id="getById" resultType="Feedback">
+		<include refid="selectFeedback"/>
+		WHERE f.id = #{id}
+		<if test="quarter != null and quarter != ''">
+			and f.quarter = #{quarter}
+		</if>
+	</select>
+
+	<select id="getByOrderId" resultType="Feedback">
+		<include refid="selectFeedback"/>
+		WHERE f.order_id = #{orderId}
+		<if test="quarter != null and quarter != ''">
+			and f.quarter = #{quarter}
+		</if>
+	</select>
+
+	<!-- 下单 begin -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sd_feedback(
+		    quarter,
+			customer_id,
+			feed_from,
+			order_id,
+			order_no,
+			title,
+			remarks,
+			reply_flag,
+			close_flag,
+			close_date,
+			create_by,
+			create_date
+		) VALUES (
+			#{quarter},
+			#{customer.id},
+			#{feedFrom},
+			#{order.id},
+			#{order.orderNo},
+			#{title},
+			#{remarks},
+			#{replyFlag},
+			0,
+			null,
+			#{createBy.id},
+			#{createDate}
+		);
+	</insert>
+
+	<update id="incrAttachmentCount">
+		update sd_feedback
+		set attachment_count = attachment_count + 1
+		where id = #{id}
+		<if test="quarter != null and quarter != ''">
+			and quarter = #{quarter}
+		</if>
+	</update>
+
+	<update id="updateFeedback" parameterType="java.util.HashMap">
+		update sd_feedback
+		<set >
+			<if test="replyFlag != null" >
+				reply_flag = #{replyFlag},
+			</if>
+			<if test="closeFlag != null" >
+				close_flag = #{closeFlag},
+			</if>
+			<if test="_parameter.containsKey('closeDate')" >
+				close_date = #{closeDate},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+			<if test="updateBy != null" >
+				update_by = #{updateBy.id},
+			</if>
+		</set>
+		where
+		<choose>
+			<when test="order != null and order.id != null and order.id != 0">
+				order_id = #{order.id}
+			</when>
+			<otherwise>
+				id = #{id}
+			</otherwise>
+		</choose>
+		<if test="quarter != null and quarter != ''">
+			and quarter = #{quarter}
+		</if>
+	</update>
+
+	<delete id="delete">
+		delete from  sd_feedback
+		where id = #{id}
+		<if test="quarter != null and quarter != ''">
+			and quarter = #{quarter}
+		</if>
+	</delete>
+
+	<delete id="deleteItems">
+		delete from  sd_feedbackitem
+		where feedback_id = #{id}
+		<if test="quarter != null and quarter != ''">
+			and quarter = #{quarter}
+		</if>
+	</delete>
+
+	<!-- items -->
+	<sql id="selectFeedbackAndItems">
+		SELECT
+			f.quarter,
+			f.id,
+			f.customer_id,
+			f.feed_from,
+			f.order_id,
+			f.order_no,
+			f.title,
+			f.remarks,
+			f.reply_flag,
+			f.close_flag,
+			f.close_date,
+			f.close_by,
+			'' as close_name,
+			f.create_by,
+			'' as create_name,
+			0 as create_userType,
+			f.update_by as update_by,
+			'' as update_name,
+			f.create_date,
+			f.update_date,
+			f.del_flag,
+			f.next_floor,
+			f.attachment_count,
+			i.id as item_id,
+			i.feedback_id,
+			i.floor,
+			i.remarks as item_remarks,
+			i.content_type,
+			i.create_name as item_create_name,
+			i.create_by as item_create_by,
+			i.user_type,
+			i.create_date as item_create_date
+		FROM sd_feedback f
+			LEFT join sd_feedbackitem i on f.id = i.feedback_id
+	</sql>
+
+	<select id="getWithItemsById" resultMap="FeedbackResult">
+		<include refid="selectFeedbackAndItems"/>
+		WHERE f.id = #{id}
+		<if test="quarter != null and quarter != ''">
+			and f.quarter = #{quarter}
+		</if>
+		order by i.id
+	</select>
+
+	<select id="getWithItemsByOrderId" resultMap="FeedbackResult">
+		<include refid="selectFeedbackAndItems"/>
+		WHERE f.order_id = #{orderId}
+		<if test="quarter != null and quarter != ''">
+			and f.quarter = #{quarter}
+		</if>
+		order by i.id
+	</select>
+
+	<!-- 递增下一楼层数，每次用之前加一防止顺序错误 -->
+	<update id="incrNextFloor">
+		update sd_feedback
+		set next_floor = next_floor + 1
+		where id = #{id}
+		<if test="quarter != null and quarter != ''">
+			and quarter = #{quarter}
+		</if>
+	</update>
+
+	<select id="getNextFloor" resultType="java.lang.Integer">
+		select next_floor
+		from sd_feedback
+		where id = #{id}
+		<if test="quarter != null and quarter != ''">
+			and quarter = #{quarter}
+		</if>
+	</select>
+
+	<insert id="insertFeedbackItem">
+		insert into sd_feedbackitem
+		(
+			quarter,feedback_id,floor,remarks,content_type,create_name,create_by,user_type,create_date
+		)
+		values(
+			#{quarter},#{feedbackId},#{floor},#{remarks},#{contentType},#{createBy.name},#{createBy.id},#{userType},#{createDate}
+		)
+	</insert>
+
+	<!-- 问题反馈内容（图片） -->
+	<select id="getImageItems">
+		select
+			i.id,
+			i.remarks
+		from sd_feedbackitem i
+		where feedback_id = #{feedbackId}
+		<if test="quarter != null and quarter != ''">
+			and quarter = #{quarter}
+		</if>
+		  and content_type = 1
+	</select>
+
+	<!-- 问题反馈内容（文本） -->
+	<select id="getFeedbackItems" resultType="FeedbackItem">
+		select *
+		from
+			(
+			select i.id, i.quarter, i.remarks, i.create_date, i.create_by as "createBy.id", '' as "createBy.name", i.content_type
+			from sd_feedbackitem i
+			where i.feedback_id = #{feedbackId}
+				<if test="quarter != null and quarter != ''">
+					and i.quarter = #{quarter}
+				</if>
+				and i.content_type = 0
+			union
+			select  f.id,f.quarter,f.remarks,f.create_date, f.create_by as "createBy.id", '' as "createBy.name",0 as content_type
+			from sd_feedback f
+			where f.id = #{feedbackId}
+				<if test="quarter != null and quarter != ''">
+					and f.quarter = #{quarter}
+				</if>
+			) a
+		order by a.id
+	</select>
+
+	<!-- 统计 BEGIN -->
+	<!-- 统计已分配客户的客服的数据(by customer) -->
+	<select id="groupByKefuOfCustomer" resultType="java.util.HashMap">
+		select
+			customer_id,
+			sum(feedback_qty) as feedback_qty,
+			sum(pending_qty) as pending_qty
+		from (
+			select o.customer_id,count(distinct o.order_id) as feedback_qty,0 as pending_qty
+			from sd_order_condition o,sys_user_customer s
+			where o.reply_flag = 2
+				and o.customer_id = s.customer_id
+			group by o.customer_id
+			union all
+			select o.customer_id,0 as feedback_qty,count(distinct o.order_id) as pending_qty
+			from sd_order_condition o,sys_user_customer s
+			where o.reply_flag_customer = 1
+				and o.customer_id = s.customer_id
+			group by o.customer_id
+		) t
+		group by t.customer_id
+		limit 50000
+	</select>
+
+	<!-- 统计已分配客户的客服的数据(by customer) 去sys_user_customer  add on 2020-9-14 -->
+	<select id="groupByKefuOfCustomerWithoutUserCustomer" resultType="java.util.HashMap">
+		select
+			customer_id,
+			sum(feedback_qty) as feedback_qty,
+			sum(pending_qty) as pending_qty
+		from (
+			select o.customer_id,count(distinct o.order_id) as feedback_qty,0 as pending_qty
+			from sd_order_condition o
+			where o.reply_flag = 2
+				and o.customer_id in
+				<foreach collection="customerIds" item="id" open="(" close=")" separator=",">
+					#{id}
+				</foreach>
+			group by o.customer_id
+			union all
+			select o.customer_id,0 as feedback_qty,count(distinct o.order_id) as pending_qty
+			from sd_order_condition o
+			where o.reply_flag_customer = 1
+				and o.customer_id in
+				<foreach collection="customerIds" item="id" open="(" close=")" separator=",">
+					#{id}
+				</foreach>
+			group by o.customer_id
+		) t
+		group by t.customer_id
+		limit 50000
+	</select>
+
+	<!-- 统计未分配客户的客服的数据(by area) -->
+	<select id="groupByKefuOfArea" resultType="java.util.HashMap">
+		select
+			area_id,
+			sum(feedback_qty) as feedback_qty,
+			sum(pending_qty) as pending_qty
+		from (
+			select o.area_id,count(o.order_id) as feedback_qty,0 as pending_qty
+			from sd_order_condition o
+			where o.reply_flag = 2
+				and not exists(
+					select 1
+					from sys_user_customer s
+					where o.customer_id = s.customer_id
+				)
+			group by o.area_id
+			union all
+			select o.area_id,0 as feedback_qty,count(o.order_id) as pending_qty
+			from sd_order_condition o
+			where o.reply_flag_customer = 1
+				and not exists(
+					select 1
+					from sys_user_customer s
+					where o.customer_id = s.customer_id
+				)
+			group by o.area_id
+		) t
+		group by t.area_id
+		limit 50000
+	</select>
+
+	<!-- 统计未分配客户的客服的数据(by area) 去sys_user_customer add on 2020-9-14-->
+	<select id="groupByKefuOfAreaWithoutUserCustomer" resultType="java.util.HashMap">
+		select
+			area_id,
+			sum(feedback_qty) as feedback_qty,
+			sum(pending_qty) as pending_qty
+		from (
+			select o.area_id,count(o.order_id) as feedback_qty,0 as pending_qty
+			from sd_order_condition o
+			where o.reply_flag = 2
+				and o.customer_id not in
+				<foreach collection="customerIds" item="id" open="(" close=")" separator=",">
+					#{id}
+				</foreach>
+			group by o.area_id
+			union all
+			select o.area_id,0 as feedback_qty,count(o.order_id) as pending_qty
+			from sd_order_condition o
+			where o.reply_flag_customer = 1
+				and o.customer_id not in
+					<foreach collection="customerIds" item="id" open="(" close=")" separator=",">
+						#{id}
+					</foreach>
+			group by o.area_id
+		) t
+		group by t.area_id
+		limit 50000
+	</select>
+
+	<!-- 统计客户的数据 -->
+	<select id="groupByCustomer" resultType="java.util.HashMap">
+		SELECT
+			t.customer_id,
+			t.create_by,
+			SUM(feedback_qty) AS feedback_qty,
+			SUM(pending_qty) AS pending_qty
+		FROM
+			(SELECT
+				o.customer_id,
+				o.create_by,
+				COUNT(o.order_id) AS feedback_qty,
+				0 AS pending_qty
+			FROM
+				sd_order_condition o
+			WHERE
+				o.reply_flag = 1
+			GROUP BY
+				o.customer_id , o.create_by
+			UNION ALL
+			SELECT
+				o.customer_id,
+				o.create_by,
+				0 AS feedback_qty,
+				COUNT(o.order_id) AS pending_qty
+			FROM
+				sd_order_condition o
+			WHERE
+				o.reply_flag_kefu = 1
+			GROUP BY
+				o.customer_id , o.create_by
+		) t
+		GROUP BY t.customer_id,t.create_by
+		limit 50000
+	</select>
+
+	<!-- 批量标记已读或已处理 -->
+	<update id="updateReadedNew" parameterType="java.util.HashMap">
+		<choose>
+			<when test="userType == 3">
+				<!-- 客户主帐号 -->
+				<choose>
+					<when test="noticeType==1"><!-- 未读问题反馈 -->
+						UPDATE sd_order_condition
+						SET
+							reply_flag = 0
+						WHERE
+							quarter = #{quarter}
+							AND customer_id = #{customerId}
+							AND reply_flag = 1
+					</when>
+					<when test="noticeType==2"><!-- 未处理问题反馈 -->
+						UPDATE sd_order_condition
+						SET
+							reply_flag_kefu = 0
+						WHERE
+							quarter = #{quarter}
+							AND customer_id = #{customerId}
+							AND reply_flag_kefu = 1
+					</when>
+					<otherwise>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="userType == 4">
+				<!-- 客户子帐号 -->
+				<choose>
+					<when test="noticeType==1">
+						UPDATE sd_order_condition
+						SET
+							reply_flag = 0
+						WHERE
+							quarter = #{quarter}
+							AND create_by = #{createBy}
+							AND customer_id = #{customerId}
+							AND reply_flag = 1
+					</when>
+					<when test="noticeType==2">
+						UPDATE sd_order_condition
+						SET
+							reply_flag_kefu = 0
+						WHERE
+							quarter = #{quarter}
+							AND create_by = #{createBy}
+							AND customer_id = #{customerId}
+							AND reply_flag_kefu = 1
+					</when>
+					<otherwise>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="userType == 7">
+				<!-- 业务 -->
+				<choose>
+					<when test="noticeType==1">
+						UPDATE sd_order_condition
+						SET
+							reply_flag = 0
+						WHERE
+							quarter = #{quarter}
+							AND customer_id = #{customerId}
+							AND reply_flag = 1
+					</when>
+					<when test="noticeType==2">
+						UPDATE sd_order_condition
+						SET
+							reply_flag_kefu = 0
+						WHERE
+							quarter = #{quarter}
+							AND customer_id = #{customerId}
+							AND reply_flag_kefu = 1
+					</when>
+					<otherwise>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="userType == 2">
+				<!-- 客服 -->
+				<choose>
+					<when test="noticeType==1">
+						UPDATE sd_order_condition
+						SET
+							reply_flag = 0
+						WHERE
+							quarter = #{quarter}
+						<if test="customerId != null and customerId > 0">
+							AND customer_id = #{customerId}
+						</if>
+						<if test="areaId != null and areaId > 0">
+							AND area_id = #{areaId}
+						</if>
+							AND reply_flag = 2
+					</when>
+					<when test="noticeType==2">
+						UPDATE sd_order_condition
+						SET
+							reply_flag_customer = 0
+						WHERE
+							quarter = #{quarter}
+						<if test="customerId != null and customerId > 0">
+							AND customer_id = #{customerId}
+						</if>
+						<if test="areaId != null and areaId > 0">
+							AND area_id = #{areaId}
+						</if>
+							AND reply_flag_customer = 1
+					</when>
+					<when test="noticeType==3">
+						UPDATE sd_order_condition
+						SET
+							app_abnormaly_flag = 0
+						WHERE
+							quarter = #{quarter}
+						<if test="customerId != null and customerId > 0">
+							AND customer_id = #{customerId}
+						</if>
+						<if test="areaId != null and areaId > 0">
+							AND area_id = #{areaId}
+						</if>
+							AND app_abnormaly_flag = 1
+					</when>
+					<otherwise>
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</update>
+
+	<!-- 统计 END -->
+</mapper>

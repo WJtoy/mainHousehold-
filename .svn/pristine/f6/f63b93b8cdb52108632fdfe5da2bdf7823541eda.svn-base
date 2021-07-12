@@ -1,0 +1,3651 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ServicePointDao">
+    <sql id="servicePointColumns">
+            s.id,
+            s.servicepoint_no,
+            s.name,
+            s.contact_info1,
+            s.contact_info2,
+            s.contract_date,
+            s.developer,
+            s.address,
+            s.area_id as "area.id",
+            s.grade,
+            s.level as "level.value",
+            '' as "level.label",
+            s.sign_flag ,
+            s.order_count,
+            s.plan_count,
+            s.break_count,
+            s.Longitude,
+            s.latitude,
+            s.qq,
+            s.attachment1,
+            s.attachment2,
+            s.attachment3,
+            s.attachment4,
+            s.sub_address,
+            s.primary_id as "primary.id",
+            s.property,
+            s.scale ,
+            s.description ,
+            s.create_by AS "createBy.id",
+            s.create_date,
+            s.update_by ,
+            s.update_date ,
+            s.remarks ,
+            s.del_flag,
+            s.short_message_flag,
+            s.auto_complete_order,
+            s.use_defaultprice,
+            s.sub_engineer_count,
+            s.plan_remark,
+            s.insurance_flag,
+            s.app_insurance_flag,
+            s.time_liness_flag,
+            s.for_tmall,
+            s.status  AS "status.value",
+            s.auto_plan_flag,
+            s.capacity
+    </sql>
+
+    <sql id="areaColumns">
+        a.name as "area.name",
+        a.full_name as "area.fullName"
+    </sql>
+
+    <sql id="primaryColumns">
+        e.name as "primary.name",
+        e.app_flag as "primary.appFlag",
+        e.contact_info as "primary.contactInfo",
+        e.level as "primary.level.value"
+    </sql>
+
+    <sql id="fiColumns">
+        fi.id AS "finance.id",
+        fi.invoice_flag AS "finance.invoiceFlag",
+        fi.discount as "finance.discount",
+        fi.payment_type as "finance.paymentType.value",
+        '' as "finance.paymentType.label",
+        fi.bank as "finance.bank.value",
+        '' as "finance.bank.label",
+        fi.branch as "finance.branch",
+        fi.bank_no as "finance.bankNo",
+        fi.bank_owner as "finance.bankOwner",
+        fi.bank_issue as "finance.bankIssue.value",
+        '' as "finance.bankIssue.label",
+        fi.balance as "finance.balance",
+        fi.last_pay_date as "finance.lastPayDate",
+        fi.last_pay_amount as "finance.lastPayAmount",
+        fi.order_payment_amount as "finance.orderPaymentAmount",
+        fi.debts_amount as "finance.debtsAmount",
+        fi.debts_descrption as "finance.debtsDescrption",
+        fi.refund_amount as "finance.refundAmount",
+        fi.replenish_amount as "finance.replenishAmount",
+        fi.total_amount as "finance.totalAmount",
+        fi.invoice_flag as "finance.invoiceFlag",
+        fi.discount_flag as "finance.discountFlag",
+        fi.unit as "finance.unit.value",
+        '' as "finance.unit.label"
+    </sql>
+
+    <sql id="FIJoins">
+        INNER JOIN md_servicepoint_finance fi ON s.id=fi.id
+    </sql>
+
+    <!-- 按id获得一个服务网点完整信息 -->
+    <!--
+    //mark on 2020-1-13
+    <select id="get" resultType="ServicePoint">
+      select <include refid="servicePointColumns"/>
+        ,<include refid="primaryColumns" />
+        ,<include refid="fiColumns"/>
+        ,<include refid="areaColumns"/>
+        ,u.app_loged as "primary.appLoged"
+      from md_servicepoint s
+      left join md_engineer e on s.primary_id = e.id
+      left join sys_area a ON s.area_id = a.id
+        <include refid="FIJoins"/>
+      LEFT JOIN sys_user u ON e.id = u.engineer_id
+      where s.id = #{id}
+    </select>
+    -->
+
+    <!-- 获取网点的基础资料 -->
+    <!--<resultMap id="ServicePointBaseInfoResult" type="ServicePointBaseInfoRptEntity">-->
+
+        <!--<id column="servicepoint_id" property="servicePointId"/>-->
+        <!--<result column="servicepoint_no" property="servicePointNo"/>-->
+        <!--<result column="servicepoint_name" property="servicePointName"/>-->
+        <!--<result column="province_name" property="provinceName"/>-->
+        <!--<result column="city_name" property="cityName"/>-->
+
+        <!--<result column="engineer_name" property="engineerName"/>-->
+        <!--<result column="engineer_mobile" property="engineerMobile"/>-->
+        <!--<result column="engineer_phone" property="engineerPhone"/>-->
+        <!--<result column="contact_info1" property="contactInfo1"/>-->
+        <!--<result column="contact_info2" property="contactInfo2"/>-->
+        <!--<result column="email" property="email"/>-->
+        <!--<result column="contract_date" property="contractDate"/>-->
+        <!--<result column="address" property="address"/>-->
+
+        <!--<result column="bank" property="bank.value"/>-->
+        <!--<result column="branch" property="branch"/>-->
+        <!--<result column="bank_no" property="bankNo"/>-->
+        <!--<result column="bank_owner" property="bankOwner"/>-->
+
+        <!--<result column="level" property="level.value"/>-->
+        <!--<result column="sign_flag" property="signFlag.value"/>-->
+        <!--<result column="payment_type" property="paymentType.value"/>-->
+        <!--<result column="remarks" property="remarks"/>-->
+        <!--<result column="order_count" property="orderCount"/>-->
+        <!--<result column="grade" property="grade"/>-->
+        <!--<result column="sub_engineer_count" property="subEngineerCount"/>-->
+        <!--<result column="status" property="status.value"/>-->
+    <!--</resultMap>-->
+
+    <!--
+    //mark on 2020-1-13
+    <select id="getServicePointBaseInfo" parameterType="java.util.Map" resultMap="ServicePointBaseInfoResult">
+        select 	ms.id as 'servicepoint_id',
+                ms.servicepoint_no as 'servicepoint_no',
+                ms.name as 'servicepoint_name',
+                sa3.name as 'province_name',
+                sa2.name as 'city_name',
+                me.name as 'engineer_name',
+                su.mobile as 'engineer_mobile',
+                me.contact_info as 'engineer_phone',
+                ms.contact_info1 ,
+                ms.contact_info2,
+                su.email,
+                ms.contract_date,
+                ms.address,
+                msf.bank,
+                msf.branch,
+                msf.bank_no,
+                msf.bank_owner,
+                ms.auto_plan_flag,
+                ms.level,
+                ms.sign_flag,
+                msf.payment_type,
+                ms.remarks,
+                ms.order_count,
+                ms.grade,
+                ms.sub_engineer_count,
+                ms.status
+        from 	md_servicepoint ms
+                left join md_servicepoint_finance msf on msf.id = ms.id
+                left join md_engineer me on me.id = ms.primary_id
+                left join sys_user su on su.engineer_id = me.id
+
+                left join sys_area sa1 on sa1.id = ms.area_id
+                left join sys_area sa2 on sa2.id = sa1.parent_id
+                left join sys_area sa3 on sa3.id = sa2.parent_id
+        <where>
+                <if test="servicePointNo != null and servicePointNo != ''">
+                    ms.servicepoint_no = #{servicePointNo}
+                </if>
+                <if test="provinceName != null and provinceName != ''">
+                    and sa3.name like concat('%',#{provinceName},'%')
+                </if>
+                <if test="cityName != null and cityName != ''">
+                    and sa2.name like concat('%',#{cityName},'%')
+                </if>
+        </where>
+        order by ms.servicepoint_no, sa3.name, sa2.name
+    </select>
+    -->
+
+    <!-- 查询所有网点的服务区域 -->
+    <!--2020-1-18 web端去md_servicepoint_area
+    <select id="getAllServicePointServiceAreas" parameterType="java.util.Map" resultType="ServicePointServiceArea">
+        select  msa.servicepoint_id as 'servicePointId',
+                msa.area_id as 'areaId',
+                sa.name as 'areaName'
+        from    md_servicepoint_area msa
+		        left join sys_area sa on sa.id = msa.area_id
+		where sa.type = 4
+		    <if test="servicePointIds != null and servicePointIds.size > 0">
+                and msa.servicepoint_id in
+                  <foreach collection="servicePointIds" item="id" open="(" separator="," close=")">
+                      #{id}
+                  </foreach>
+            </if>
+        limit 200000
+    </select>
+    -->
+
+    <!-- 查询网点的服务区域 -->
+    <!-- mark on 2020-1-18 已没有地方调用  web端去md_servicepoint_area
+    <select id="getServicePointServiceAreas" parameterType="java.util.Map" resultType="ServicePoint">
+        SELECT 	msa.servicepoint_id AS 'id',
+                group_concat(sa.name) AS 'serviceAreas'
+        FROM 	md_servicepoint_area msa
+                LEFT JOIN sys_area sa on sa.id = msa.area_id
+        WHERE 	sa.type = 4
+            <if test="servicePointIds != null and servicePointIds.size > 0">
+                AND msa.servicepoint_id in
+                <foreach collection="servicePointIds" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+        GROUP BY msa.servicepoint_id
+        LIMIT 200000
+    </select>
+    -->
+
+    <select id="getServicePointBalances" resultType="java.util.HashMap" >
+        select id,balance,last_pay_date,last_pay_amount
+        from  md_servicepoint_finance
+        where id in
+        <foreach collection="servicePointIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <select id="rptServicePointappraise" parameterType="java.util.Map" resultType="java.util.HashMap">
+        SELECT sp.servicepoint_no servicepointNo, sp.name servicepointName,sp.contact_info1 contactInfo,
+            SUM(IF(og.grade_name = '时效性' ,og.point ,0)) AS delay,
+            SUM(IF(og.grade_name = '服务态度' ,og.point ,0)) AS attitude,
+            SUM(IF(og.grade_name = '技术水平' ,og.point ,0)) AS skill,
+            SUM(IF(og.grade_name = '收费' ,og.point ,0)) AS charge,
+            SUM(og.point) AS summary
+        FROM md_servicepoint AS sp
+        LEFT JOIN sd_ordergrade AS og
+        ON sp.id=og.servicepoint_id
+        GROUP 	BY sp.servicepoint_no,sp.name,sp.contact_info1
+        ORDER 	BY summary
+    </select>
+    -->
+
+    <!-- 查询安维人员的客户评分 -->
+    <!--
+    //mark on 2020-1-13
+    <select id="getEngineerAppraiseList" parameterType="java.util.Map" resultType="EngineerAppraiseRptEntity">
+        select  sog.servicepoint_id as servicePointId, sog.engineer_id as engineerId,
+                msp.servicepoint_no as servicePointNo,
+                me.name as engineerName, me.contact_info,
+                sum(if(sog.grade_id=1, sog.point, 0)) as delayPoint,
+                sum(if(sog.grade_id=2, sog.point, 0)) as attitudePoint,
+                sum(if(sog.grade_id=3, sog.point, 0)) as skillPoint,
+                sum(if(sog.grade_id=4, sog.point, 0)) as chargePoint,
+                sum(sog.point) as totalPoint
+        from 	sd_ordergrade sog
+                left join md_servicepoint msp on msp.id = sog.servicepoint_id
+                left join md_engineer me on me.id = sog.engineer_id
+        where	sog.quarter = #{quarter}
+                and sog.create_date >= #{beginDate}
+                and <![CDATA[ sog.create_date < #{endDate} ]]>
+        group by sog.servicepoint_id, sog.engineer_id
+        order by totalPoint desc
+    </select>
+    -->
+
+    <!-- 查询安维人员的客户评分 -->
+<!--    <select id="getEngineerGradeList" parameterType="java.util.Map" resultType="EngineerAppraiseRptEntity">-->
+<!--        SELECT servicepoint_id AS servicePointId, engineer_id, SUM(POINT) AS totalPoint-->
+<!--        FROM sd_order_grade-->
+<!--         WHERE quarter = #{quarter}-->
+<!--        and create_date >= #{beginDate}-->
+<!--        and <![CDATA[ create_date < #{endDate} ]]>-->
+<!--        GROUP BY servicepoint_id, engineer_id-->
+<!--        ORDER BY totalPoint DESC-->
+<!--        LIMIT 20000;-->
+<!--    </select>-->
+    <!--<select id="rptServicePointTimely"  parameterType="String" resultType="java.util.HashMap">-->
+        <!--<![CDATA[-->
+        <!--SELECT	s.login_name AS engineerCode,-->
+                <!--s.name AS engineerName,-->
+                <!--s.phone,-->
+                <!--IFNULL(s.orderCount,0) orderCount,-->
+                <!--IFNULL(s.finishedCount,0) finishedCount,-->
+                <!--IFNULL(s.In24,0) In24,-->
+                <!--IFNULL(s.In24 * 100/s.finishedCount,0.00) PerIn24,-->
+                <!--IFNULL(s.In48,0) In48,-->
+                <!--IFNULL(s.In48 * 100/s.finishedCount,0.00) PerIn48,-->
+                <!--IFNULL(s.In72,0) In72,-->
+                <!--IFNULL(s.In72 * 100/s.finishedCount,0.00) PerIn72,-->
+                <!--IFNULL(s.Over72,0) Over72,-->
+                <!--IFNULL(s.Over72 * 100/s.finishedCount,0.00) PerOver72-->
+        <!--FROM 	(SELECT	g.login_name,-->
+                        <!--g.name,-->
+                        <!--g.phone,-->
+                        <!--SUM(g.orderCount) AS orderCount,-->
+                        <!--SUM(g.finishedCount) AS finishedCount,-->
+                        <!--SUM(IF(DATE_FORMAT(g.customer_invoice_date,'%Y-%m') = #{queryMonth} AND g.diff < 24 ,1 ,0)) AS In24,-->
+                        <!--SUM(IF(DATE_FORMAT(g.customer_invoice_date,'%Y-%m') = #{queryMonth} AND g.diff >= 24 AND g.diff < 48 ,1 ,0)) AS In48,-->
+                        <!--SUM(IF(DATE_FORMAT(g.customer_invoice_date,'%Y-%m') = #{queryMonth} AND g.diff >= 48 AND g.diff < 72 ,1 ,0)) AS In72,-->
+                        <!--SUM(CASE WHEN DATE_FORMAT(g.customer_invoice_date,'%Y-%m')	= #{queryMonth} AND g.diff >= 72 THEN 1-->
+                        <!--WHEN g.customer_invoice_date IS NULL AND g.cancelled = 0 AND g.diffOpen >= 72 THEN 1-->
+                        <!--ELSE 0 END) AS Over72-->
+                <!--FROM 	(SELECT-->
+                	    <!--sp.name as login_name,-->
+                        <!--eng.name ,-->
+                        <!--eng.contact_info as phone,-->
+                        <!--IF(DATE_FORMAT(od.accept_date,'%Y-%m') = #{queryMonth} ,1 ,0) AS orderCount,-->
+                        <!--IF(DATE_FORMAT(od.customer_invoice_date,'%Y-%m') = #{queryMonth} ,1 ,0) AS finishedCount,-->
+                        <!--od.customer_invoice_date,-->
+                        <!--IFNULL(TIMESTAMPDIFF(HOUR,od.accept_date,od.customer_invoice_date),0) diff,-->
+                        <!--IFNULL(TIMESTAMPDIFF(HOUR,od.accept_date,NOW()),0) diffOpen,-->
+                        <!--IF(od.cancel_approve_date IS NOT NULL,1,0) cancelled-->
+                          <!--FROM md_engineer eng-->
+                        <!--INNER JOIN sd_order_condition oc-->
+                        <!--ON eng.id=oc.engineer_id-->
+                        <!--INNER	JOIN sd_order_status od-->
+                        <!--ON 	od.order_id = oc.order_id-->
+                        <!--INNER JOIN md_servicepoint sp-->
+                        <!--ON oc.servicepoint_id=sp.id-->
+                        <!--WHERE 	eng.del_flag = 0-->
+                        <!--AND (DATE_FORMAT(od.accept_date,'%Y-%m') = #{queryMonth}-->
+                        <!--OR DATE_FORMAT(od.customer_invoice_date,'%Y-%m') = #{queryMonth})-->
+          <!--) g-->
+        <!--GROUP 	BY g.login_name,g.name,g.phone) s;-->
+        <!--]]>-->
+    <!--</select>-->
+
+    <!-- 查询安维人员的时效数据 -->
+<!--    <select id="getEngineerTimelyList" parameterType="java.util.Map" resultType="EngineerTimelyRptEntity">-->
+<!--        select  A.*, B.newQty, C.finishQty-->
+<!--        from (-->
+<!--            select  sog.servicepoint_id as servicePointId, sog.engineer_id as engineerId,-->
+<!--                    &lt;!&ndash;-->
+<!--                    // servicePoint微服务-->
+<!--                    msp.servicepoint_no as servicePointNo,-->
+<!--                    &ndash;&gt;-->
+<!--                    &lt;!&ndash;-->
+<!--                    me.name as engineerName, me.contact_info,-->
+<!--                    &ndash;&gt;-->
+<!--                    sum(if(sog.grade_item_id=10001, 1, 0)) as within24Hours,-->
+<!--                    sum(if(sog.grade_item_id=10003, 1, 0)) as within48Hours,-->
+<!--                    sum(if(sog.grade_item_id=10004, 1, 0)) as within72Hours,-->
+<!--                    sum(if(sog.grade_item_id=10005, 1, 0)) as over72Hours-->
+<!--            from 	sd_ordergrade sog-->
+<!--                    &lt;!&ndash;-->
+<!--                    // servicePoint微服务-->
+<!--                    left join md_servicepoint msp on msp.id = sog.servicepoint_id-->
+<!--                    &ndash;&gt;-->
+<!--                    &lt;!&ndash;-->
+<!--                    left join md_engineer me on me.id = sog.engineer_id-->
+<!--                    &ndash;&gt;-->
+<!--            where	sog.quarter = #{quarter}-->
+<!--                    and sog.grade_id = 1-->
+<!--                    and sog.create_date between #{beginDate} and #{endDate}-->
+<!--            group by sog.servicepoint_id, sog.engineer_id &lt;!&ndash;, me.name&ndash;&gt;-->
+<!--        ) A-->
+<!--        left join (-->
+<!--            select  soc.engineer_id as engineerId, count(soc.engineer_id) as newQty-->
+<!--            from	sd_order_condition soc-->
+<!--                    left join sd_order_status sos on sos.order_id = soc.order_id-->
+<!--            where	soc.quarter = #{quarter}-->
+<!--                    and sos.quarter = #{quarter}-->
+<!--                    and sos.plan_date between #{beginDate} and #{endDate}-->
+<!--            group by soc.engineer_id-->
+<!--        ) B on B.engineerId = A.engineerId-->
+<!--        left join (-->
+<!--            select  soc.engineer_id as engineerId, count(soc.engineer_id) as finishQty-->
+<!--            from	sd_order_condition soc-->
+<!--                    left join sd_order_status sos on sos.order_id = soc.order_id-->
+<!--            where	soc.quarter = #{quarter}-->
+<!--                    and sos.quarter = #{quarter}-->
+<!--                    &lt;!&ndash; and soc.status = 80 &ndash;&gt;-->
+<!--                    and soc.grade_flag > 0-->
+<!--                    and soc.close_date between #{beginDate} and #{endDate}-->
+<!--            group by soc.engineer_id-->
+<!--        ) C on C.engineerId = A.engineerId-->
+<!--        order by B.newQty desc, A.servicePointId, A.engineerId-->
+<!--    </select>-->
+
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_servicepoint (
+            servicepoint_no ,
+            name,
+            contact_info1 ,
+            contact_info2 ,
+            contract_date ,
+            developer ,
+            area_id,
+            address ,
+            sub_address,
+            grade ,
+            level ,
+            sign_flag ,
+            order_count ,
+            plan_count,
+            break_count ,
+            Longitude ,
+            latitude,
+            qq,
+            attachment1 ,
+            attachment2 ,
+            attachment3 ,
+            attachment4 ,
+            primary_id,
+            property,
+            scale ,
+            description ,
+            create_by ,
+            create_date ,
+            update_by ,
+            update_date ,
+            remarks ,
+            del_flag,
+            short_message_flag,
+            auto_complete_order,
+            use_defaultprice,
+            insurance_flag,
+            time_liness_flag,
+            for_tmall,
+            invoice_flag,
+            discount_flag,
+            payment_type,
+            bank,
+            bank_no,
+            bank_owner,
+            bank_issue,
+            status,
+            auto_plan_flag,
+            capacity
+        ) VALUES (
+            #{servicePointNo},
+            #{name},
+            #{contactInfo1},
+            #{contactInfo2},
+            #{contractDate},
+            #{developer},
+            #{area.id},
+            #{address},
+            #{subAddress},
+            #{grade},
+            #{level.value},
+            #{signFlag},
+            #{orderCount},
+            #{planCount},
+            #{breakCount},
+            #{longitude},
+            #{latitude},
+            #{qq},
+            #{attachment1},
+            #{attachment2},
+            #{attachment3},
+            #{attachment4},
+            <choose>
+                <when test="primary==null || primary.id == null || primary.id == 0">
+                    0,
+                </when>
+                <otherwise>
+                    #{primary.id},
+                </otherwise>
+            </choose>
+            #{property.value},
+            #{scale.value},
+            #{description},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{remarks},
+            #{delFlag},
+            #{shortMessageFlag},
+            #{autoCompleteOrder},
+            #{useDefaultPrice},
+            #{insuranceFlag},
+            #{timeLinessFlag},
+            #{forTmall},
+            #{invoiceFlag},
+            #{discountFlag},
+            #{paymentType.value},
+            #{bank.value},
+            #{bankNo},
+            #{bankOwner},
+            #{bankIssue.value},
+            #{status.value},
+            #{autoPlanFlag},
+            #{capacity}
+        )
+    </insert>
+    -->
+
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <update id="update">
+        update md_servicepoint
+        SET
+            servicepoint_no = #{servicePointNo},
+            name = #{name},
+            contact_info1 = #{contactInfo1},
+            contact_info2 = #{contactInfo2},
+            contract_date = #{contractDate},
+            area_id = #{area.id},
+            developer = #{developer},
+            address = #{address},
+            sub_address= #{subAddress},
+            level = #{level.value},
+            sign_flag = #{signFlag},
+            Longitude = #{longitude},
+            latitude= #{latitude},
+            qq= #{qq},
+            attachment1= #{attachment1},
+            attachment2= #{attachment2},
+            attachment3= #{attachment3},
+            attachment4= #{attachment4},
+            property= #{property.value},
+            scale = #{scale.value},
+            description = #{description},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate},
+            remarks = #{remarks},
+            del_flag= #{delFlag},
+            short_message_flag = #{shortMessageFlag},
+            auto_complete_order = #{autoCompleteOrder},
+            use_defaultprice = #{useDefaultPrice},
+            insurance_flag = #{insuranceFlag},
+            time_liness_flag = #{timeLinessFlag},
+            invoice_flag = #{invoiceFlag},
+            discount_flag = #{discountFlag},
+            payment_type = #{paymentType.value},
+            bank = #{bank.value},
+            bank_no = #{bankNo},
+            bank_owner = #{bankOwner},
+            bank_issue = #{bankIssue.value},
+            auto_plan_flag = #{autoPlanFlag},
+            capacity =#{capacity}
+            <if test="status != null and status.value != null and status.value != 0">
+                ,status = #{status.value}
+            </if>
+
+        where
+        id = #{id}
+    </update>
+    -->
+
+    <!-- 逻辑删除 -->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <update id="delete">
+        UPDATE
+          md_servicepoint
+        SET
+          del_flag = 1
+        WHERE id = #{id}
+    </update>
+    -->
+
+    <!-- 按需更改信息：订单相关统计数量只做增减,客评：平均运算，四舍五入 -->
+    <update id="updateServicePointByMap_Del20200115" parameterType="java.util.HashMap">
+        update
+          md_servicepoint
+        <set >
+            <if test="primary != null">
+                primary_id = #{primary.id},
+            </if>
+            <if test="orderCount != null" >
+                order_count = order_count + #{orderCount},
+            </if>
+            <if test="planCount != null" >
+                plan_count = plan_count + #{planCount},
+            </if>
+            <if test="breakCount != null" >
+                break_count = break_count + #{breakCount},
+            </if>
+            <if test="grade != null" >
+                grade = CASE WHEN grade=0.00 THEN #{grade} ELSE ROUND((#{grade}+grade)/2) END,
+            </if>
+            <if test="subEngineerCount != null" >
+                sub_engineer_count = sub_engineer_count + #{subEngineerCount},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--更新网点的关键设定值-->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <update id="updateServicePointForKeySetting">
+        update md_servicepoint
+        SET
+            contact_info1 = #{contactInfo1},
+            level = #{level.value},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate},
+            del_flag= #{delFlag},
+            use_defaultprice = #{useDefaultPrice},
+            insurance_flag = #{insuranceFlag},
+            time_liness_flag = #{timeLinessFlag},
+            auto_plan_flag = #{autoPlanFlag}
+            <if test="status != null and status.value != null and status.value != 0">
+                ,status = #{status.value}
+            </if>
+        where id = #{id}
+    </update>
+    -->
+
+
+    <insert id="insertFI">
+        INSERT INTO md_servicepoint_finance (
+        id,
+        payment_type,
+        bank,
+        branch,
+        bank_no ,
+        bank_owner,
+        bank_issue,
+        order_payment_amount,
+        debts_amount,
+        debts_descrption,
+        refund_amount ,
+        replenish_amount,
+        balance,
+        total_amount,
+        invoice_flag,
+        discount,
+        discount_flag,
+        unit
+        ) VALUES (
+        #{id},
+        #{paymentType.value},
+        #{bank.value},
+        #{branch},
+        #{bankNo},
+        #{bankOwner},
+        #{bankIssue.value},
+        #{orderPaymentAmount},
+        #{debtsAmount},
+        #{debtsDescrption},
+        #{refundAmount},
+        #{replenishAmount},
+        #{balance},
+        #{totalAmount},
+        #{invoiceFlag},
+        #{discount},
+        #{discountFlag},
+        #{unit.value}
+        )
+    </insert>
+
+    <update id="updateFI">
+        UPDATE md_servicepoint_finance
+        SET
+            payment_type = #{paymentType.value},
+            bank = #{bank.value},
+            branch = #{branch},
+            bank_no = #{bankNo},
+            bank_owner = #{bankOwner},
+            bank_issue = #{bankIssue.value},
+            unit = #{unit.value},
+            invoice_flag = #{invoiceFlag},
+            discount = #{discount},
+            discount_flag = #{discountFlag}
+            <if test="debtsDescrption != null">
+                , debts_descrption = #{debtsDescrption}
+            </if>
+            <if test="debtsAmount != null">
+                , debts_amount = #{debtsAmount}
+            </if>
+        WHERE
+          id = #{id}
+    </update>
+
+    <update id="approve" >
+        update md_servicepoint
+        set del_flag = 0,
+        update_by = #{updateBy},
+        update_date = now()
+        where id in
+        <foreach collection="ids" item="id" index="index"
+                 open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 产品 -->
+    <!-- 查询网点负责的产品id -->
+    <!--//mark on 2020-1-20 web端去md_servicepoint_product
+    <select id="getProductIds" resultType="java.lang.Integer">
+        SELECT product_id
+        from md_servicepoint_product
+        where servicepoint_id = #{id}
+        limit 200
+    </select>
+    -->
+
+    <!-- 查询网点负责的产品清单 -->
+    <!--//mark on 2020-1-20 web端去md_servicepoint_product
+    <select id="getProducts" resultType="Product">
+        SELECT p.id,p.name,p.set_flag,p.sort,p.product_category_id as "productCategory.id"
+        FROM md_servicepoint_product m
+        INNER JOIN md_product p
+        ON m.product_id = p.id
+        where m.servicepoint_id = #{id}
+        order by p.sort
+        limit 200
+    </select>
+    -->
+
+    <!-- 查询网点负责的产品ID清单 -->
+    <!--//mark on 2020-1-20 web端去md_servicepoint_product
+    <select id="getProductIdsById" resultType="java.lang.Long">
+        SELECT
+            m.product_id
+        FROM
+            md_servicepoint_product m
+        WHERE
+            m.servicepoint_id = #{id}
+        ORDER BY
+            m.product_id
+        limit 200
+    </select>
+    -->
+
+    <!-- 读取网点与产品分类的产品列表 -->
+    <select id="getServicePointProductsByIds" parameterType="ServicePrice" resultType="ServicePointProduct">
+        SELECT
+              msp.servicepoint_id     AS "servicePoint.id",
+              <!--
+              改成调用servicePoint微服务 2019-9-16
+              ms.servicepoint_no      AS "servicePoint.servicePointNo",
+              ms.name                 AS "servicePoint.name",
+              -->
+              msp.product_id          AS "product.id"
+              <!--,
+              改成调用product微服务
+              mp.name                 AS "product.name",
+              mp.sort                 AS "product.sort",
+              mp.product_category_id  AS "product.productCategory.id"
+              -->
+        FROM
+              md_servicepoint_product msp
+        <!--
+        改成调用servicePoint微服务 2019-9-16
+        INNER JOIN
+              md_servicepoint ms
+          ON  msp.servicepoint_id = ms.id
+          -->
+        <!--
+        INNER JOIN
+              md_product mp
+          ON  msp.product_id = mp.id
+          -->
+        <where>
+              <if test="servicePoint != null and servicePoint.id != null">
+                AND msp.servicepoint_id = #{servicePoint.id}
+              </if>
+              <if test="productIds != null and productIds.size >0">
+                  AND  msp.product_id in
+                  <foreach collection="productIds" item="item" index="index" open="(" close=")" separator=",">
+                      ${item}
+                  </foreach>
+              </if>
+              <!--
+              <if test="productCategory !=null and productCategory.id != null">
+                AND mp.product_category_id = #{productCategory.id}
+              </if>
+              -->
+              <if test="product != null and product.id != null">
+                AND msp.product_id = #{product.id}
+              </if>
+        </where>
+        <!--
+        ORDER BY
+              msp.servicepoint_id,
+              mp.sort
+              -->
+    </select>
+
+    <!--//mark on 2020-1-20  web端去md_servicepoint_product
+    <insert id="assignProducts">
+      insert into md_servicepoint_product (servicepoint_id,product_id)
+      values
+        <foreach collection="products" item="product" index="index"
+                 open="" close="" separator=",">
+            (#{id},#{product})
+        </foreach>
+    </insert>
+    -->
+
+    <!-- 移除网点下所有区域 -->
+    <!-- //mark on 2020-1-20  web端去md_servicepoint_product
+    <delete id="removeProducts">
+        delete from md_servicepoint_product
+        where servicepoint_id = #{id};
+    </delete>
+    -->
+
+
+    <!-- 区域 -->
+    <!-- 查询网点负责的区域id清单 -->
+    <!-- //mark on 2020-1-18 web端去md_servicepoint_area
+    <select id="getAreaIds" resultType="java.lang.Integer">
+        SELECT area_id
+        from md_servicepoint_area
+        where servicepoint_id = #{id}
+        limit 5000
+    </select>
+    -->
+
+    <!-- 查询网点负责的区域清单 -->
+    <!--mark on 2020-1-18 web端去md_servicepoint_area
+    <select id="getAreas" resultType="Area">
+        SELECT
+        sa.area_id as id,
+        a.parent_id as "parent.id",
+        a.parent_ids,
+        a.name,
+        a.full_name,
+        a.code,
+        a.type
+        from md_servicepoint_area sa
+        INNER JOIN sys_area a on sa.area_id = a.id
+        where servicepoint_id = #{id}
+        order by a.code
+        limit 5000
+    </select>
+    -->
+
+    <!-- 移除网点下所有区域 -->
+    <!--mark on 2020-1-18 web端去md_servicepoint_area
+    <delete id="removeAreas">
+      delete from md_servicepoint_area
+      where servicepoint_id = #{id}
+    </delete>
+    -->
+
+    <!-- 给网点分配区域 -->
+    <!--mark on 2020-1-18
+    <insert id="assignAreas">
+      insert into md_servicepoint_area (servicepoint_id,area_id)
+      values
+        <foreach collection="areas" item="area" index="index"
+                      open="" close="" separator=",">
+          (#{id},#{area})
+        </foreach>
+    </insert>
+    -->
+
+    <!-- 查询 -->
+    <!-- 查询所有网点信息，保存在redis中（zset） -->
+    <select id="XXX_findAllList" resultType="ServicePoint">
+        select
+        s.id,
+        s.servicepoint_no,
+        s.name,
+        s.contact_info1,
+        s.contact_info2,
+        s.address,
+        s.order_count,
+        s.plan_count,
+        s.break_count,
+        s.developer,
+        s.remarks,
+        s.short_message_flag,
+        s.auto_complete_order,
+        s.use_defaultprice,
+        s.sub_engineer_count,
+        s.plan_remark,
+        s.insurance_flag,
+        s.time_liness_flag,
+        fi.id as "finance.id",
+        fi.invoice_flag as "finance.invoiceFlag",
+        fi.discount as "finance.discount",
+        fi.discount_flag as "finance.discountFlag",
+        fi.payment_type as "finance.paymentType.value",
+        '' as "finance.paymentType.label",
+        fi.bank as "finance.bank.value",
+        '' as "finance.bank.label",
+        fi.balance as "finance.balance",
+        fi.last_pay_date as "finance.lastPayDate",
+        fi.last_pay_amount as "finance.lastPayAmount",
+        fi.branch as "finance.branch",
+        fi.bank_no as "finance.bankNo",
+        fi.bank_owner as "finance.bankOwner",
+        fi.bank_issue as "finance.bankIssue.value",
+        '' as "finance.bankIssue.label",
+        s.primary_id as "primary.id",
+        e.name as "primary.name",
+        e.app_flag as "primary.appFlag",
+        e.contact_info as "primary.contactInfo",
+        u.app_loged as "primary.appLoged",
+        u.id as "primary.accountId",
+        s.level as "level.value",
+        '' as "level.label",
+        s.status AS "status.value",
+        s.app_insurance_flag,
+        s.auto_plan_flag,
+        s.capacity
+        from md_servicepoint s
+        inner join md_servicepoint_finance fi ON s.id = fi.id
+        LEFT JOIN md_engineer e on s.primary_id = e.id
+        LEFT JOIN sys_user u ON e.id = u.engineer_id and u.del_flag = 0
+        where s.del_flag = 0
+        order by s.id
+        limit 100000
+    </select>
+
+    <select id="findIdList_del20200114" resultType="java.lang.Long">
+        select s.id
+        from md_servicepoint s
+        <if test="finance!=null and ((finance.bankIssue!=null and finance.bankIssue.value != '') or (finance.bank !=null and finance.bank.value !=null and finance.bank.value != '') or (finance.paymentType !=null and finance.paymentType.value !=null and finance.paymentType.value != '') or (finance.bankNo !=null and finance.bankNo != '') or (finance.invoiceFlag !=null and finance.invoiceFlag > 0) or (finance.discountFlag !=null and finance.discountFlag >= 0))">
+          INNER JOIN md_servicepoint_finance f ON s.id = f.id
+        </if>
+        <if test="productCategory != null and productCategory > 0">
+          INNER JOIN md_productcategory_servicepoint mps ON mps.service_point_id = s.id AND mps.product_category_id = #{productCategory}
+        </if>
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="servicePointNo!=null and servicePointNo!='' ">
+                s.servicepoint_no like CONCAT(#{servicePointNo},'%')
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND s.name like CONCAT(#{name},'%')
+            </if>
+            <if test="contactInfo1!=null and contactInfo1!='' ">
+                <choose>
+                    <when test="contactInfo1.length == 11">
+                        AND s.contact_info1 = #{contactInfo1}
+                    </when>
+                    <otherwise>
+                        AND s.contact_info1 like CONCAT(#{contactInfo1},'%')
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="area != null and area.id != null ">
+                AND exists (
+                  select 1 from md_servicepoint_area sa
+                  where sa.area_id = #{area.id} and s.id = sa.servicepoint_id
+                )
+            </if>
+            <if test="developer!=null and developer!='' ">
+                AND s.developer like CONCAT(#{developer},'%')
+            </if>
+            <if test="signFlag != null and signFlag != -1 ">
+                AND s.sign_flag = #{signFlag}
+            </if>
+            <if test="level != null and level.value != null and level.value != 0 ">
+                AND s.level = #{level.value}
+            </if>
+            <if test="levelRange != null ">
+                <if test="levelRange.start>0">
+                    <![CDATA[ AND s.level >= #{levelRange.start} ]]>
+                </if>
+                <if test="levelRange.end > 0">
+                    <![CDATA[ AND s.level <= #{levelRange.end} ]]>
+                </if>
+            </if>
+            <if test="status != null and status.value != null and status.value != 0 ">
+                AND s.status = #{status.value}
+            </if>
+            <if test="statusRange != null ">
+                <if test="statusRange.start > 0">
+                    <![CDATA[ AND s.status >= #{statusRange.start} ]]>
+                </if>
+                <if test="statusRange.end > 0">
+                    <![CDATA[ AND s.status <= #{statusRange.end} ]]>
+                </if>
+            </if>
+            <if test="finance!=null and finance.bankIssue !=null and finance.bankIssue.value != '' ">
+                AND f.bank_issue = #{finance.bankIssue.value}
+            </if>
+            <if test="finance.bank !=null and finance.bank.value !=null and finance.bank.value != '' ">
+                AND f.bank = CONVERT(#{finance.bank.value},SIGNED)
+            </if>
+            <if test="finance.bankNo !=null and finance.bankNo != '' ">
+                AND f.bank_no like CONCAT('%',#{finance.bankNo},'%')
+            </if>
+            <if test="finance.paymentType !=null and finance.paymentType.value !=null and finance.paymentType.value != '' ">
+                AND f.payment_type = #{finance.paymentType.value}
+            </if>
+            <if test="finance!=null and finance.invoiceFlag !=null and finance.invoiceFlag > 0">
+                AND f.invoice_flag = #{finance.invoiceFlag}
+            </if>
+            <if test="finance!=null and finance.discountFlag !=null and finance.discountFlag >= 0">
+                AND f.discount_flag = #{finance.discountFlag}
+            </if>
+            <if test="primary!=null and primary.appFlag !=null and primary.appFlag >= 0">
+                and exists (
+                    select 1
+                    from md_engineer e
+                    where s.primary_id = e.id
+                    and e.app_flag = #{primary.appFlag}
+                )
+            </if>
+            <if test="autoCompleteOrder != null and autoCompleteOrder > 0">
+                AND s.auto_complete_order = #{autoCompleteOrder}
+            </if>
+            <!--
+            <if test="productCategory != 0">
+
+                改成product微服务调用
+                AND exists (select 1 from md_product p,md_servicepoint_product sp
+                  where p.product_category_id = #{productCategory}
+                    and p.id = sp.product_id
+                    and s.id = sp.servicePoint_id
+                )
+
+                <if test="productIds != null and productIds !=''">
+                    AND exists (select 1 from md_servicepoint_product sp
+                    where sp.product_id in
+                    <foreach collection="productIds.split(',')" item="item" index="index" open="(" close=")" separator=",">
+                        ${item}
+                    </foreach>
+                    and s.id = sp.servicePoint_id
+                    )
+                </if>
+            </if>
+            -->
+            <if test="autoPlanFlag != null and autoPlanFlag >= 0">
+                AND s.auto_plan_flag = #{autoPlanFlag}
+            </if>
+            <if test="insuranceFlag != null and insuranceFlag >=0">
+                and s.insurance_flag = #{insuranceFlag}
+            </if>
+            <if test="timeLinessFlag != null and timeLinessFlag >=0">
+                and s.time_liness_flag = #{timeLinessFlag}
+            </if>
+            <if test="useDefaultPrice != null and useDefaultPrice >=0">
+                and s.use_defaultprice = #{useDefaultPrice}
+            </if>
+            <if test="orderCount != null and orderCount >=1">
+                and s.order_count >= #{orderCount}
+            </if>
+            AND s.del_flag = 0
+        </trim>
+        order by
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                s.servicepoint_no
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- mark on 2020-1-13
+    <select id="findServicePointIdsForPlan" resultType="java.lang.Long">
+        select s.id
+        from md_servicepoint s
+        <if test="finance!=null and ((finance.bankIssue!=null and finance.bankIssue.value != '') or (finance.bank !=null and finance.bank.value !=null and finance.bank.value != '') or (finance.paymentType !=null and finance.paymentType.value !=null and finance.paymentType.value != '') or (finance.bankNo !=null and finance.bankNo != '') or (finance.invoiceFlag !=null and finance.invoiceFlag > 0))">
+            INNER JOIN md_servicepoint_finance f ON s.id = f.id
+        </if>
+        <if test="productCategoryId != null">
+            INNER JOIN md_productcategory_servicepoint mps ON mps.service_point_id = s.id AND mps.product_category_id = #{productCategoryId}
+        </if>
+        <where>
+            <if test="servicePointNo!=null and servicePointNo!='' ">
+                s.servicepoint_no like CONCAT(#{servicePointNo},'%')
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND s.name like CONCAT(#{name},'%')
+            </if>
+            <if test="contactInfo1!=null and contactInfo1!='' ">
+                <choose>
+                    <when test="contactInfo1.length == 11">
+                        AND s.contact_info1 = #{contactInfo1}
+                    </when>
+                    <otherwise>
+                        AND s.contact_info1 like CONCAT(#{contactInfo1},'%')
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="area != null and area.id != null ">
+                AND exists (
+                select 1 from md_servicepoint_area sa
+                where sa.area_id = #{area.id} and s.id = sa.servicepoint_id
+                )
+            </if>
+            <if test="subArea != null and subArea.id != null">
+                and exists (
+                select 1 from md_servicepoint_station mss
+                where mss.sub_area_id = #{subArea.id} and s.id = mss.servicepoint_id
+                and mss.del_flag = 0
+                )
+            </if>
+            <if test="developer!=null and developer!='' ">
+                AND s.developer like CONCAT(#{developer},'%')
+            </if>
+            <if test="signFlag != null and signFlag != -1 ">
+                AND s.sign_flag = #{signFlag}
+            </if>
+            <if test="level != null and level.value != null and level.value != 0 ">
+                AND s.level = #{level.value}
+            </if>
+            <if test="levelRange != null ">
+                <if test="levelRange.start>0">
+                    <![CDATA[ AND s.level >= #{levelRange.start} ]]>
+                </if>
+                <if test="levelRange.end > 0">
+                    <![CDATA[ AND s.level <= #{levelRange.end} ]]>
+                </if>
+            </if>
+            <if test="status != null and status.value != null and status.value != 0 ">
+                AND s.status = #{status.value}
+            </if>
+            <if test="statusRange != null ">
+                <if test="statusRange.start > 0">
+                    <![CDATA[ AND s.status >= #{statusRange.start} ]]>
+                </if>
+                <if test="statusRange.end > 0">
+                    <![CDATA[ AND s.status <= #{statusRange.end} ]]>
+                </if>
+            </if>
+            <if test="finance!=null and finance.bankIssue !=null and finance.bankIssue.value != '' ">
+                AND f.bank_issue = #{finance.bankIssue.value}
+            </if>
+            <if test="finance.bank !=null and finance.bank.value !=null and finance.bank.value != '' ">
+                AND f.bank = CONVERT(#{finance.bank.value},SIGNED)
+            </if>
+            <if test="finance.bankNo !=null and finance.bankNo != '' ">
+                AND f.bank_no like CONCAT('%',#{finance.bankNo},'%')
+            </if>
+            <if test="finance.paymentType !=null and finance.paymentType.value !=null and finance.paymentType.value != '' ">
+                AND f.payment_type = #{finance.paymentType.value}
+            </if>
+            <if test="finance!=null and finance.invoiceFlag !=null and finance.invoiceFlag > 0">
+                AND f.invoice_flag = #{finance.invoiceFlag}
+            </if>
+            <if test="primary!=null and primary.appFlag !=null and primary.appFlag >= 0">
+                and exists (
+                select 1
+                from md_engineer e
+                where s.primary_id = e.id
+                and e.app_flag = #{primary.appFlag}
+                )
+            </if>
+            <if test="autoCompleteOrder != null and autoCompleteOrder > 0">
+                AND s.auto_complete_order = #{autoCompleteOrder}
+            </if>
+            <if test="productCategory != 0 ">
+                <if test="productIds != null and productIds !=''">
+                    AND exists (select 1 from md_servicepoint_product sp
+                    where sp.product_id in
+                    <foreach collection="productIds.split(',')" item="item" index="index" open="(" close=")" separator=",">
+                        ${item}
+                    </foreach>
+                    and s.id = sp.servicePoint_id
+                    )
+                </if>
+            </if>
+            AND s.del_flag = 0
+        </where>
+        order by s.level desc, s.order_count desc, s.servicepoint_no
+    </select>
+    -->
+
+    <!-- 按区县/街道/品类 分页查询可派单列表 -->
+    <select id="findServicePointIdsForPlanNew_Del20200114" resultType="java.lang.Long">
+        select sa.servicepoint_id
+        from
+            md_servicepoint_area sa
+        inner join
+            md_servicepoint s
+            on sa.servicepoint_id = s.id
+        INNER JOIN
+            md_productcategory_servicepoint mps
+            ON mps.service_point_id = s.id
+            AND mps.product_category_id = #{productCategoryId}
+        <where>
+            sa.area_id = #{area.id}
+            and s.level between 1 AND 5
+            AND s.status = 10
+            AND s.del_flag = 0
+            <if test="subArea != null and subArea.id != null">
+                and exists (
+                    select 1
+                    from
+                        md_servicepoint_station mss
+                    where
+                        mss.area_id = #{area.id}
+                        and mss.sub_area_id = #{subArea.id}
+                        and s.id = mss.servicepoint_id
+                        and mss.del_flag = 0
+                )
+            </if>
+            <if test="contactInfo1!=null and contactInfo1!='' ">
+                <choose>
+                    <when test="contactInfo1.length == 11">
+                        AND s.contact_info1 = #{contactInfo1}
+                    </when>
+                    <otherwise>
+                        AND s.contact_info1 like CONCAT(#{contactInfo1},'%')
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="servicePointNo!=null and servicePointNo!='' ">
+                AND s.servicepoint_no like CONCAT(#{servicePointNo},'%')
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND s.name like CONCAT(#{name},'%')
+            </if>
+            <if test="finance != null and finance.paymentType !=null and finance.paymentType.value !=null and finance.paymentType.value != '' ">
+                AND exists (
+                    select 1
+                    from
+                        md_servicepoint_finance f
+                    where
+                        f.payment_type = #{finance.paymentType.value}
+                        and s.id = f.id
+                )
+            </if>
+        </where>
+        order by s.level desc, s.order_count desc, s.servicepoint_no
+    </select>
+
+    <!-- 按id列表返回 -->
+    <!--
+    mark on 2020-1-13
+    <select id="findListByIds" resultType="ServicePoint">
+        select <include refid="servicePointColumns"/>
+        ,<include refid="primaryColumns" />
+        ,<include refid="fiColumns"/>
+        from md_servicepoint s
+        left join md_engineer e on s.primary_id = e.id
+        <include refid="FIJoins"/>
+        where s.id in
+        <foreach collection="ids" item="id" index="index"
+                 open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        AND s.del_flag = 0
+    </select>
+    -->
+
+    <!-- 待审核网点 -->
+    <select id="findApproveList_Del20200114" resultType="ServicePoint">
+        select <include refid="servicePointColumns"/>
+        from md_servicepoint s
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+                <if test="servicePointNo!=null and servicePointNo!='' ">
+                    s.servicepoint_no like CONCAT(#{servicePointNo},'%')
+                </if>
+                <if test="name!= null and name!= '' ">
+                    AND s.name like CONCAT(#{name},'%')
+                </if>
+                <if test="contactInfo1!=null and contactInfo1!='' ">
+                    AND s.contact_info1 = #{contactInfo1}
+                </if>
+                <if test="area!=null and area.id!=null ">
+                    AND exsits(select 1 from md_servicepoint_area sa
+                    where s.id = sa.servicepoint_id
+                    and sa.area_id = #{area.id} )
+                </if>
+                <if test="planCount !=null and planCount > 0 ">
+                    <![CDATA[
+                    AND s.planCount >0
+                    ]]>
+                </if>
+                AND s.del_flag = 2
+        </trim>
+        order by
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                s.${orderBy}
+            </when>
+            <otherwise>
+                s.servicepoint_no
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 按网点号返回网点id -->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <select id="findServicePointNo" resultType="java.lang.Integer">
+        select
+          id
+        from
+          md_servicepoint
+        where
+          servicepoint_no = #{no}
+          <if test="exceptId != null and exceptId > 0">
+              <![CDATA[
+                and id <> #{exceptId}
+              ]]>
+          </if>
+          and del_flag = 0
+        limit 1
+    </select>
+    -->
+
+    <!-- 按网点手机号返回网点id -->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <select id="findServicePointIdByContact" resultType="java.lang.Integer">
+        select
+        id
+        from
+        md_servicepoint
+        where
+          contact_info1 = #{contact}
+        <if test="exceptId != null and exceptId > 0">
+            <![CDATA[
+                and id <> #{exceptId}
+              ]]>
+        </if>
+        and del_flag = 0
+        limit 1
+    </select>
+    -->
+
+    <!-- 按手机号返回网点id -->
+    <!--mark on 2020-1-13
+    <select id="findEngineerIdByMobile" resultType="java.lang.Integer">
+        select  id
+        from
+          md_engineer
+        where
+        contact_info = #{mobile}
+        <if test="exceptId != null and exceptId > 0">
+            <![CDATA[
+                and id <> #{exceptId}
+              ]]>
+        </if>
+        and del_flag = 0
+        limit 1
+    </select>
+    -->
+
+    <!-- 按手机号返回网点id -->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <select id="findServicePointIdByBankNo" resultType="java.lang.Integer">
+        select  fi.id
+        from
+          md_servicepoint_finance fi
+          inner join md_servicepoint p
+          on fi.id = p.id
+        where
+          fi.bank_no = #{bankNo}
+        <if test="exceptId != null and exceptId > 0">
+            <![CDATA[
+                and fi.id <> #{exceptId}
+              ]]>
+        </if>
+          and p.del_flag = 0
+        limit 1
+    </select>
+    -->
+
+    <!-- 更新主帐号信息 -->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <update id="updatePrimaryAccount">
+        update
+          md_servicepoint
+        SET
+          primary_id = #{primary.id},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+        where id = #{id};
+    </update>
+    -->
+
+    <!-- 升级网点后更新信息 -->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <update id="upgradeServicePoint">
+        update
+          md_servicepoint
+        SET
+          primary_id = #{primary.id},
+          order_count = #{orderCount},
+          plan_count = #{planCount},
+          break_count = #{breakCount},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+        where id = #{id};
+    </update>
+    -->
+
+    <!-- 以下是安维人员管理 -->
+    <sql id="engineerColumns">
+        e.id,
+        e.servicepoint_id as "servicePoint.id",
+        s.servicepoint_no as "servicePoint.servicePointNo",
+        s.name as "servicePoint.name",
+        e.name,
+        e.contact_info,
+        e.area_id as "area.id",
+        ea.name as "area.name",
+        ea.full_name as "area.fullName",
+        e.address,
+        e.grade,
+        e.qq,
+        e.master_flag,
+        e.app_flag,
+        u.app_loged,
+        e.level as "level.value",
+        '' as "level.label",
+        e.order_count,
+        e.plan_count,
+        e.break_count,
+        e.create_by AS "createBy.id",
+        e.create_date,
+        e.update_by ,
+        e.update_date ,
+        e.remarks ,
+        e.del_flag,
+        e.for_tmall,
+        u.id as accountId
+    </sql>
+
+    <sql id="engineerColumnsWithoutServicePoint">
+        e.id,
+        e.servicepoint_id as "servicePoint.id",
+        e.name,
+        e.contact_info,
+        e.area_id as "area.id",
+        ea.name as "area.name",
+        ea.full_name as "area.fullName",
+        e.address,
+        e.grade,
+        e.qq,
+        e.master_flag,
+        e.app_flag,
+        u.app_loged,
+        e.level as "level.value",
+        '' as "level.label",
+        e.order_count,
+        e.plan_count,
+        e.break_count,
+        e.create_by AS "createBy.id",
+        e.create_date,
+        e.update_by ,
+        e.update_date ,
+        e.remarks ,
+        e.del_flag,
+        e.for_tmall,
+        u.id as accountId
+    </sql>
+
+    <!--
+    mark on 2020-1-13
+    <select id="getEngineer" resultType="Engineer">
+        select <include refid="engineerColumns"/>
+        from md_engineer e
+        left join sys_area ea ON e.area_id = ea.id
+        inner join md_servicepoint s on e.servicepoint_id = s.id
+        inner join sys_user u on u.engineer_id = e.id
+        where e.id = #{id}
+    </select>
+
+
+    <select id="getEngineerWithoutServicePoint" resultType="Engineer">
+        select <include refid="engineerColumnsWithoutServicePoint"/>
+        from md_engineer e
+        left join sys_area ea ON e.area_id = ea.id
+        inner join sys_user u on u.engineer_id = e.id
+        where e.id = #{id}
+    </select>
+
+    <select id="getEngineerByPhone" resultType="Engineer">
+        select <include refid="engineerColumns"/>
+        from md_engineer e
+        left join sys_area ea ON e.area_id = ea.id
+        inner join md_servicepoint s on e.servicepoint_id = s.id
+        inner join sys_user u on u.engineer_id = e.id
+        where e.contact_info = #{phone}
+        limit 1
+    </select>
+    -->
+
+    <select id="getEngineerByPhoneExpect" resultType="User">
+        select id,name
+        from sys_user
+        where login_name = #{mobile}
+            <![CDATA[and del_flag != 0]]>
+        <if test="exceptId != null and exceptId > 0">
+            <![CDATA[
+                and engineer_id <> #{exceptId}
+              ]]>
+        </if>
+        limit 1
+    </select>
+
+    <!--
+    <insert id="insertEngineer" useGeneratedKeys="true" keyProperty="id">
+        insert into md_engineer (
+            servicepoint_id,
+            name,
+            contact_info,
+            area_id,
+            address,
+            grade,
+            qq,
+            master_flag,
+            app_flag,
+            level,
+            for_tmall,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            remarks,
+            del_flag
+        ) VALUES (
+            #{servicePoint.id},
+            #{name},
+            #{contactInfo},
+            #{area.id},
+            #{address},
+            #{grade},
+            #{qq},
+            #{masterFlag},
+            #{appFlag},
+            #{level.value},
+            #{forTmall},
+            #{createBy.id},
+            #{createDate},
+            #{createBy.id},
+            #{createDate},
+            #{remarks},
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="updateEngineer">
+        update
+          md_engineer
+        SET
+          name = #{name},
+          contact_info = #{contactInfo},
+          area_id = #{area.id},
+          address = #{address},
+          qq = #{qq},
+          app_flag = #{appFlag},
+          master_flag = #{masterFlag},
+          level = #{level.value},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateEngineerByParams" parameterType="java.util.HashMap">
+        update
+        md_engineer
+        <set >
+            <if test="name != null" >
+                name = #{name},
+            </if>
+            <if test="contactInfo != null" >
+                contact_info = #{contactInfo},
+            </if>
+            <if test="appFlag != null">
+                app_flag = #{appFlag},
+            </if>
+            <if test="updateBy != null and updateBy.id != null" >
+                update_by = #{updateBy.id},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    -->
+
+    <!-- 区域 -->
+    <!-- 查询网点负责的区域id清单 -->
+    <!--mark on 2020-2-12
+    <select id="getEngineerAreaIds" resultType="Long">
+        SELECT area_id
+        from md_engineer_area
+        where engineer_id = #{id}
+    </select>
+    -->
+
+    <!-- 查询网点负责的区域清单 -->
+    <!-- mark on 2020-2-12
+    <select id="getEngineerAreas" resultType="Area">
+        SELECT
+        sa.area_id as id,
+        a.parent_id as "parent.id",
+        a.parent_ids,
+        a.name,
+        a.full_name,
+        a.code
+        from md_engineer_area sa
+        INNER JOIN sys_area a on sa.area_id = a.id
+        where engineer_id = #{id}
+        order by a.code
+        limit 10000
+    </select>
+    -->
+
+    <!-- 移除网点下所有区域 -->
+    <!--mark on 2020-2-12
+    <delete id="removeEngineerAreas">
+        delete from md_engineer_area
+        where engineer_id = #{id}
+    </delete>
+    -->
+
+    <!-- 给网点分配区域 -->
+    <!--mark on 2020-2-12
+    <insert id="assignEngineerAreas">
+        insert into md_engineer_area (engineer_id,area_id)
+        <foreach collection="areas" item="areaId" separator=" union all ">
+            SELECT #{id}, #{areaId}
+        </foreach>
+    </insert>
+    -->
+
+    <!--
+    mark on 2020-1-13
+    <update id="updateEngineerByMap" parameterType="java.util.HashMap">
+        update
+          md_engineer
+        <set >
+            <if test="orderCount != null" >
+                order_count = order_count + #{orderCount},
+            </if>
+            <if test="planCount != null" >
+                plan_count = plan_count + #{planCount},
+            </if>
+            <if test="breakCount != null" >
+                break_count = break_count + #{breakCount},
+            </if>
+            <if test="grade != null" >
+                grade = CASE WHEN grade=0.00 THEN #{grade} ELSE ROUND((#{grade}+grade)/2) END,
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    -->
+
+    <!-- mark on 2020-1-13
+    <update id="upgradeEngineer">
+        update
+          md_engineer
+        SET
+            servicepoint_id = #{servicePoint.id},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE id = #{id}
+    </update>
+    -->
+
+    <update id="updateUser">
+        UPDATE
+          sys_user
+        SET
+          login_name = #{contactInfo},
+          mobile = #{contactInfo},
+          name = #{name},
+          qq = #{qq},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+          <if test="masterFlag == 1">,sub_flag = 0</if>
+          <if test="masterFlag == 0">,sub_flag = 1</if>
+        where engineer_id = #{id}
+    </update>
+
+    <!-- 按区域查询可手机接单网点主帐号(Engineer) -->
+    <!-- mark on 2020-1-13
+    <select id="getEngieersListByAreaID" resultType="Engineer">
+        select e.id,e.name,e.contact_info
+        from md_engineer_area ea
+        inner join md_engineer e
+        on e.id = ea.engineer_id
+        where ea.area_id = #{areaId}
+          and e.master_flag = 1
+          and e.app_flag = 1
+          and e.del_flag = 0
+        order by level desc,plan_count desc
+        limit 1000;
+    </select>
+    -->
+
+    <!-- 按区域查询可手机接单网点主帐号(User)
+    <select id="getEngineerAccountsListByAreaID" resultType="User">
+        select u.id,
+               u.name,
+               u.mobile,
+               u.app_loged,
+               e.app_flag,
+               e.servicepoint_id AS "servicePointId"
+        from md_engineer_area ea
+            inner join md_engineer e
+              on e.id = ea.engineer_id
+            inner join sys_user u
+              on u.user_type = 5 and u.engineer_id = e.id
+        where ea.area_id = #{areaId}
+            and e.master_flag = 1
+            and e.app_flag = 1
+            and e.del_flag = 0
+        limit 2000;
+    </select>
+    -->
+
+    <!-- 按区域+产品类目查询可手机接单网点主帐号(User) -->
+    <!-- mark on 2020-1-13
+    <select id="getEngineerAccountsListByAreaAndProductCategory" resultType="User">
+        SELECT
+            u.id,
+            u.name,
+            u.mobile,
+            u.app_loged,
+            e.app_flag,
+            e.servicepoint_id
+        FROM
+            sys_user u
+            inner join md_engineer e
+            on u.engineer_id = e.id and e.master_flag = 1 and e.app_flag = 1 and e.del_flag = 0
+        where u.user_type = 5
+            and u.sub_flag = 0
+            and u.del_flag = 0
+            and exists (
+                select 1
+                from md_engineer_area ea
+                where ea.area_id = #{areaId}
+                    and u.engineer_id = ea.engineer_id
+            )
+            <if test="categoryId != null and categoryId > 0">
+            AND exists (
+                select 1
+                from md_productcategory_servicepoint mps
+                where mps.product_category_id = #{categoryId}
+                    and e.servicepoint_id = mps.service_point_id
+            )
+            </if>
+        LIMIT 2000;
+    </select>
+    -->
+
+    <!-- 查询安维人员 -->
+    <!-- mark on 2020-1-13
+    <select id="findEngineerList" resultType="Engineer">
+        select <include refid="engineerColumns"/>
+        from md_engineer e
+        left join sys_area ea ON e.area_id = ea.id
+        <if test="area != null and area.id != null">
+            INNER JOIN md_engineer_area mea ON e.id = mea.engineer_id AND mea.area_id = #{area.id}
+        </if>
+        inner join md_servicepoint s on e.servicepoint_id = s.id
+        inner join sys_user u on u.engineer_id = e.id
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <choose>
+                <when test="servicePoint!=null and servicePoint.id!=null and servicePoint.id>0 ">
+                    s.id = #{servicePoint.id}
+                </when>
+                <otherwise>
+                    <if test="servicePoint!=null and servicePoint.servicePointNo!=null and servicePoint.servicePointNo!='' ">
+                        s.servicepoint_no like CONCAT(#{servicePoint.servicePointNo},'%')
+                    </if>
+                    <if test="servicePoint!=null and servicePoint.name!=null and servicePoint.name!='' ">
+                        s.name like CONCAT(#{servicePoint.name},'%')
+                    </if>
+                </otherwise>
+            </choose>
+            <if test="servicePoint != null and servicePoint.id !=null ">
+                AND e.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND e.name LIKE CONCAT('%',#{name},'%')
+            </if>
+            <if test="contactInfo != null and contactInfo != '' ">
+                <choose>
+                    <when test="contactInfo.length == 11">
+                        AND e.contact_info = #{contactInfo}
+                    </when>
+                    <otherwise>
+                        AND e.contact_info like CONCAT('%',#{contactInfo},'%')
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="masterFlag != null and masterFlag >= 0">
+                AND e.master_flag = #{masterFlag}
+            </if>
+            <if test="appFlag != null and appFlag >= 0">
+                AND e.app_flag = #{appFlag}
+            </if>
+            <if test="exceptId != null">
+                <![CDATA[ AND e.id <> #{exceptId} ]]>
+            </if>
+            <if test="delFlag != null">
+                AND e.del_flag = #{delFlag}
+            </if>
+        </trim>
+        order by
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                s.${orderBy}
+            </when>
+            <otherwise>
+                s.servicepoint_no,master_flag desc,s.name
+            </otherwise>
+        </choose>
+    </select>
+    -->
+
+    <!-- 查询安维的服务区域 -->
+    <!-- mark on 2020-2-12
+    <select id="getEngineerServiceAreas" parameterType="Map" resultType="Engineer">
+        SELECT 	mea.engineer_id AS 'id', group_concat(sa.name) AS 'areas'
+        FROM 	md_engineer_area mea
+                LEFT JOIN sys_area sa on sa.id = mea.area_id
+        WHERE   sa.type = 4
+            <if test="engineerIds != null and engineerIds.size > 0">
+                AND mea.engineer_id in
+                <foreach collection="engineerIds" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+        GROUP BY mea.engineer_id
+        LIMIT 200000
+    </select>
+    -->
+
+    <!-- 所有安维人员 -->
+    <!-- mark on 2020-1-13
+    <select id="findAllEngineersName" resultType="Engineer">
+        select
+            e.id,
+            e.name,
+            e.contact_info,
+            app_flag
+        from md_engineer e
+        <where>
+            <if test="engineerIds != null and engineerIds.size >0">
+                id in
+                <foreach item="engineerId" index="index" collection="engineerIds" open="(" separator="," close=")">
+                    #{engineerId}
+                </foreach>
+            </if>
+        </where>
+        limit 100000
+    </select>
+
+    <select id="findAllEngineers" resultType="Engineer">
+        select
+            e.id,
+            e.servicepoint_id as "servicePoint.id",
+            e.area_id as "area.id",
+            ea.name as "area.name",
+            ea.full_name as "area.fullName",
+            e.name,
+            e.contact_info,
+            e.address,
+            e.grade,
+            e.master_flag,
+            e.app_flag,
+            u.app_loged,
+            u.id as accountId,
+            e.level as "level.value",
+            '' as "level.label",
+            e.order_count,
+            e.plan_count,
+            e.break_count,
+            e.remarks
+        from md_engineer e
+        left join sys_area ea on e.area_id = ea.id
+        inner join md_servicepoint s on s.del_flag = 0 and e.servicepoint_id = s.id
+        inner join sys_user u on u.engineer_id = e.id
+        where  e.del_flag = 0
+        order by e.servicepoint_id
+        limit 100000
+    </select>
+    -->
+
+    <!-- 重置安维帐号密码 -->
+    <update id="resetPassword">
+        update sys_user
+        SET
+          password = #{password},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+        where engineer_id = #{engineerId}
+    </update>
+
+    <!--
+    mark on 2020-1-13
+    <delete id="deleteEngineer">
+        update md_engineer
+          set del_flag = #{delFlag},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+        where id = #{id}
+    </delete>
+    -->
+
+    <delete id="deleteUser">
+        update sys_user
+        set del_flag = #{delFlag},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate}
+        where engineer_id = #{id}
+    </delete>
+
+    <!--
+    //mark on 2020-1-13
+    <select id="checkMasterEngineer" resultType="java.lang.Integer">
+        select
+        count(id)
+        from
+          md_engineer
+        where
+          servicepoint_id = #{servicePointId}
+        and master_flag = 1
+        and del_flag = 0
+        <if test="exceptId != null and exceptId > 0">
+            <![CDATA[
+                and id <> #{exceptId}
+              ]]>
+        </if>
+        limit 1
+    </select>
+    -->
+
+    <!-- mark on 2020-1-13
+    <select id="getEngineerByUserId" resultType="Engineer">
+        select <include refid="engineerColumnsWithoutServicePoint"/>
+        from sys_user u
+        inner join md_engineer e on e.id = u.engineer_id
+        left join sys_area ea ON e.area_id = ea.id
+        where u.id = #{userId} and u.del_flag = 0
+    </select>
+
+
+        <select id="getEngineerByUserId_old" resultType="Engineer">
+            select <include refid="engineerColumns"/>
+            from sys_user u
+            inner join md_engineer e on e.id = u.engineer_id
+            left join sys_area ea ON e.area_id = ea.id
+            inner join md_servicepoint s on e.servicepoint_id = s.id
+            where u.id = #{userId} and u.del_flag = 0
+        </select>
+         -->
+        <!-- mark on 2020-1-13
+        <select id="getMasterEngineer" resultType="Engineer">
+            select
+            <include refid="engineerColumnsWithoutServicePoint"/>
+            from
+              md_engineer e
+            left join sys_area ea ON e.area_id = ea.id
+            inner join sys_user u on u.engineer_id = e.id
+            where
+              e.servicepoint_id = #{servicePointId}
+              and e.master_flag = 1
+              and e.del_flag = 0
+            limit 1
+        </select>
+
+
+        <select id="getMasterEngineer_old" resultType="Engineer">
+            select
+            <include refid="engineerColumns"/>
+            from
+            md_engineer e
+            left join sys_area ea ON e.area_id = ea.id
+            inner join md_servicepoint s on e.servicepoint_id = s.id
+            inner join sys_user u on u.engineer_id = e.id
+            where
+            e.servicepoint_id = #{servicePointId}
+            and e.master_flag = 1
+            and e.del_flag = 0
+            limit 1
+        </select>
+        -->
+
+    <!-- mark on 2020-1-13
+    <update id="resetEngineerMasterFlag">
+        update md_engineer set master_flag = 0
+        where id IN
+        <foreach item="engineerId" index="index" collection="list" open="(" separator="," close=")">
+            #{engineerId}
+        </foreach>
+    </update>
+
+    <select id="getSubEngineerIds" resultType="Long">
+        select id from md_engineer
+        where servicepoint_id = #{id}  <![CDATA[ and id <> #{primary.id}]]>
+    </select>
+    -->
+
+
+    <update id="resetUserEngineerSubFlag">
+        update sys_user
+        set sub_flag = 1
+        where engineer_id in
+        <foreach item="engineerId" index="index" collection="list" open="(" separator="," close=")">
+          #{engineerId}
+        </foreach>
+    </update>
+
+
+    <!-- 以下为安维价格管理 -->
+
+    <sql id="priceColumn">
+        p.id,
+        p.servicepoint_id as "servicePoint.id",
+        s.servicepoint_no as "servicePoint.servicePointNo",
+        s.name as "servicePoint.name",
+        p.product_id as "product.id",
+        <!--
+        sp.name as "product.name",
+        -->
+        p.service_type_id as "serviceType.id",
+        st.name as "serviceType.name",
+        st.code as "serviceType.code",
+        p.price,
+        p.discount_price,
+        p.unit,
+        p.price_type,
+        p.create_by as "createBy.id",
+        p.create_date,
+        p.update_by as "updateBy.id",
+        p.update_date,
+        p.remarks,
+        p.del_flag
+    </sql>
+
+    <sql id="priceColumnWithoutServicePoint">
+        p.id,
+        p.servicepoint_id as "servicePoint.id",
+        <!--
+        s.servicepoint_no as "servicePoint.servicePointNo",
+        s.name as "servicePoint.name",
+        -->
+        p.product_id as "product.id",
+        <!--
+        sp.name as "product.name",
+        -->
+        p.service_type_id as "serviceType.id",
+        <!-- 调用微服务获取服务类型
+        st.name as "serviceType.name",
+        st.code as "serviceType.code",
+        -->
+        p.price,
+        p.discount_price,
+        p.unit,
+        p.price_type as "priceType.value",
+        p.create_by as "createBy.id",
+        p.create_date,
+        p.update_by as "updateBy.id",
+        p.update_date,
+        p.remarks,
+        p.del_flag,
+        p.customize_flag
+    </sql>
+
+    <!-- 获得某个网点下的价格 -->
+    <select id="getPrices_del" resultType="ServicePrice">
+        select <include refid="priceColumnWithoutServicePoint"/>
+        from md_servicepoint_price p
+        <!--
+        INNER JOIN md_servicepoint s on p.servicepoint_id = s.id and s.del_flag = 0
+        -->
+        <!--
+        改成微服务调用
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        <!--
+         改为调用微服务
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        -->
+        <where>
+            <if test="servicePointId !=null and servicePointId > 0">
+                AND p.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="productId !=null and productId > 0">
+                AND p.product_id = #{productId}
+            </if>
+            <if test="delFlag !=null">
+                AND p.del_flag = #{delFlag}
+            </if>
+        </where>
+        limit 2000
+        <!--
+        order by sp.name,st.name
+        -->
+    </select>
+
+    <select id="getPrices_old" resultType="ServicePrice">
+        select <include refid="priceColumn"/>
+        from md_servicepoint_price p
+        INNER JOIN md_servicepoint s on p.servicepoint_id = s.id and s.del_flag = 0
+        <!--
+        改成微服务调用
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        <where>
+            <if test="servicePointId !=null and servicePointId > 0">
+                AND p.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="productId !=null and productId > 0">
+                AND p.product_id = #{productId}
+            </if>
+            <if test="delFlag !=null">
+                AND p.del_flag = #{delFlag}
+            </if>
+        </where>
+        <!--
+        order by sp.name,st.name
+        -->
+    </select>
+
+    <!-- 按多个id获得网点下价格 -->
+    <!-- mark on 2020-3-4 web端去md_servicepoint_price
+    <select id="getPricesByPoints" resultType="ServicePrice">
+        SELECT
+            msp.id,
+            msp.servicepoint_id   AS "servicePoint.id",
+            msp.product_id        AS "product.id",
+            msp.service_type_id   AS "serviceType.id",
+            msp.price,
+            msp.discount_price,
+            msp.price_type        AS "priceType.value",
+            msp.del_flag
+        FROM
+            md_servicepoint_price msp
+        <where>
+            <if test="ids != null and ids.size > 0">
+            msp.servicepoint_id IN
+            <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            </if>
+            <if test="productId != null and productId > 0">
+                AND msp.product_id = #{productId}
+            </if>
+            <if test="serviceTypeId != null">
+                AND msp.serviceType_id = #{serviceTypeId}
+            </if>
+        </where>
+        LIMIT 1000
+    </select>
+    -->
+
+    <!-- 分页获得网点id -->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <select id="findServiceIdList" resultType="ServicePoint">
+        select distinct s.id,s.servicepoint_no,s.name
+        from md_servicepoint_price p
+        inner join md_servicepoint s on p.servicepoint_id = s.id and s.del_flag = 0
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                AND p.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="product!= null and product.id != null and product.id>0 ">
+                AND p.product_id = #{product.id}
+            </if>
+        </trim>
+        order by s.servicepoint_no
+    </select>
+    -->
+
+    <!-- 弃用,mycat不支持
+    <insert id="insertPrices">
+        insert into md_servicepoint_price
+        (servicepoint_id,product_id,service_type_id,price,discount_price,unit,create_by,create_date,update_by,update_date,remarks,del_flag)
+        <foreach collection="prices" item="price" separator=" union all ">
+            SELECT #{servicePoint.id},#{price.product.id},#{price.serviceType.id},#{price.price},#{price.discountPrice},#{price.unit},#{price.createBy.id},#{price.createDate},#{price.createBy.id},#{price.createDate},#{price.remarks},0
+        </foreach>
+    </insert>
+    -->
+    <!-- 结算标准为空，按默认值10保存 -->
+    <!-- mark on 2020-3-4
+    <insert id="insertPrice" useGeneratedKeys="true" keyProperty="id">
+        <choose>
+            <when test="priceType != null and priceType.value != null and priceType.value != ''.toString()">
+                insert into md_servicepoint_price
+                (servicepoint_id,product_id,price_type,service_type_id,price,discount_price,customize_flag,unit,create_by,create_date,update_by,update_date,remarks,del_flag)
+                values
+                (#{servicePoint.id},#{product.id},convert(#{priceType.value},SIGNED),#{serviceType.id},#{price},#{discountPrice},#{customizeFlag},#{unit.value},#{createBy.id},#{createDate},#{createBy.id},#{createDate},#{remarks},0)
+            </when>
+            <otherwise>
+                insert into md_servicepoint_price
+                (servicepoint_id,product_id,service_type_id,price,discount_price,customize_flag,unit,create_by,create_date,update_by,update_date,remarks,del_flag)
+                values
+                (#{servicePoint.id},#{product.id},#{serviceType.id},#{price},#{discountPrice},#{customizeFlag},#{unit.value},#{createBy.id},#{createDate},#{createBy.id},#{createDate},#{remarks},0)
+            </otherwise>
+        </choose>
+    </insert>
+    -->
+
+    <!-- mark on 2020-3-4
+    <update id="stopPrice">
+        update md_servicepoint_price
+        set
+          del_flag = 1,
+          update_by = #{stopBy},
+          update_date = now()
+        where id = #{id}
+    </update>
+    -->
+
+    <!--
+    <update id="activePrice">
+        update md_servicepoint_price
+        set
+            del_flag = 0,
+            update_by = #{activeBy},
+            update_date = now()
+        where id = #{id}
+    </update>
+    -->
+
+    <!-- mark on 2020-3-4
+    <delete id="deletePrice">
+        delete from md_servicepoint_price
+        where id = #{id}
+    </delete>
+    -->
+
+    <!-- mark on 2020-3-4
+    <delete id="deletePricesByPointAndProducts">
+        delete from md_servicepoint_price
+        where servicepoint_id = #{pointId}
+           and product_id in
+        <foreach collection="products" item="id" index="index"
+                 open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+    -->
+
+    <!--mark on 2020-3-4
+    <delete id="deletePrices">
+        delete from md_servicepoint_price
+        where servicepoint_id = #{id}
+    </delete>
+    -->
+
+    <select id="getPrice_del" resultType="ServicePrice">
+        select <include refid="priceColumnWithoutServicePoint"/>
+        from md_servicepoint_price p
+        <!--
+        INNER join md_servicepoint s on p.servicepoint_id = s.id and s.del_flag = 0
+        -->
+        <!--
+        改成调用product微服务
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        <!--
+         改为调用微服务
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        -->
+        where p.id = #{id}
+    </select>
+
+    <select id="getPrice_old" resultType="ServicePrice">
+        select <include refid="priceColumn"/>
+        from md_servicepoint_price p
+        INNER join md_servicepoint s on p.servicepoint_id = s.id and s.del_flag = 0
+        <!--
+        改成调用product微服务
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        where p.id = #{id}
+    </select>
+
+    <!-- 更改价格 -->
+    <!--mark on 2020-3-4
+    <update id="updatePrice">
+        update md_servicepoint_price
+        set price = #{price},
+        discount_price = #{discountPrice},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate},
+        remarks = #{remarks},
+        del_flag = #{delFlag},
+        customize_flag = #{customizeFlag}
+        where id = #{id}
+    </update>
+    -->
+
+    <select id="findAllFinanceList" resultType="ServicePointFinance">
+        SELECT  id,
+                 payment_type as "paymentType.value",
+                '' as "paymentType.label",
+                bank as "bank.value",
+                '' as "bank.label",
+                branch,
+                bank_no,
+                bank_owner,
+                bank_issue as "bankIssue.value",
+                ''   as "bankIssue.label",
+                invoice_flag,
+                discount_flag,
+                discount,
+                last_pay_date,
+                last_pay_amount,
+                balance,
+                debts_amount,
+                debts_descrption,
+                insurance_amount,
+                info_fee,
+                tax_fee
+          FROM md_servicepoint_finance
+    </select>
+
+    <select id="findFinanceListByIds" resultType="ServicePointFinance">
+        SELECT id,
+            payment_type as "paymentType.value",
+            '' as "paymentType.label",
+            bank as "bank.value",
+            '' as "bank.label",
+            bank_no as "bankNo",
+            bank_owner as "bankOwner",
+            invoice_flag as "invoiceFlag",
+            discount_flag as "discountFlag"
+        FROM  md_servicepoint_finance
+        WHERE id in
+            <foreach collection="ids" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+    </select>
+
+    <select id="getFinanceNew" resultType="ServicePointFinance">
+        SELECT fi.id AS "id",
+                fi.invoice_flag AS "invoiceFlag",
+                fi.discount as "discount",
+                fi.payment_type as "paymentType.value",
+                '' as "paymentType.label",
+                fi.bank as "bank.value",
+                '' as "bank.label",
+                fi.branch as "branch",
+                fi.bank_no as "bankNo",
+                fi.bank_owner as "bankOwner",
+                fi.bank_issue as "bankIssue.value",
+                '' as "bankIssue.label",
+                fi.balance as "balance",
+                fi.last_pay_date as "lastPayDate",
+                fi.last_pay_amount as "lastPayAmount",
+                fi.order_payment_amount as "orderPaymentAmount",
+                fi.debts_amount as "debtsAmount",
+                fi.debts_descrption as "debtsDescrption",
+                fi.refund_amount as "refundAmount",
+                fi.replenish_amount as "replenishAmount",
+                fi.total_amount as "totalAmount",
+                fi.invoice_flag as "invoiceFlag",
+                fi.discount_flag as "discountFlag",
+                fi.unit as "unit.value",
+                '' as "unit.label"
+        FROM md_servicepoint_finance fi
+        where fi.id = #{id}
+    </select>
+
+    <select id="getFinanceForDiscount" resultType="ServicePointFinance">
+        select id,
+               discount
+        from md_servicepoint_finance
+        where id = #{id}
+    </select>
+
+    <select id="getFinanceFromMaster" resultType="ServicePointFinance">
+        /*!mycat:db_type=master*/
+        SELECT fi.id AS "id",
+                fi.invoice_flag AS "invoiceFlag",
+                fi.discount as "discount",
+                fi.payment_type as "paymentType.value",
+                '' as "paymentType.label",
+                fi.bank as "bank.value",
+                '' as "bank.label",
+                fi.branch as "branch",
+                fi.bank_no as "bankNo",
+                fi.bank_owner as "bankOwner",
+                fi.bank_issue as "bankIssue.value",
+                '' as "bankIssue.label",
+                fi.balance as "balance",
+                fi.last_pay_date as "lastPayDate",
+                fi.last_pay_amount as "lastPayAmount",
+                fi.order_payment_amount as "orderPaymentAmount",
+                fi.debts_amount as "debtsAmount",
+                fi.debts_descrption as "debtsDescrption",
+                fi.refund_amount as "refundAmount",
+                fi.replenish_amount as "replenishAmount",
+                fi.total_amount as "totalAmount",
+                fi.invoice_flag as "invoiceFlag",
+                fi.discount_flag as "discountFlag",
+                fi.unit as "unit.value",
+                '' as "unit.label"
+        FROM md_servicepoint_finance fi
+        where fi.id = #{id}
+    </select>
+
+    <select id="getFinance" resultType="ServicePointFinance">
+        SELECT
+            a.id,
+            a.payment_type            AS 'paymentType.value',
+            a.bank                    AS 'bank.value',
+            a.branch,
+            a.bank_no,
+            a.bank_owner,
+            a.bank_issue              AS 'bankIssue.value',
+            a.order_payment_amount,
+            a.debts_amount,
+            a.refund_amount,
+            a.replenish_amount,
+            a.balance,
+            a.daily_balance,
+            a.last_pay_date,
+            a.total_amount,
+            a.invoice_flag,
+            a.insurance_amount
+        FROM
+            md_servicepoint_finance a
+        WHERE
+            a.id =#{id}
+    </select>
+
+    <select id="getFinanceForRestBalance" resultType="ServicePointFinance">
+        SELECT
+        a.order_payment_amount,
+        a.debts_amount,
+        a.refund_amount,
+        a.replenish_amount,
+        a.balance,
+        a.daily_balance,
+        a.last_pay_date,
+        a.total_amount,
+        a.invoice_flag,
+        a.insurance_amount
+        FROM
+        md_servicepoint_finance a
+        WHERE
+        a.id =#{id}
+    </select>
+
+    <select id="getAmounts" resultType="ServicePointFinance">
+        SELECT
+            a.id,
+            a.order_payment_amount,
+            a.debts_amount,
+            a.refund_amount,
+            a.replenish_amount,
+            a.balance,
+            a.total_amount,
+            a.insurance_amount,
+            a.bank_issue              AS 'bankIssue.value'
+        FROM
+            md_servicepoint_finance a
+        WHERE
+            a.id =#{id}
+    </select>
+
+    <select id="getBalanceById" resultType="ServicePointFinance">
+        SELECT
+            id,
+            balance
+        FROM
+            md_servicepoint_finance
+        WHERE
+            id = #{servicePointId}
+    </select>
+
+    <select id="getBalanceAndDiscount" resultType="ServicePointFinance">
+        SELECT
+            a.id,
+            a.balance,
+            a.discount,
+            a.discount_flag
+        FROM
+            md_servicepoint_finance a
+        WHERE
+            a.id IN
+            <foreach item="servicePointId" index="index" collection="servicePointIds" open="(" separator="," close=")">
+                #{servicePointId}
+            </foreach>
+    </select>
+
+    <select id="getBalanceAndDiscountById" resultType="ServicePointFinance">
+        SELECT
+        a.id,
+        a.balance,
+        a.discount,
+        a.discount_flag
+        FROM
+        md_servicepoint_finance a
+        WHERE
+        a.id = #{servicePointId}
+    </select>
+
+    <select id="getDiscountFlagById" resultType="ServicePointFinance">
+        SELECT
+            a.discount,
+            a.discount_flag
+        FROM
+            md_servicepoint_finance a
+        WHERE
+            a.id = #{servicePointId}
+    </select>
+
+    <update id="updateBalance" parameterType="ServicePointFinance">
+        UPDATE
+            md_servicepoint_finance
+        <set>
+              balance = balance + #{balance},
+            <if test="dailyBalance != 0">
+                daily_balance = daily_balance + #{dailyBalance},
+            </if>
+            <if test="taxFee != 0">
+                tax_fee = tax_fee + #{taxFee},
+            </if>
+            <if test="infoFee != 0">
+                info_fee = info_fee + #{infoFee},
+            </if>
+        </set>
+        WHERE
+            id = #{id}
+    </update>
+
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <update id="updateBankIssue" parameterType="servicePointFinance">
+        UPDATE
+            md_servicepoint
+        SET
+            bank_issue = #{bankIssue.value}
+        WHERE
+            id = #{id}
+    </update>
+    -->
+
+    <update id="updateBankIssueFI" parameterType="servicePointFinance">
+        UPDATE
+            md_servicepoint_finance
+        SET
+            bank_issue = #{bankIssue.value}
+        WHERE
+            id = #{id}
+    </update>
+
+    <update id="payServicePoint" parameterType="servicePointFinance">
+        UPDATE
+            md_servicepoint_finance
+        <set>
+            bank_issue = 0,
+            <if test="balance != 0">
+              balance = balance + #{balance},
+            </if>
+            <if test="platformFee != 0">
+              platform_fee = platform_fee + #{platformFee},
+            </if>
+            <if test="debtsAmount != 0">
+              debts_amount = debts_amount + #{debtsAmount},
+            </if>
+            <if test="totalAmount != 0">
+              total_amount = total_amount + #{totalAmount},
+            </if>
+            <if test="lastPayDate != null">
+                last_pay_date = #{lastPayDate},
+            </if>
+            <if test="lastPayAmount != 0">
+                last_pay_amount = #{lastPayAmount},
+            </if>
+            <if test="dailyBalance != 0">
+                daily_balance = daily_balance + #{dailyBalance},
+            </if>
+            <if test="insuranceAmount != 0">
+                insurance_amount = insurance_amount + #{insuranceAmount},
+            </if>
+        </set>
+        WHERE
+            id =#{id}
+    </update>
+
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <select id="getNeedPaymentType" resultType="Integer">
+        SELECT
+            DISTINCT
+            msf.payment_type
+        FROM
+            md_servicepoint_finance msf
+        LEFT JOIN
+            md_servicepoint         ms
+          ON
+            msf.id = ms.id AND ms.del_flag = 0
+        WHERE
+            msf.balance-msf.debts_amount > 0
+    </select>
+    -->
+
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <select id="getNeedPayCondition" resultType="ServicePointFinance">
+        SELECT
+            DISTINCT
+            msf.id,
+            msf.payment_type as 'paymentType.value',
+            msf.bank as 'bank.value'
+        FROM
+            md_servicepoint_finance msf
+        LEFT JOIN
+            md_servicepoint         ms
+          ON
+            msf.id = ms.id AND ms.del_flag = 0
+        WHERE
+            msf.balance-msf.debts_amount > 0
+        ORDER BY
+            msf.payment_type,
+            msf.bank
+    </select>
+    -->
+
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <select id="getNeedPayList" parameterType="ServicePoint" resultType="ServicePoint">
+        SELECT
+            ms.id,
+            ms.servicepoint_no,
+            ms.name,
+            ms.contact_info1,
+            ms.contact_info2,
+            msf.id as 'finance.id',
+            msf.invoice_flag as 'finance.invoiceFlag',
+            msf.payment_type as 'finance.paymentType.value',
+            msf.bank as 'finance.bank.value',
+            msf.branch as 'finance.branch',
+            msf.bank_no as 'finance.bankNo',
+            msf.bank_owner as 'finance.bankOwner',
+            msf.bank_issue as 'finance.bankIssue.value',
+            msf.order_payment_amount as 'finance.orderPaymentAmount',
+            msf.debts_amount as 'finance.debtsAmount',
+            msf.refund_amount as 'finance.refundAmount',
+            msf.replenish_amount as 'finance.replenishAmount',
+            msf.balance as 'finance.balance',
+            msf.total_amount as 'finance.totalAmount'
+        FROM
+            md_servicepoint ms
+        INNER JOIN
+            md_servicepoint_finance msf
+          ON
+            msf.id = ms.id AND ms.del_flag = 0
+        <where>
+            msf.balance-msf.debts_amount > 0
+            <if test="finance != null">
+            <if test="finance.id != null">
+            AND msf.id = #{finance.id}
+            </if>
+            <if test="finance.paymentType != null and finance.paymentType.value != null">
+            AND msf.payment_type = #{finance.paymentType.value}
+            </if>
+            <if test="finance.bank != null and finance.bank.value != null">
+            AND msf.bank = #{finance.bank.value}
+            </if>
+            <if test="finance.bankIssue != null and finance.bankIssue.value != null and finance.bankIssue.value == 0">
+            AND msf.bank_issue = 0
+            </if>
+            <if test="finance.bankIssue != null and finance.bankIssue.value != null and finance.bankIssue.value == 1">
+            AND msf.bank_issue > 0
+            </if>
+            </if>
+        </where>
+        ORDER BY
+            msf.id
+    </select>
+    -->
+
+    <select id="getPayableDailyList_del20200115" resultType="ServicePointPayCondition">
+        SELECT
+              msf.id    AS 'servicePointId',
+              20        AS 'paymentType',
+              msf.bank
+        FROM
+              md_servicepoint_finance msf
+        INNER JOIN
+              md_servicepoint ms
+          ON  msf.id = ms.id AND ms.del_flag = 0
+        WHERE daily_balance > 0
+        <if test="exceptBankIds != null and exceptBankIds.size > 0">
+          AND msf.bank NOT IN
+          <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+              #{exceptBankId}
+          </foreach>
+        </if>
+		ORDER BY
+			  msf.bank
+        LIMIT 50000;
+    </select>
+
+    <!--去ServicePoint关联 add on 2019-9-29-->
+    <select id="getPayableDailyListWithoutServicePoint" resultType="ServicePointPayCondition">
+        SELECT
+            msf.id    AS 'servicePointId',
+            20        AS 'paymentType',
+            msf.bank
+        FROM
+            md_servicepoint_finance msf
+            <!--
+            INNER JOIN
+            md_servicepoint ms
+            ON  msf.id = ms.id AND ms.del_flag = 0
+            -->
+        WHERE daily_balance > 0
+        <if test="exceptBankIds != null and exceptBankIds.size > 0">
+            AND msf.bank NOT IN
+            <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+                #{exceptBankId}
+            </foreach>
+        </if>
+        ORDER BY
+            msf.bank
+            LIMIT 50000;
+    </select>
+
+    <select id="getPayableMonthlyList_del20200115" resultType="ServicePointPayCondition">
+        SELECT
+		      msf.id    AS 'servicePointId',
+              10        AS 'paymentType',
+              msf.bank
+        FROM
+              md_servicepoint_finance msf
+          INNER JOIN(
+            SELECT
+                    DISTINCT payable.servicepoint_id AS id
+            FROM
+                    fi_servicepoint_payable_monthly payable
+            INNER JOIN
+                    md_servicepoint ms
+                ON  payable.servicepoint_id = ms.id AND ms.del_flag = 0
+            INNER JOIN
+                    fi_servicepoint_paid_monthly paid
+                ON	payable.id = paid.id
+            AND payable.payment_type = 10
+            AND paid.payment_type = 10
+            WHERE (payable.m1+payable.m2+payable.m3+payable.m4+payable.m5+payable.m6+payable.m7+payable.m8+payable.m9+payable.m10+payable.m11+payable.m12) -
+                  (paid.m1+paid.m2+paid.m3+paid.m4+paid.m5+paid.m6+paid.m7+paid.m8+paid.m9+paid.m10+paid.m11+paid.m12) > 0
+            LIMIT 50000
+          )payabler
+          ON msf.id = payabler.id AND msf.balance > 0
+          <if test="exceptBankIds != null and exceptBankIds.size > 0">
+            WHERE msf.bank NOT IN
+            <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+                #{exceptBankId}
+            </foreach>
+          </if>
+		ORDER BY
+			msf.bank
+        LIMIT 50000;
+    </select>
+
+    <!--去ServicePoint add on 2019-9-29-->
+    <select id="getPayableMonthlyListWithoutServicePoint" resultType="ServicePointPayCondition">
+        SELECT
+            msf.id    AS 'servicePointId',
+            10        AS 'paymentType',
+            msf.bank
+        FROM
+            md_servicepoint_finance msf
+            INNER JOIN(
+                SELECT
+                    DISTINCT payable.servicepoint_id AS id
+                FROM
+                    fi_servicepoint_payable_monthly payable
+                    <!--
+                    INNER JOIN
+                      md_servicepoint ms
+                    ON  payable.servicepoint_id = ms.id AND ms.del_flag = 0
+                    -->
+                    INNER JOIN
+                      fi_servicepoint_paid_monthly paid
+                    ON	payable.id = paid.id
+                        AND payable.payment_type = 10
+                        AND paid.payment_type = 10
+                WHERE (payable.m1+payable.m2+payable.m3+payable.m4+payable.m5+payable.m6+payable.m7+payable.m8+payable.m9+payable.m10+payable.m11+payable.m12) -
+                    (paid.m1+paid.m2+paid.m3+paid.m4+paid.m5+paid.m6+paid.m7+paid.m8+paid.m9+paid.m10+paid.m11+paid.m12) > 0
+                LIMIT 50000
+            )payabler
+        ON msf.id = payabler.id AND msf.balance > 0
+        <if test="exceptBankIds != null and exceptBankIds.size > 0">
+            WHERE msf.bank NOT IN
+            <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+                #{exceptBankId}
+            </foreach>
+        </if>
+        ORDER BY
+        msf.bank
+        LIMIT 50000;
+    </select>
+
+    <!-- mark on 2020-1-13
+    <select id="getPayableDailyDetailList" resultType="ServicePoint">
+        SELECT
+            ms.id,
+            ms.servicepoint_no,
+            ms.name,
+            ms.contact_info1,
+            ms.contact_info2,
+            me.name                 AS 'primary.name',
+            msf.id                  AS 'finance.id',
+            msf.invoice_flag        AS 'finance.invoiceFlag',
+            msf.discount_flag       AS 'finance.discountFlag',
+            20                      AS 'finance.paymentType.value',
+            msf.debts_amount        AS 'finance.debtsAmount',
+            msf.debts_descrption    AS 'finance.debtsDescrption',
+            msf.bank                AS 'finance.bank.value',
+            msf.branch              AS 'finance.branch',
+            msf.bank_no             AS 'finance.bankNo',
+            msf.bank_owner          AS 'finance.bankOwner',
+            msf.bank_issue          AS 'finance.bankIssue.value',
+            msf.daily_balance       AS 'finance.payableAmount'
+        FROM
+            md_servicepoint_finance msf
+        INNER JOIN
+            md_servicepoint ms
+        ON  msf.id = ms.id AND ms.del_flag = 0
+        LEFT JOIN
+            md_engineer me
+        ON  ms.primary_id = me.id
+        <if test="areaId != null">
+        LEFT JOIN
+            sys_area sa
+        ON  ms.area_id = sa.id
+        </if>
+        <where>
+            <if test="finance.id != null">
+                AND msf.id = #{finance.id}
+            </if>
+            <if test="finance.bank != null and finance.bank.value != null">
+                AND msf.bank = #{finance.bank.value}
+            </if>
+            <if test="finance.bankIssue != null and finance.bankIssue.value != null">
+                <if test="finance.bankIssue.value == 0">
+                    AND msf.bank_issue = 0
+                </if>
+                <if test="finance.bankIssue.value == 1">
+                    AND msf.bank_issue > 0
+                </if>
+            </if>
+            <if test="finance.invoiceFlag != null">
+                AND msf.invoice_flag = #{finance.invoiceFlag}
+            </if>
+            <if test="finance.discountFlag != null">
+                AND msf.discount_flag = #{finance.discountFlag}
+            </if>
+            AND msf.daily_balance > 0 AND msf.balance > 0
+            <if test="exceptBankIds != null and exceptBankIds.size > 0">
+                AND msf.bank NOT IN
+                <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+                    #{exceptBankId}
+                </foreach>
+            </if>
+            <if test="areaId != null">
+                AND sa.parent_ids LIKE CONCAT('%,',#{areaId}, ',%')
+            </if>
+        </where>
+        ORDER BY
+          ms.name
+        LIMIT 50000;
+    </select>
+    -->
+
+    <!--去ServicePoint //add on 2019-9-29 -->
+    <select id="getPayableDailyDetailListWithoutServicePoint" resultType="ServicePoint">
+        SELECT
+           <!--
+            ms.id,
+            ms.servicepoint_no,
+            ms.name,
+            ms.contact_info1,
+            ms.contact_info2,
+            me.name                 AS 'primary.name',
+            -->
+            msf.id                  AS 'id',
+            msf.id                  AS 'finance.id',
+            msf.invoice_flag        AS 'finance.invoiceFlag',
+            msf.discount_flag       AS 'finance.discountFlag',
+            20                      AS 'finance.paymentType.value',
+            msf.debts_amount        AS 'finance.debtsAmount',
+            msf.debts_descrption    AS 'finance.debtsDescrption',
+            msf.bank                AS 'finance.bank.value',
+            msf.branch              AS 'finance.branch',
+            msf.bank_no             AS 'finance.bankNo',
+            msf.bank_owner          AS 'finance.bankOwner',
+            msf.bank_issue          AS 'finance.bankIssue.value',
+            msf.daily_balance       AS 'finance.payableAmount'
+        FROM
+              md_servicepoint_finance msf
+            <!--
+             去ServicePoint关联 //mark on 2019-9-29
+            INNER JOIN
+              md_servicepoint ms
+            ON  msf.id = ms.id AND ms.del_flag = 0
+            LEFT JOIN
+              md_engineer me
+            ON  ms.primary_id = me.id
+            <if test="areaId != null">
+                LEFT JOIN
+                sys_area sa
+                ON  ms.area_id = sa.id
+            </if>
+            -->
+        <where>
+            <if test="finance.id != null">
+                AND msf.id = #{finance.id}
+            </if>
+            <if test="finance.bank != null and finance.bank.value != null">
+                AND msf.bank = #{finance.bank.value}
+            </if>
+            <if test="finance.bankIssue != null and finance.bankIssue.value != null">
+                <if test="finance.bankIssue.value == 0">
+                    AND msf.bank_issue = 0
+                </if>
+                <if test="finance.bankIssue.value == 1">
+                    AND msf.bank_issue > 0
+                </if>
+            </if>
+            <if test="finance.invoiceFlag != null">
+                AND msf.invoice_flag = #{finance.invoiceFlag}
+            </if>
+            <if test="finance.discountFlag != null">
+                AND msf.discount_flag = #{finance.discountFlag}
+            </if>
+            AND msf.daily_balance > 0 AND msf.balance > 0
+            <if test="exceptBankIds != null and exceptBankIds.size > 0">
+                AND msf.bank NOT IN
+                <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+                    #{exceptBankId}
+                </foreach>
+            </if>
+            <!--
+            // mark on 2019-9-29
+            <if test="areaId != null">
+                AND sa.parent_ids LIKE CONCAT('%,',#{areaId}, ',%')
+            </if>
+            -->
+        </where>
+        <!--
+        ORDER BY ms.name
+        -->
+        LIMIT 50000;
+    </select>
+
+    <!--//add on 2019-12-29 -->
+    <select id="findServicePointIdsFromFinance" resultType="Long">
+        SELECT
+            msf.id                  AS 'id'
+        FROM  md_servicepoint_finance msf
+        <where>
+            <if test="invoiceFlag != null and invoiceFlag >=0">
+                AND msf.invoice_flag = #{invoiceFlag}
+            </if>
+            <if test="discountFlag != null and discountFlag >=0">
+                AND msf.discount_flag = #{discountFlag}
+            </if>
+        </where>
+        LIMIT 2000;
+    </select>
+
+    <!-- mark on 2020-1-13
+    <select id="getPayableMonthlyDetailList" resultType="ServicePoint">
+        SELECT
+                ms.id,
+                ms.servicepoint_no,
+                ms.name,
+                ms.contact_info1,
+                ms.contact_info2,
+                me.name                 AS 'primary.name',
+                msf.id                  AS 'finance.id',
+                msf.invoice_flag        AS 'finance.invoiceFlag',
+                msf.discount_flag       AS 'finance.discountFlag',
+                10                      AS 'finance.paymentType.value',
+                msf.debts_amount        AS 'finance.debtsAmount',
+                msf.debts_descrption    AS 'finance.debtsDescrption',
+                msf.bank                AS 'finance.bank.value',
+                msf.branch              AS 'finance.branch',
+                msf.bank_no             AS 'finance.bankNo',
+                msf.bank_owner          AS 'finance.bankOwner',
+                msf.bank_issue          AS 'finance.bankIssue.value',
+                payable.${finance.payableMonthField} - paid.${finance.payableMonthField}
+                                        AS 'finance.payableAmount'
+        FROM
+                fi_servicepoint_payable_monthly payable
+        INNER JOIN
+                fi_servicepoint_paid_monthly paid
+            ON	payable.id = paid.id
+            AND payable.payment_type = 10
+            AND paid.payment_type = 10
+        INNER JOIN
+                rpt_servicepoint_balance_monthly balance
+            ON	payable.id = balance.id
+            AND payable.payment_type = 10
+            AND balance.payment_type = 10
+        INNER JOIN
+                md_servicepoint ms
+            ON  payable.servicepoint_id = ms.id AND ms.del_flag = 0
+        INNER JOIN
+                md_servicepoint_finance msf
+            ON  payable.servicepoint_id = msf.id
+        LEFT JOIN
+                md_engineer me
+            ON  ms.primary_id = me.id
+        <if test="areaId != null">
+        LEFT JOIN
+                sys_area sa
+            ON  ms.area_id = sa.id
+        </if>
+        <where>
+            <if test="finance.id != null">
+                AND payable.servicepoint_id = #{finance.id}
+            </if>
+            AND payable.year = #{finance.payableYear}
+            AND payable.${finance.payableMonthField} - paid.${finance.payableMonthField} > 0
+            AND balance.${finance.payableMonthField} > 0
+            AND msf.balance > 0
+            <if test="finance.bank != null and finance.bank.value != null">
+                AND msf.bank = #{finance.bank.value}
+            </if>
+            <if test="finance.bankIssue != null and finance.bankIssue.value != null">
+                <if test="finance.bankIssue.value == 0">
+                  AND msf.bank_issue = 0
+                </if>
+                <if test="finance.bankIssue.value == 1">
+                  AND msf.bank_issue > 0
+                </if>
+            </if>
+            <if test="finance.invoiceFlag != null">
+                AND msf.invoice_flag = #{finance.invoiceFlag}
+            </if>
+            <if test="finance.discountFlag != null">
+                AND msf.discount_flag = #{finance.discountFlag}
+            </if>
+            <if test="exceptBankIds != null and exceptBankIds.size > 0">
+                AND msf.bank NOT IN
+                <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+                    #{exceptBankId}
+                </foreach>
+            </if>
+            <if test="areaId != null">
+                AND sa.parent_ids LIKE CONCAT('%,',#{areaId}, ',%')
+            </if>
+        </where>
+        LIMIT 50000;
+    </select>
+    -->
+
+    <!--去ServicePoint //add on 2019-9-29 -->
+    <select id="getPayableMonthlyDetailListWithoutServicePoint" resultType="ServicePoint">
+        SELECT
+                <!--
+                ms.id,
+                ms.servicepoint_no,
+                ms.name,
+                ms.contact_info1,
+                ms.contact_info2,
+                me.name                 AS 'primary.name',
+                -->
+                msf.id                  AS 'id',
+                msf.id                  AS 'finance.id',
+                msf.invoice_flag        AS 'finance.invoiceFlag',
+                msf.discount_flag       AS 'finance.discountFlag',
+                10                      AS 'finance.paymentType.value',
+                msf.debts_amount        AS 'finance.debtsAmount',
+                msf.debts_descrption    AS 'finance.debtsDescrption',
+                msf.bank                AS 'finance.bank.value',
+                msf.branch              AS 'finance.branch',
+                msf.bank_no             AS 'finance.bankNo',
+                msf.bank_owner          AS 'finance.bankOwner',
+                msf.bank_issue          AS 'finance.bankIssue.value',
+                payable.${finance.payableMonthField} - paid.${finance.payableMonthField}
+                                        AS 'finance.payableAmount'
+        FROM
+                fi_servicepoint_payable_monthly payable
+        INNER JOIN
+                fi_servicepoint_paid_monthly paid
+            ON	payable.id = paid.id
+            AND payable.payment_type = 10
+            AND paid.payment_type = 10
+        INNER JOIN
+                rpt_servicepoint_balance_monthly balance
+            ON	payable.id = balance.id
+            AND payable.payment_type = 10
+            AND balance.payment_type = 10
+        <!--
+        INNER JOIN
+                md_servicepoint ms
+            ON  payable.servicepoint_id = ms.id AND ms.del_flag = 0
+            -->
+        INNER JOIN
+                md_servicepoint_finance msf
+            ON  payable.servicepoint_id = msf.id
+        <!--
+        LEFT JOIN
+                md_engineer me
+            ON  ms.primary_id = me.id
+        <if test="areaId != null">
+        LEFT JOIN
+                sys_area sa
+            ON  ms.area_id = sa.id
+        </if>
+        -->
+        <where>
+            <if test="finance.id != null">
+                AND payable.servicepoint_id = #{finance.id}
+            </if>
+            AND payable.year = #{finance.payableYear}
+            AND payable.${finance.payableMonthField} - paid.${finance.payableMonthField} > 0
+            AND balance.${finance.payableMonthField} > 0
+            AND msf.balance > 0
+            <if test="finance.bank != null and finance.bank.value != null">
+                AND msf.bank = #{finance.bank.value}
+            </if>
+            <if test="finance.bankIssue != null and finance.bankIssue.value != null">
+                <if test="finance.bankIssue.value == 0">
+                  AND msf.bank_issue = 0
+                </if>
+                <if test="finance.bankIssue.value == 1">
+                  AND msf.bank_issue > 0
+                </if>
+            </if>
+            <if test="finance.invoiceFlag != null">
+                AND msf.invoice_flag = #{finance.invoiceFlag}
+            </if>
+            <if test="finance.discountFlag != null">
+                AND msf.discount_flag = #{finance.discountFlag}
+            </if>
+            <if test="exceptBankIds != null and exceptBankIds.size > 0">
+                AND msf.bank NOT IN
+                <foreach item="exceptBankId" index="index" collection="exceptBankIds" open="(" separator="," close=")">
+                    #{exceptBankId}
+                </foreach>
+            </if>
+            <!--
+            // mark on 2019-10-8
+            <if test="areaId != null">
+                AND sa.parent_ids LIKE CONCAT('%,',#{areaId}, ',%')
+            </if>
+            -->
+        </where>
+        LIMIT 50000;
+    </select>
+
+    <select id="getPayableMinusMonthlyListByServicePointId" resultType="ServicePointPayableMonthly">
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '1'                     AS MONTH,
+                payable.m1              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m1
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '2'                     AS MONTH,
+                payable.m2              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m2
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '3'                     AS MONTH,
+                payable.m3              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m3
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '4'                     AS MONTH,
+                payable.m4              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m4
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '5'                     AS MONTH,
+                payable.m5              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m5
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '6'                     AS MONTH,
+                payable.m6              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m6
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '7'                     AS MONTH,
+                payable.m7              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m7
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '8'                     AS MONTH,
+                payable.m8              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m8
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '9'                     AS MONTH,
+                payable.m9              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m9
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '10'                    AS MONTH,
+                payable.m10             AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m10
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '11'                    AS MONTH,
+                payable.m11             AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m11
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '12'                    AS MONTH,
+                payable.m12             AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.servicepoint_id = #{servicePointId}
+          AND   payable.payment_type = 10
+          AND 	0 > payable.m12
+    </select>
+
+    <select id="getPayableMinusMonthlyDetailList" resultType="ServicePointPayableMonthlyDetail">
+        <foreach collection="details" item="detail" separator=" union ">
+            SELECT
+                    payable.servicepoint_id AS 'servicePoint.id',
+                    `year`,
+                    ${detail.month}                 AS MONTH,
+                    ${detail.monthField}            AS amount,
+                    payable.product_category_id,
+                    payable.last_deduction_year_month
+            FROM
+                    fi_servicepoint_payable_monthly_detail payable
+            WHERE
+                    total_id = #{detail.totalId}
+        </foreach>
+    </select>
+
+    <select id="getPayableMinusMonthlyList" resultType="ServicePointPayableMonthly">
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '1'                     AS MONTH,
+                payable.m1              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m1
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '2'                     AS MONTH,
+                payable.m2              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m2
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '3'                     AS MONTH,
+                payable.m3              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m3
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '4'                     AS MONTH,
+                payable.m4              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m4
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '5'                     AS MONTH,
+                payable.m5              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m5
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '6'                     AS MONTH,
+                payable.m6              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m6
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '7'                     AS MONTH,
+                payable.m7              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m7
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '8'                     AS MONTH,
+                payable.m8              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m8
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '9'                     AS MONTH,
+                payable.m9              AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m9
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '10'                    AS MONTH,
+                payable.m10             AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m10
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '11'                    AS MONTH,
+                payable.m11             AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m11
+        UNION
+        SELECT
+                payable.servicepoint_id AS 'servicePoint.id',
+                `year`,
+                '12'                    AS MONTH,
+                payable.m12             AS amount,
+                payable.last_deduction_year_month
+        FROM
+                fi_servicepoint_payable_monthly payable
+        WHERE
+                payable.payment_type = 10
+          AND 	0 > payable.m12
+    </select>
+
+    <!--更新网点的派单备注-->
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <update id="savePlanRemark">
+        update md_servicepoint
+        <set>
+            <if test="planRemarks != null">
+                plan_remarks = #{planRemarks},
+            </if>
+            <if test="planRemark != null">
+                plan_remark = #{planRemark},
+            </if>
+        </set>
+        where id=#{servicePointId}
+    </update>
+    -->
+
+    <!--
+    // mark on 2019-9-11
+    <select id="getPlanRemarks" resultType="String">
+        select plan_remarks
+        from md_servicepoint
+        where id = #{servicePointId}
+        limit 1
+    </select>
+    -->
+
+    <!--更新网点的网点备注-->
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <update id="updateRemark">
+        update md_servicepoint
+        <set>
+            <if test="remarks != null">
+                remarks = #{remarks},
+            </if>
+            <if test="remarksJson != null">
+                remarks_json = #{remarksJson},
+            </if>
+        </set>
+        where id=#{servicePointId}
+    </update>
+    -->
+
+    <!--
+    // mark on 2019-9-11
+    <select id="getRemarksJSON" resultType="String">
+        select remarks_json
+        from md_servicepoint
+        where id = #{servicePointId}
+        limit 1
+    </select>
+    -->
+
+    <!--  B2B -->
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <update id="enableOrDisableServicePointForTmall" parameterType="Map">
+        UPDATE md_servicepoint
+        SET
+            for_tmall = #{forTmall}
+        WHERE id = #{servicePointId}
+    </update>
+    -->
+
+    <!--  B2B -->
+    <!-- mark on 2020-1-13
+    <update id="enableOrDisableEngineerForTmall" parameterType="Map">
+        UPDATE md_engineer
+        SET
+            for_tmall = #{forTmall}
+        WHERE id = #{engineerId}
+    </update>
+    -->
+
+    <!-- 获取网点的结算方式 -->
+    <select id="getServicePointPaymentType" resultType="java.lang.Integer">
+        SELECT
+              payment_type
+        FROM  md_servicepoint_finance
+        WHERE id  = #{servicePointId}
+    </select>
+
+    <!--根据用ID列表获取网点余额-->
+    <select id="getBalanceByIds" resultType="ServicePointFinance">
+        SELECT
+            id,
+            balance
+        FROM
+            md_servicepoint_finance
+        <if test="ids != null and ids.size > 0">
+            WHERE id IN
+            <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <!--是否启用网点保险扣除-->
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <update id="appReadInsuranceClause">
+       UPDATE md_servicepoint
+       SET  app_insurance_flag = #{appInsuranceFlag},
+            update_by = #{updateBy},
+            update_date = #{updateDate}
+       WHERE id = #{id}
+    </update>
+    -->
+
+    <!-- 更新网点地址 -->
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <update id="updateServicePointAddress">
+        UPDATE md_servicepoint
+        SET
+          area_id = #{area.id},
+          address = #{address},
+          sub_address= #{subAddress},
+          longitude = #{longitude},
+          latitude = #{latitude},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+        WHERE id = #{id}
+    </update>
+    -->
+
+    <!-- 更新网点银行账号信息 -->
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <update id="updateServicePointBankAccountInfo">
+        UPDATE md_servicepoint
+        SET
+          bank = #{bank.value},
+          bank_no = #{bankNo},
+          bank_owner = #{bankOwner},
+          update_by = #{updateBy.id},
+          update_date = #{updateDate}
+        WHERE id = #{id}
+    </update>
+    -->
+
+    <!-- 更新网点银行账号信息 -->
+    <update id="updateServicePointFIBankAccountInfo">
+        UPDATE md_servicepoint_finance
+        SET
+          bank = #{bank.value},
+          branch = #{branch},
+          bank_no = #{bankNo},
+          bank_owner = #{bankOwner}
+        WHERE id = #{id}
+    </update>
+
+    <!--//mark on 2020-1-14  web端去servicePoint
+    <update id="updateAutoPlanFlag">
+        update md_servicepoint
+        set auto_plan_flag = #{autoPlanFlag},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        where id =#{id}
+    </update>
+    -->
+
+    <!--
+    //mark on 2020-1-14  web端去servicePoint
+    <update id="updateLevel">
+        update md_servicepoint
+        set level = #{level.value},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        where id =#{id}
+    </update>
+    -->
+
+    <select id="findAllServicePointProductCategoryMapping" resultType="LongTwoTuple">
+        SELECT
+               service_point_id     AS "aElement",
+               product_category_id  AS "bElement"
+        FROM  md_productcategory_servicepoint
+        LIMIT 100000
+    </select>
+
+</mapper>

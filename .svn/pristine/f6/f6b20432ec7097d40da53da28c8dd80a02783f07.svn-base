@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+        version="2.0">
+
+  <description>JSTL 1.1 functions library</description>
+  <display-name>JSTL functions sys</display-name>
+  <tlib-version>1.1</tlib-version>
+  <short-name>fns</short-name>
+  <uri>http://java.sun.com/jsp/jstl/functionss</uri>
+
+  <function>
+    <description>获取管理路径</description>
+    <name>getAdminPath</name>
+    <function-class>com.wolfking.jeesite.common.config.Global</function-class>
+    <function-signature>java.lang.String getAdminPath()</function-signature>
+    <example>${fns:getAdminPath()}</example>
+  </function>
+  <function>
+    <description>获取配置</description>
+    <name>getConfig</name>
+    <function-class>com.wolfking.jeesite.common.config.Global</function-class>
+    <function-signature>java.lang.String getConfig(java.lang.String)</function-signature>
+    <example>${fns:getConfig(key)}</example>
+  </function>
+  <!-- UserUtils -->
+  <function>
+    <description>获取当前用户对象</description>
+    <name>getUser</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>com.wolfking.jeesite.modules.sys.entity.User getUser()</function-signature>
+    <example>${fns:getUser()}</example>
+  </function>
+
+  <function>
+    <description>根据编码获取用户对象</description>
+    <name>getUserById</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>com.wolfking.jeesite.modules.sys.entity.User get(java.lang.Long)</function-signature>
+    <example>${fns:getUserById(id)}</example>
+  </function>
+
+  <function>
+    <description>获取授权用户信息</description>
+    <name>getPrincipal</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>com.wolfking.jeesite.modules.sys.security.SystemAuthorizingRealm.Principal getPrincipal()</function-signature>
+    <example>${fns:getPrincipal()}</example>
+  </function>
+
+  <function>
+    <description>获取当前用户的菜单对象列表</description>
+    <name>getMenuList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.util.List getMenuList()</function-signature>
+    <example>${fns:getMenuList()}</example>
+  </function>
+
+  <function>
+    <description>获取当前用户的菜单对象列表</description>
+    <name>getTopMenuList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.util.List getTopMenuList()</function-signature>
+    <example>${fns:getTopMenuList()}</example>
+  </function>
+
+  <function>
+    <description>获取当前用户的区域对象列表</description>
+    <name>getAreaList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.util.List getAreaList()</function-signature>
+    <example>${fns:getAreaList()}</example>
+  </function>
+
+  <function>
+    <description>获取省份对象列表</description>
+    <name>getProvinceList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.AreaUtils</function-class>
+    <function-signature>java.util.List getProvinceList()</function-signature>
+    <example>${fns:getProvinceList()}</example>
+  </function>
+
+  <function>
+    <description>获取当前用户的部门对象列表</description>
+    <name>getOfficeList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.util.List getOfficeList()</function-signature>
+    <example>${fns:getOfficeList()}</example>
+  </function>
+
+  <function>
+    <description>获取业务员列表</description>
+    <name>getSaleList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.util.List getSaleList()</function-signature>
+    <example>${fns:getOfficeList()}</example>
+  </function>
+  <function>
+    <description>获取跟单员列表</description>
+    <name>getMerchandiserList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.util.List getMerchandiserList()</function-signature>
+    <example>${fns:getOfficeList()}</example>
+  </function>
+  <function>
+    <description>获取客服列表</description>
+    <name>getKefuList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.util.List getKefuList()</function-signature>
+    <example>${fns:getKefuList()}</example>
+  </function>
+  <!--
+  <function>
+    <description>获取当前用户缓存</description>
+    <name>getCache</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.UserUtils</function-class>
+    <function-signature>java.lang.Object getCache(java.lang.String, java.lang.Object)</function-signature>
+    <example>${fns:getCache(cacheName, defaultValue)}</example>  
+  </function>
+  -->
+  <!-- DictUtils -->
+  <function>
+    <description>获取字典标签</description>
+    <name>getDictLabel</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.lang.String getDictLabel(java.lang.String, java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictLabel(value, type, defaultValue)}</example>
+  </function>
+  <!--切换为微服务-->
+  <function>
+    <description>获取字典标签</description>
+    <name>getDictLabelFromMS</name>
+    <function-class>com.wolfking.jeesite.ms.utils.MSDictUtils</function-class>
+    <function-signature>java.lang.String getDictLabel(java.lang.String, java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictLabelFromMS(value, type, defaultValue)}</example>
+  </function>
+
+  <function>
+    <description>获取字典标签(多个)</description>
+    <name>getDictLabels</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.lang.String getDictLabels(java.lang.String, java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictLabels(values, type, defaultValue)}</example>
+  </function>
+
+  <function>
+    <description>获取字典值</description>
+    <name>getDictValue</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.lang.String getDictValue(java.lang.String, java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictValue(label, type, defaultValue)}</example>
+  </function>
+
+  <function>
+    <description>获取字典对象列表</description>
+    <name>getDictList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.util.List getDictList(java.lang.String)</function-signature>
+    <example>${fns:getDictList(type)}</example>
+  </function>
+
+  <!--切换为微服务-->
+  <function>
+    <description>获取字典对象列表</description>
+    <name>getDictListFromMS</name>
+    <function-class>com.wolfking.jeesite.ms.utils.MSDictUtils</function-class>
+    <function-signature>java.util.List getDictList(java.lang.String)</function-signature>
+    <example>${fns:getDictListFromMS(type)}</example>
+  </function>
+
+  <function>
+    <description>获取字典对象列表</description>
+    <name>getDictListJson</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.lang.String getDictListJson(java.lang.String)</function-signature>
+    <example>${fns:getDictListJson(type)}</example>
+  </function>
+
+  <function>
+    <description>获取字典单一值</description>
+    <name>getDictSingleValue</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.lang.String getDictSingleValue(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictSingleValue(type, defaultValue)}</example>
+  </function>
+  <!-- 使用微服务 -->
+  <function>
+    <description>获取字典单一值</description>
+    <name>getDictSingleValueFromMS</name>
+    <function-class>com.wolfking.jeesite.ms.utils.MSDictUtils</function-class>
+    <function-signature>java.lang.String getDictSingleValue(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictSingleValueFromMS(type, defaultValue)}</example>
+  </function>
+
+  <function>
+    <description>获取字典对象列表(排除指定值)</description>
+    <name>getDictExceptList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.util.List getDictExceptList(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictExceptList(type, except)}</example>
+  </function>
+
+  <!--切换为微服务-->
+  <function>
+    <description>获取字典对象列表(排除指定值)</description>
+    <name>getDictExceptListFromMS</name>
+    <function-class>com.wolfking.jeesite.ms.utils.MSDictUtils</function-class>
+    <function-signature>java.util.List getDictExceptList(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictExceptListFromMS(type, except)}</example>
+  </function>
+
+  <function>
+    <description>获取字典对象列表(只包含指定值)</description>
+    <name>getDictInclueList</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.util.List getDictInclueList(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictInclueList(type, values)}</example>
+  </function>
+  <!--切换为微服务-->
+  <function>
+    <description>获取字典对象列表(只包含指定值)</description>
+    <name>getDictInclueListFromMS</name>
+    <function-class>com.wolfking.jeesite.ms.utils.MSDictUtils</function-class>
+    <function-signature>java.util.List getDictInclueList(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:getDictInclueListFromMS(type, values)}</example>
+  </function>
+
+  <function>
+    <description>获取字典对象列表(指定范围)</description>
+    <name>getDictListOfRange</name>
+    <function-class>com.wolfking.jeesite.modules.sys.utils.DictUtils</function-class>
+    <function-signature>java.util.List getDictListOfRange(java.lang.String, java.lang.Integer,java.lang.Integer)</function-signature>
+    <example>${fns:getDictListOfRange(type, start,end)}</example>
+  </function>
+
+  <!-- 切换为微服务 -->
+  <function>
+    <description>获取字典对象列表(指定范围)</description>
+    <name>getDictListOfRangeFromMS</name>
+    <function-class>com.wolfking.jeesite.ms.utils.MSDictUtils</function-class>
+    <function-signature>java.util.List getDictListOfRange(java.lang.String, java.lang.Integer,java.lang.Integer)</function-signature>
+    <example>${fns:getDictListOfRangeFromMS(type, start,end)}</example>
+  </function>
+
+  <!-- CustomerUtils -->
+  <function>
+    <description>获取客户对象列表</description>
+    <name>getCustomerList</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.CustomerUtils</function-class>
+    <function-signature>java.util.List getCustomerList()</function-signature>
+    <example>${fns:getCustomerList()}</example>
+  </function>
+  <function>
+    <description>获取当前用户的客户对象列表</description>
+    <name>getMyCustomerList</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.CustomerUtils</function-class>
+    <function-signature>java.util.List getMyCustomerList()</function-signature>
+    <example>${fns:getCustomerList()}</example>
+  </function>
+  <function>
+    <description>获取当前用户的VIP客户对象列表</description>
+    <name>getMyVipCustomerList</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.CustomerUtils</function-class>
+    <function-signature>java.util.List getMyVipCustomerList()</function-signature>
+    <example>${fns:getMyVipCustomerList()}</example>
+  </function>
+  <function>
+    <description>获取当前用户的非VIP客户对象列表</description>
+    <name>getMyNotVipCustomerList</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.CustomerUtils</function-class>
+    <function-signature>java.util.List getMyNotVipCustomerList()</function-signature>
+    <example>${fns:getMyNotVipCustomerList()}</example>
+  </function>
+  <function>
+    <description>通过微服务获取客户对象列表</description>
+    <name>getCustomerListFromMS</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.CustomerUtils</function-class>
+    <function-signature>java.util.List getCustomerListFromMS()</function-signature>
+    <example>${fns:getCustomerListFromMS()}</example>
+  </function>
+  <function>
+    <description>通过微服务获取当前用户的客户对象列表</description>
+    <name>getMyCustomerListFromMS</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.CustomerUtils</function-class>
+    <function-signature>java.util.List getMyCustomerListFromMS()</function-signature>
+    <example>${fns:getMyCustomerListFromMS()}</example>
+  </function>
+  <function>
+    <description>通过微服务获取VIP客户对象列表</description>
+    <name>getVipCustomerListFromMS</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.CustomerUtils</function-class>
+    <function-signature>java.util.List getVipCustomerListFromMS()</function-signature>
+    <example>${fns:getVipCustomerListFromMS()}</example>
+  </function>
+
+  <!-- QuarterUtils -->
+  <function>
+    <description>获取报表查询的年份列表</description>
+    <name>getReportQueryYears</name>
+    <function-class>com.wolfking.jeesite.common.utils.QuarterUtils</function-class>
+    <function-signature>java.util.List getReportQueryYears()</function-signature>
+    <example>${fns:getReportQueryYears()}</example>
+  </function>
+  <!-- Encodes -->
+  <function>
+    <description>URL编码</description>
+    <name>urlEncode</name>
+    <function-class>com.wolfking.jeesite.common.utils.Encodes</function-class>
+    <function-signature>java.lang.String urlEncode(java.lang.String)</function-signature>
+    <example>${fns:urlEncode(part)}</example>
+  </function>
+  <function>
+    <description>URL解码</description>
+    <name>urlDecode</name>
+    <function-class>com.wolfking.jeesite.common.utils.Encodes</function-class>
+    <function-signature>java.lang.String urlDecode(java.lang.String)</function-signature>
+    <example>${fns:urlDecode(part)}</example>
+  </function>
+  <function>
+    <description>HTML编码</description>
+    <name>escapeHtml</name>
+    <function-class>com.wolfking.jeesite.common.utils.Encodes</function-class>
+    <function-signature>java.lang.String escapeHtml(java.lang.String)</function-signature>
+    <example>${fns:escapeHtml(html)}</example>
+  </function>
+  <function>
+    <description>HTML解码</description>
+    <name>unescapeHtml</name>
+    <function-class>com.wolfking.jeesite.common.utils.Encodes</function-class>
+    <function-signature>java.lang.String unescapeHtml(java.lang.String)</function-signature>
+    <example>${fns:unescapeHtml(html)}</example>
+  </function>
+
+  <!-- StringUtils -->
+  <function>
+    <description>截取最后一次出现字符串前面的字符</description>
+    <name>substringBeforeLast</name>
+    <function-class>org.apache.commons.lang3.StringUtils</function-class>
+    <function-signature>java.lang.String substringBeforeLast(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:substringBeforeLast(str,separator)}</example>
+  </function>
+  <function>
+    <description>从后边开始截取字符串</description>
+    <name>substringAfterLast</name>
+    <function-class>org.apache.commons.lang3.StringUtils</function-class>
+    <function-signature>java.lang.String substringAfterLast(java.lang.String, java.lang.String)</function-signature>
+    <example>${fns:substringAfterLast(str,separator)}</example>
+  </function>
+  <function>
+    <description>判断字符串是否以某某开头</description>
+    <name>startsWith</name>
+    <function-class>org.apache.commons.lang3.StringUtils</function-class>
+    <function-signature>boolean startsWith(java.lang.CharSequence, java.lang.CharSequence)</function-signature>
+    <example>${fns:startsWith(str,prefix)}</example>
+  </function>
+  <function>
+    <description>判断字符串是否以某某结尾</description>
+    <name>endsWith</name>
+    <function-class>org.apache.commons.lang3.StringUtils</function-class>
+    <function-signature>boolean endsWith(java.lang.CharSequence, java.lang.CharSequence)</function-signature>
+    <example>${fns:endsWith(str,suffix)}</example>
+  </function>
+  <function>
+    <description>缩写字符串，超过最大宽度用“...”表示</description>
+    <name>abbr</name>
+    <function-class>com.kkl.kklplus.utils.StringUtils</function-class>
+    <function-signature>java.lang.String abbr(java.lang.String, int)</function-signature>
+    <example>${fns:abbr(str,length)}</example>
+  </function>
+  <!--  <function>-->
+  <!--    <description>缩写字符串，超过最大宽度用“...”表示</description>-->
+  <!--    <name>abbr</name>-->
+  <!--    <function-class>com.wolfking.jeesite.common.utils.StringUtils</function-class>-->
+  <!--    <function-signature>java.lang.String abbr(java.lang.String, int)</function-signature>-->
+  <!--    <example>${fns:abbr(str,length)}</example>-->
+  <!--  </function>-->
+  <!--  <function>-->
+  <!--    <description>替换掉HTML标签</description>-->
+  <!--    <name>replaceHtml</name>-->
+  <!--    <function-class>com.wolfking.jeesite.common.utils.StringUtils</function-class>-->
+  <!--    <function-signature>java.lang.String replaceHtml(java.lang.String)</function-signature>-->
+  <!--    <example>${fns:replaceHtml(html)}</example>  -->
+  <!--  </function>-->
+  <function>
+    <description>替换掉HTML标签</description>
+    <name>replaceHtml</name>
+    <function-class>com.kkl.kklplus.utils.StringUtils</function-class>
+    <function-signature>java.lang.String cleanHtmlTag(java.lang.String)</function-signature>
+    <example>${fns:replaceHtml(html)}</example>
+  </function>
+  <function>
+    <description>转换为JS获取对象值，生成三目运算返回结果。</description>
+    <name>jsGetVal</name>
+    <function-class>com.wolfking.jeesite.common.utils.StringUtils</function-class>
+    <function-signature>java.lang.String jsGetVal(java.lang.String)</function-signature>
+    <example>${fns:jsGetVal('row.user.id')}  返回：!row?'':!row.user?'':!row.user.id?'':row.user.id</example>
+  </function>
+
+  <function>
+    <description>页面格式化double(两位小数)</description>
+    <name>formatNum</name>
+    <function-class>com.kkl.kklplus.utils.NumberUtils</function-class>
+    <function-signature>java.lang.String formatNum(double)</function-signature>
+    <example>${fns:formatNum(value)}</example>
+  </function>
+
+  <function>
+    <description>页面格式化double(自定义小数位数)</description>
+    <name>formatDouble</name>
+    <function-class>com.kkl.kklplus.utils.NumberUtils</function-class>
+    <function-signature>java.lang.String formatDouble(double,int)</function-signature>
+    <example>${fns:formatDouble(double,digits)}</example>
+  </function>
+
+  <function>
+    <description>字符转Integer</description>
+    <name>stringToInteger</name>
+    <function-class>com.kkl.kklplus.utils.StringUtils</function-class>
+    <function-signature>java.lang.Integer toInteger(java.lang.Object)</function-signature>
+    <example>${fns:stringToInteger(val)}</example>
+  </function>
+
+  <!-- DateUtils -->
+  <function>
+    <description>获取当前日期</description>
+    <name>getDate</name>
+    <function-class>com.wolfking.jeesite.common.utils.DateUtils</function-class>
+    <function-signature>java.lang.String getDate(java.lang.String)</function-signature>
+    <example>${fns:getDate(pattern)}</example>
+  </function>
+  <function>
+    <description>获取过去的天数</description>
+    <name>pastDays</name>
+    <function-class>com.wolfking.jeesite.common.utils.DateUtils</function-class>
+    <function-signature>long pastDays(java.util.Date)</function-signature>
+    <example>${fns:pastDays(date)}</example>
+  </function>
+  <function>
+    <description>转成字符型</description>
+    <name>formatDate</name>
+    <function-class>com.wolfking.jeesite.common.utils.DateUtils</function-class>
+    <function-signature>java.lang.String formatDate(java.util.Date,java.lang.String)</function-signature>
+    <example>${fns:formatDate(date,pattern)}</example>
+  </function>
+  <function>
+    <description>是否大于当前日期</description>
+    <name>isGreaterNow</name>
+    <function-class>com.wolfking.jeesite.common.utils.DateUtils</function-class>
+    <function-signature>boolean isGreaterNow(java.util.Date)</function-signature>
+    <example>${fns:isGreaterNow(date)}</example>
+  </function>
+  <function>
+    <description>是否大于当前日期</description>
+    <name>isGreaterNowByString</name>
+    <function-class>com.wolfking.jeesite.common.utils.DateUtils</function-class>
+    <function-signature>boolean isGreaterNowByString(java.lang.String)</function-signature>
+    <example>${fns:isGreaterNowByString(date)}</example>
+  </function>
+  <function>
+    <description>将时间戳格式化成日期字符串</description>
+    <name>formatDateString</name>
+    <function-class>com.wolfking.jeesite.common.utils.DateUtils</function-class>
+    <function-signature>java.lang.String formatDateString(java.lang.Long)</function-signature>
+    <example>${fns:formatDateString(timestamp)}</example>
+  </function>
+  <function>
+    <description>计算指定日期与当前日期相差小时</description>
+    <name>getDateDiffHourOfNow</name>
+    <function-class>com.wolfking.jeesite.common.utils.DateUtils</function-class>
+    <function-signature>java.lang.Float getDateDiffHourOfNow(java.util.Date)</function-signature>
+    <example>${fns:getDateDiffHourOfNow(timestamp)}</example>
+  </function>
+  <!-- JsonMapper -->
+  <function>
+    <description>对象转换JSON字符串</description>
+    <name>toJson</name>
+    <function-class>com.wolfking.jeesite.common.mapper.JsonMapper</function-class>
+    <function-signature>java.lang.String toJsonString(java.lang.Object)</function-signature>
+    <example>${fns:toJson(object)}</example>
+  </function>
+  <!-- Gson -->
+  <function>
+    <description>对象转换JSON字符串</description>
+    <name>toGson</name>
+    <function-class>com.wolfking.jeesite.common.utils.GsonUtils</function-class>
+    <function-signature>java.lang.String toGsonString(java.lang.Object)</function-signature>
+    <example>${fns:toGson(object)}</example>
+  </function>
+
+  <function>
+    <description>获得产品类别</description>
+    <name>getProductCategories</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.ProductUtils</function-class>
+    <function-signature>java.util.List getProductCategoryList()</function-signature>
+    <example>${fns:getProductCategories()}</example>
+  </function>
+
+  <function>
+    <description>获得产品</description>
+    <name>getProducts</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.ProductUtils</function-class>
+    <function-signature>java.util.List getProductList()</function-signature>
+    <example>${fns:getProducts()}</example>
+  </function>
+  <function>
+    <description>获得服务项目</description>
+    <name>getServiceTypes</name>
+    <function-class>com.wolfking.jeesite.modules.sd.utils.OrderUtils</function-class>
+    <function-signature>java.util.List getServiceTypes()</function-signature>
+    <example>${fns:getServiceTypes()}</example>
+  </function>
+  <function>
+    <description>订单是否是待回访</description>
+    <name>canFollowUp</name>
+    <function-class>com.wolfking.jeesite.modules.sd.utils.OrderUtils</function-class>
+    <function-signature>int canFollowUpFns(java.lang.String,java.lang.Integer,java.util.Date)</function-signature>
+    <example>${fns:canFollowUpFns(status,subStatus,pendingTypeDate)}</example>
+  </function>
+  <function>
+    <description>获得产品单品（非套组）列表</description>
+    <name>getSingleProductList</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.ProductUtils</function-class>
+    <function-signature>java.util.List getSingleProductList()</function-signature>
+    <example>${fns:getSingleProductList()}</example>
+  </function>
+
+  <function>
+    <description>获得产品单品（非套组）列表</description>
+    <name>getSingleProductListFromMS</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.ProductUtils</function-class>
+    <function-signature>java.util.List getSingleProductListFromMS()</function-signature>
+    <example>${fns:getSingleProductListFromMS()}</example>
+  </function>
+
+  <!-- B2B -->
+  <function>
+    <description>获得B2B所有店铺列表</description>
+    <name>getAllShopList</name>
+    <function-class>com.wolfking.jeesite.ms.tmall.md.utils.B2BMapUtils</function-class>
+    <function-signature>java.util.List getAllShopList(int)</function-signature>
+    <example>${fns:getAllShopList(dataSource)}</example>
+  </function>
+
+  <function>
+    <description>是否允许通过客户查询B2B工单</description>
+    <name>canSearchB2BOrderByCustomer</name>
+    <function-class>com.wolfking.jeesite.ms.b2bcenter.md.utils.B2BMDUtils</function-class>
+    <function-signature>boolean canSearchB2BOrderByCustomer(java.lang.Integer)</function-signature>
+    <example>${fns:canSearchB2BOrderByCustomer(dataSourceId)}</example>
+  </function>
+
+  <function>
+    <description>判断工单是否是新单</description>
+    <name>isNewOrder</name>
+    <function-class>com.wolfking.jeesite.modules.sd.utils.OrderUtils</function-class>
+    <function-signature>int isNewOrder(java.lang.String)</function-signature>
+    <example>${fns:isNewOrder(orderNo)}</example>
+  </function>
+
+  <function>
+    <description>判断是否可见标识里面是否含义网点</description>
+    <name>hasServicePoint</name>
+    <function-class>com.wolfking.jeesite.modules.sys.entity.VisibilityFlagEnum</function-class>
+    <function-signature>boolean hasServicePoint(java.lang.Integer)</function-signature>
+    <example>${fns:hasServicePoint(visibilityValue)}</example>
+  </function>
+
+  <function>
+    <description>读取所有禁用词</description>
+    <name>getAllWordsString</name>
+    <function-class>com.wolfking.jeesite.modules.md.utils.DisableWordUtils</function-class>
+    <function-signature>java.lang.String getAllWordsString()</function-signature>
+    <example>${fns:getAllWordsString()}</example>
+  </function>
+
+</taglib>

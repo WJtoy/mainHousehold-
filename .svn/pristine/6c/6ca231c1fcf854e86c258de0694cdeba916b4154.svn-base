@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.PlanRadiusDao">
+    <!--
+    <sql id="planRadiusColumns">
+        a.id,
+        a.area_id as 'area.id',
+        a.radius1,
+        a.radius2,
+        a.radius3,
+        a.remarks,
+        a.auto_plan_flag,
+        a.create_by as 'creatBy.id',
+        a.create_date,
+        a.update_by as 'updateBy.id',
+        a.update_date,
+        a.del_flag
+    </sql>
+
+    <sql id="areaColumns">
+        b.parent_id as 'area.parent.id',
+        b.parent_ids as 'area.parentIds',
+        b.name as 'area.name'
+    </sql>
+
+    <select id="get" resultType="PlanRadius">
+        select <include refid="planRadiusColumns" />
+        from md_plan_radius a
+        where a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="PlanRadius" parameterType="PlanRadius">
+        select a.id,
+        a.area_id as 'area.id',
+        a.radius1/1000 as 'radius1',
+        a.radius2/1000 as 'radius2',
+        a.radius3/1000 as 'radius3',
+        a.auto_plan_flag,
+        a.remarks,
+        a.create_by as 'creatBy.id',
+        a.create_date,
+        a.update_by as 'updateBy.id',
+        a.update_date,
+        a.del_flag
+        ,<include refid="areaColumns"/>
+        from md_plan_radius a
+        join sys_area b
+        on a.area_id = b.id
+        and b.del_flag = 0
+        <where>
+            <if test="area != null and area.parentIds != null and area.parentIds !='' and area.id != null and area.id !=''">
+                b.parent_ids like concat(#{area.parentIds},#{area.id},',%')
+            </if>
+            <if test="area != null and area.id != null and area.id !=''">
+                or b.id = #{area.id}
+            </if>
+        </where>
+    </select>
+
+    <select id="findAllList" resultType="PlanRadius">
+        select <include refid="planRadiusColumns" />
+              ,<include refid="areaColumns"/>
+        from  md_plan_radius a
+        join sys_area b
+        on a.area_id = b.id
+        and b.del_flag = 0
+        and a.del_flag = 0
+    </select>
+
+    <select id="getByAreaId" parameterType="java.lang.Long" resultType="PlanRadius">
+        select
+          a.id,
+          a.area_id as 'area.id',
+          a.radius1,
+          a.radius2,
+          a.radius3,
+          a.auto_plan_flag,
+          b.name as 'area.name',
+          b.parent_ids as 'area.parentIds'
+        from md_plan_radius a
+             join sys_area b
+             on a.area_id = b.id
+             and b.del_flag = '0'
+        where area_id = #{areaId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into md_plan_radius
+        (
+            area_id,
+            radius1,
+            radius2,
+            radius3,
+            auto_plan_flag,
+            remarks,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            del_flag
+        )
+        values (
+           #{area.id},
+           #{radius1},
+           #{radius2},
+           #{radius3},
+           #{autoPlanFlag},
+           #{remarks},
+           #{createBy.id},
+           #{createDate},
+           #{updateBy.id},
+           #{updateDate},
+           #{delFlag}
+        )
+    </insert>
+
+    <update id="update">
+        update md_plan_radius
+        set radius1 = #{radius1},
+            radius2 = #{radius2},
+            radius3 = #{radius3},
+            auto_plan_flag = #{autoPlanFlag},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        where area_id =#{area.id}
+    </update>
+
+    <update id="delete">
+        update md_plan_radius
+        set del_flag = #{delFlag},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        where id =#{id}
+    </update>
+    -->
+
+</mapper>

@@ -1,0 +1,311 @@
+package com.wolfking.jeesite.modules.sd.web;
+
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.es.mq.MQSyncServicePointMessage;
+import com.kkl.kklplus.entity.es.mq.MQSyncServicePointStationMessage;
+import com.kkl.kklplus.entity.es.mq.MQSyncType;
+import com.wolfking.jeesite.common.exception.OrderException;
+import com.wolfking.jeesite.common.persistence.AjaxJsonEntity;
+import com.wolfking.jeesite.common.utils.IdGen;
+import com.wolfking.jeesite.common.web.BaseController;
+import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.md.entity.ServicePointStation;
+import com.wolfking.jeesite.modules.md.service.ServicePointService;
+import com.wolfking.jeesite.modules.mq.dto.MQPushMessage;
+import com.wolfking.jeesite.modules.mq.sender.PushMessageSender;
+import com.wolfking.jeesite.modules.mq.sender.ServicePointStationSender;
+import com.wolfking.jeesite.modules.mq.service.OrderAutoPlanMessageService;
+import com.wolfking.jeesite.modules.sd.entity.OrderCondition;
+import com.wolfking.jeesite.modules.sd.service.TestService;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.LogUtils;
+import com.wolfking.jeesite.ms.providermd.service.MSServicePointPriceService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.shiro.authz.annotation.RequiresUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Created by Jeff on 2017/7/24.
+ */
+@Controller
+@RequestMapping(value = "${adminPath}/sd/test")
+@RequiresUser
+@Slf4j(topic = "TestController")
+public class TestController extends BaseController {
+
+    @Autowired
+    private TestService testService;
+
+
+    @Autowired
+    PushMessageSender pushMessageSender;
+
+    @Autowired
+    private ServicePointStationSender servicePointStationSender;
+
+    @Autowired
+    private ServicePointService servicePointService;
+
+    @Autowired
+    private MSServicePointPriceService msServicePointPriceService;
+
+    @Autowired
+    private OrderAutoPlanMessageService orderAutoPlanMessageService;
+
+    @ResponseBody
+    @RequestMapping(value = "soc")
+    public AjaxJsonEntity selectOrderCondition(int pageIndex, int pageSize, HttpServletRequest request, HttpServletResponse response){
+        response.setContentType("application/json; charset=UTF-8");
+        AjaxJsonEntity result = new AjaxJsonEntity(true);
+        List<OrderCondition> ol = testService.findOrderConditionList(pageIndex, pageSize);
+        result.setData(ol);
+        return result;
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "socreadonly")
+    public AjaxJsonEntity selectOrderConditionReadOnly(int pageIndex, int pageSize, HttpServletRequest request, HttpServletResponse response){
+        response.setContentType("application/json; charset=UTF-8");
+        AjaxJsonEntity result = new AjaxJsonEntity(true);
+        List<OrderCondition> ol = testService.findOrderConditionListReadOnly(pageIndex, pageSize);
+        result.setData(ol);
+        return result;
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "push")
+    public AjaxJsonEntity push(int uid, int times, int mtype, HttpServletRequest request, HttpServletResponse response){
+        response.setContentType("application/json; charset=UTF-8");
+        AjaxJsonEntity result = new AjaxJsonEntity(true);
+        for (int i = 1; i <= times; i++) {
+            MQPushMessage.PushMessage.Builder pushMessage = MQPushMessage.PushMessage.newBuilder();
+            pushMessage.setUserId(uid);
+            pushMessage.setPushMessageType(MQPushMessage.PushMessageType.Notification);
+            pushMessage.setMessageType(mtype);
+            pushMessage.setSubject("test subject");
+            pushMessage.setDescription("test description");
+            pushMessage.setContent("test content");
+            pushMessage.setTimestamp(System.currentTimeMillis());
+//            pushMessageSender.send(pushMessage.build());
+//            try {
+//                Thread.sleep(1500);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+        }
+        result.setData("OK");
+        return result;
+    }
+
+    @RequestMapping(value = {"testButtonDbClick"},method = RequestMethod.GET)
+    public String testButtonDbClickGet(Model model,
+                                             HttpServletRequest request, HttpServletResponse response) {
+        model.addAttribute("id", IdGen.uuid());
+        return "modules/test/testDbClickForm";
+    }
+
+    @RequestMapping(value = {"testButtonDbClick"},method = RequestMethod.POST)
+    public String testButtonDbClick(Model model,
+                                    HttpServletRequest request, HttpServletResponse response) {
+        log.info("testButtonDbClick:post request");
+        log.info("id:{}",request.getParameter("id"));
+        try {
+            Thread.sleep(1000l);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        model.addAttribute("id", IdGen.uuid());
+        return "modules/test/testDbClickForm";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "testButtonDbClickAjax")
+    public AjaxJsonEntity testButtonDbClickAjax(String id,HttpServletRequest request, HttpServletResponse response){
+        response.setContentType("application/json; charset=UTF-8");
+        AjaxJsonEntity result = new AjaxJsonEntity(true);
+        log.info("id:{}",id);
+        try {
+            Thread.sleep(2000l);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        result.setSuccess(true);
+        result.setData(IdGen.uuid());
+        return result;
+    }
+
+    @RequestMapping(value = {"testOneLogback"},method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxJsonEntity testOneLogback(HttpServletRequest request, HttpServletResponse response) {
+        response.setContentType("application/json; charset=UTF-8");
+        AjaxJsonEntity result = new AjaxJsonEntity(true);
+        //log.info("test info");
+        //log.error("我是错误！我是错误！我是错误！我是错误！我是错误！我是错误！我是错误！我是错误！我是错误！我是错误！我是错误！");
+        //LogUtils.saveLog(request,"测试异常");//ok
+        //LogUtils.saveLog(request,null,new OrderException("测试异常"),"测试异常");//ok
+        //LogUtils.saveLog(request,null,new OrderException("测试异常"),"测试异常","params");//ok
+        //LogUtils.saveLog(request,null,new OrderException("测试异常"),"测试异常","params",new User(10000l));//ok
+        LogUtils.saveLog(request,null,new OrderException("测试异常"),"测试异常","test","params",new User(10000l));//ok
+
+        result.setMessage("ok");
+        return result;
+    }
+
+    @RequestMapping(value = {"testLogback"},method = RequestMethod.GET)
+    public String testLogback(Model model,
+                                    HttpServletRequest request, HttpServletResponse response) {
+        final int threadNum = 10;
+        CyclicBarrier cb = new CyclicBarrier(threadNum);
+        ExecutorService es = Executors.newFixedThreadPool(threadNum);
+        for (int i = 0; i < threadNum; i++) {
+            es.execute(new LogThread(cb));
+        }
+
+        es.shutdown();
+        //log.trace("trace:{}",System.currentTimeMillis());
+        //log.info("info:{}",System.currentTimeMillis());
+        //log.debug("debug:{}",System.currentTimeMillis());
+        //log.warn("warn:{}",System.currentTimeMillis());
+        //log.error("error:{}",System.currentTimeMillis());
+        model.addAttribute("id", IdGen.uuid());
+        return "modules/test/testDbClickForm";
+    }
+
+    @RequestMapping(value = {"testLogOutput"},method = RequestMethod.GET)
+    public String testLogOutput(Model model,
+                              HttpServletRequest request, HttpServletResponse response) {
+        log.debug("测试日志-DEBUG");
+        log.info("测试日志-INFO");
+        log.warn("测试日志-WARN");
+        double divRst = 0.00;
+        try {
+            divRst = 12/0;
+        }catch (Exception e) {
+            log.error("测试错误输出",e);
+        }
+
+        model.addAttribute("id", IdGen.uuid());
+        return "modules/test/testDbClickForm";
+    }
+
+    @ResponseBody
+    @RequestMapping("/servicePoint")
+    public ServicePoint getServicePoint(Long id,HttpServletRequest request){
+        //long lid = StringUtils.toLong(id);
+        ServicePoint servicePoint = servicePointService.getFromCache(id);
+        return servicePoint;
+    }
+
+    @ResponseBody
+    @RequestMapping("/getHeaders")
+    public AjaxJsonEntity getRequestHeaders(Long id,HttpServletRequest request){
+        StringBuffer str=new StringBuffer();
+        //String kklToken = request.getHeader("kkl");
+        //System.out.println("kkl:" + kklToken);
+        //return AjaxJsonEntity.success("success",kklToken);
+        Enumeration<String> headerNames = request.getHeaderNames();//获取所有元素名字
+        while (headerNames.hasMoreElements()){//下一个元素存在
+            String name=headerNames.nextElement();//获取当前元素
+            str.append(name+":"+request.getHeader(name)+" | ");//通过当前元素得到具体内容
+        }
+        return AjaxJsonEntity.success("success",str.toString());
+
+    }
+
+    @ResponseBody
+    @RequestMapping("/teststation/{autoPlanFlag}")
+    public String testStation(@PathVariable Integer autoPlanFlag) {
+        MQSyncServicePointMessage.SyncServicePointMessage syncServicePointMessage = MQSyncServicePointMessage.SyncServicePointMessage.newBuilder()
+                .setMessageId(1146712723934740480L)
+                .setServicePointId(10833)
+                .setServicePointNo("CS18772732342")
+                .setName("陈明彬")
+                .setContactInfo1("18772732347")
+                .setPaymentType(10)
+                .setLevel(1)
+                .setAutoPlanFlag(autoPlanFlag)
+                .build();
+
+        MQSyncServicePointStationMessage.SyncStationMessage stationMessage = MQSyncServicePointStationMessage.SyncStationMessage.newBuilder()
+                .setStationId(225)
+                .setAreaId(1607)
+                .setSubAreaId(20085)
+                .setStationName("张槎街道")
+                .setAutoPlanFlag(autoPlanFlag)
+                .build();
+
+        MQSyncServicePointStationMessage.SyncServicePointStationMessage syncServicePointStationMessage =
+                MQSyncServicePointStationMessage.SyncServicePointStationMessage.newBuilder()
+                        .setMessageId(1146712723910561792L)
+                        .setSyncType(MQSyncType.SyncType.UPDATE)
+                        .setServicePointMessage(syncServicePointMessage)
+                        .addStationMessage(stationMessage)
+                        .build();
+
+        servicePointStationSender.send(syncServicePointStationMessage);
+        log.warn("Es-ServicePointStation:{}", syncServicePointStationMessage);
+
+        return "OK!"+ autoPlanFlag;
+    }
+
+
+    //添加上门服务
+    static class LogThread implements Runnable {
+        private CyclicBarrier cb;
+
+        public LogThread(CyclicBarrier cb) {
+            this.cb = cb;
+        }
+        @Override
+        public void run() {
+            try {
+                // 等待所有任务准备就绪
+                cb.await();
+                // 定义每个线程负责的业务逻辑实现
+                Thread.sleep(100);
+                Logger log = LoggerFactory.getLogger(getClass());
+                for(int i=0;i<1000;i++) {
+                    log.info("info - thread: {} ,content:{}", this,i);
+                    log.debug("debug - thread: {} ,content:{}", this,i);
+                    log.warn("warn - thread: {} ,content:{}", this,i);
+                    log.error("error - thread: {} ,content:{}", this,i);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+//    @ResponseBody
+//    @RequestMapping("/reloadSpPriceCache/{id}")
+//    public MSResponse<Integer> reloadServicePointPriceCache(@PathVariable Long id) {
+//        return msServicePointPriceService.reloadPointPriceWithCache(id);
+//    }
+
+      @ResponseBody
+      @RequestMapping(value="/queryAutoPlan", produces = "text/plain; charset=utf-8")
+      public String queryAutoPlan(@RequestParam("subAreaId") Long subAreaId, @RequestParam("categoryId") Long categoryId) {
+        try {
+            com.kkl.kklplus.entity.es.ServicePointStation servicePointStation = orderAutoPlanMessageService.getNearServicePointBySubAreaIdNew(subAreaId, categoryId);
+            String stationStr = servicePointStation != null?ToStringBuilder.reflectionToString(servicePointStation, ToStringStyle.JSON_STYLE):"";
+            return stationStr;
+        } catch(Exception ex) {
+            return String.format("查询失败.失败原因:%s",ex.getMessage());
+        }
+      }
+}

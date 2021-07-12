@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.EngineerDao">
+
+    <!-- 查询师傅列表 -->
+    <!--
+    // mark on 2020-1-13  web端去md_engineer
+    <select id="getEngineersForKefu" resultType="Engineer">
+        SELECT
+        a.id,
+        a.name,
+        a.contact_info,
+        a.address,
+        a.area_id as "area.id",
+        a.order_count,
+        a.plan_count,
+        a.break_count,
+        a.grade,
+        a.master_flag,
+        a.servicepoint_id AS "servicePoint.id"
+        FROM md_engineer a
+        <where>
+            a.del_flag = 0
+            <if test="id != null and id > 0 ">
+                AND a.id = #{id}
+            </if>
+            <if test="name != null and name != '' ">
+                AND a.name LIKE CONCAT('%',#{name},'%')
+            </if>
+            <if test="contactInfo != null and contactInfo !='' ">
+                AND a.contact_info LIKE CONCAT('%',#{contactInfo},'%')
+            </if>
+        </where>
+        ORDER BY a.order_count DESC, a.name
+    </select>
+
+
+    <select id="findMasterEngineer" resultType="Engineer">
+        select
+            e.id,
+            e.servicepoint_id as "servicePoint.id",
+            e.name,
+            e.contact_info,
+            e.master_flag,
+            e.app_flag
+        from  md_engineer e
+        where   e.del_flag = 0
+        and e.master_flag = 1
+        <if test="appFlag != null">
+            AND e.app_flag = #{appFlag}
+        </if>
+        limit 2000
+    </select>
+    -->
+
+</mapper>

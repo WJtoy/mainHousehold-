@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.rpt.dao.ServicePointBalanceMonthlyDao">
+
+    <select id="getServicePointCurrentMonthBalance" parameterType="Map" resultType="Double">
+        SELECT
+                SUM(payable.m1+payable.m2+payable.m3+payable.m4+payable.m5+payable.m6+payable.m7+payable.m8+payable.m9+payable.m10+payable.m11+payable.m12)-
+                SUM(paid.m1+paid.m2+paid.m3+paid.m4+paid.m5+paid.m6+paid.m7+paid.m8+paid.m9+paid.m10+paid.m11+paid.m12)
+        FROM 	fi_servicepoint_payable_monthly payable
+                LEFT JOIN fi_servicepoint_invoice_monthly paid ON paid.id = payable.id
+        WHERE 	payable.servicepoint_id = #{servicePointId}
+            AND payable.payment_type = #{paymentType};
+    </select>
+
+    <update id="updateMonthBalance">
+        UPDATE
+                rpt_servicepoint_balance_monthly
+        SET
+                ${monthField}=${balance}
+        WHERE
+                servicepoint_id = #{servicePointId}
+          AND   payment_type = #{paymentType}
+          AND   year = #{year}
+    </update>
+
+    <update id="incrBalance" parameterType="ServicePointPayableMonthly">
+        INSERT INTO rpt_servicepoint_balance_monthly (
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`,
+				${monthField}
+		) VALUES (
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year},
+				#{amount}
+		)
+		ON DUPLICATE KEY
+		UPDATE ${monthField} = ${monthField} + #{amount}
+    </update>
+
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.CustomerInvoiceConditionDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_customerinvoice_condition(
+			id,
+			customer_invoice_no,
+			customer_id,
+			payment_type,
+			invoice_date,
+			create_date,
+			service_types,
+			quarter
+		) VALUES (
+			#{id},
+			#{customerInvoiceNo},
+			#{customerId},
+			#{paymentType},
+			#{invoiceDate},
+			#{createDate},
+			#{serviceTypes},
+			#{quater}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_customerinvoice_condition SET
+			update_by = #{updateBy}
+		WHERE id = #{id}
+	</update>
+
+	<delete id="delete">
+		DELETE FROM fi_customerinvoice_condition
+		WHERE id = #{id}
+	</delete>
+	
+</mapper>

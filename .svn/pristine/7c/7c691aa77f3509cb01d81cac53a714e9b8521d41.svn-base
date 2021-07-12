@@ -1,0 +1,75 @@
+package com.wolfking.jeesite.ms.providermd.service;
+
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.md.MDEngineerAddress;
+import com.wolfking.jeesite.ms.providermd.feign.MSEngineerAddressFeign;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+
+@Service
+@Slf4j
+public class MSEngineerAddressService {
+    @Autowired
+    private MSEngineerAddressFeign msEngineerAddressFeign;
+
+
+    /**
+     * 根据id获取安维人员信息
+     * @param id
+     * @return
+     */
+    public MDEngineerAddress getByEngineerId(Long id) {
+        if (id == null) {
+            return null;
+        }
+        MDEngineerAddress engineerAddress = msEngineerAddressFeign.getByEngineerId(id).getData();
+        if (engineerAddress == null) {
+            engineerAddress = new MDEngineerAddress();
+        }
+        return engineerAddress;
+    }
+
+    public MDEngineerAddress getById(Long id) {
+        if (id == null) {
+            return null;
+        }
+        MDEngineerAddress engineerAddress = msEngineerAddressFeign.getById(id).getData();
+        if (engineerAddress == null) {
+            engineerAddress = new MDEngineerAddress();
+        }
+        return engineerAddress;
+    }
+
+    @Transactional(readOnly = false)
+    public void save(MDEngineerAddress engineerAddress){
+        if (engineerAddress.getAreaName() != null && !("").equals(engineerAddress.getAreaName())) {
+            String address = engineerAddress.getAddress();
+            String areaName = engineerAddress.getAreaName();
+            String newAddress = address.replace(areaName, "");
+            engineerAddress.setAddress(engineerAddress.getAreaName() + newAddress);
+        }
+        boolean isNew = engineerAddress.getIsNewRecord();
+        MSResponse<Integer> msResponse = new MSResponse<>();
+        if (isNew) {
+            engineerAddress.preInsert();
+            msResponse = msEngineerAddressFeign.insert(engineerAddress);
+            // 当插入时从微服务中获取生成ID
+            if (MSResponse.isSuccess(msResponse)) {
+                engineerAddress.setId(msResponse.getData().longValue());
+            }
+        } else {
+            engineerAddress.preUpdate();
+            msResponse = msEngineerAddressFeign.update(engineerAddress);
+        }
+        if (msResponse.getCode() > 0) {
+            throw new RuntimeException("保存收货地址到微服务中出错。出错原因:" + msResponse.getMsg());
+        }
+    }
+
+
+
+
+}

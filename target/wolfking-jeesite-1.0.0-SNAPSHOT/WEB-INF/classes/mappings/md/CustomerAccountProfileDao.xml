@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.CustomerAccountProfileDao">
+    <!-- 客户帐号信息 -->
+    <sql id="userColumns">
+        u.id,
+        u.company_id AS "company.id",
+        u.login_name,
+        u.qq,
+        u.name,
+        u.email,
+        u.phone,
+        u.mobile,
+        u.user_type,
+        u.login_ip,
+        u.login_date,
+        u.engineer_id,
+        u.customer_account_profile_id as "customerAccountProfile.id",
+        u.remarks,
+        u.sub_flag,
+        u.photo,
+        u.create_by AS "createBy.id",
+        u.create_date,
+        u.update_by AS "updateBy.id",
+        u.update_date,
+        u.del_flag
+    </sql>
+
+    <sql id="profileColumns">
+        a.customer_id as "customerAccountProfile.customer.id",
+        <!--c.name as "customerAccountProfile.customer.name", 改成从微服务中获取了-->
+        a.order_approve_flag as "customerAccountProfile.orderApproveFlag"
+    </sql>
+    <!--
+    <sql id="profileJoins">
+        INNER JOIN md_customer c ON c.id = a.customer_id
+    </sql>
+    -->
+    <sql id="userJoins">
+        INNER JOIN sys_user u ON u.customer_account_profile_id = a.id
+    </sql>
+
+    <!-- 获得客户帐号信息，包含扩展属性 -->
+    <select id="XXXgetUser" resultType="User">
+        select <include refid="userColumns"/>,<include refid="profileColumns"/>
+        from md_customer_account_profile a
+        <include refid="userJoins"/>
+        <!--<include refid="profileJoins"/>-->
+        where u.id = #{id}
+    </select>
+
+    <!-- 获得扩展属性 -->
+    <select id="XXXget" resultType="CustomerAccountProfile">
+        select
+          a.id,
+          a.customer_id as "customer.id",
+          <!--
+          改成微服务
+          c.name as "customer.name",
+          c.sales_id as "customer.sales.id",
+          '' as "customer.sales.name",
+          '' as "customer.sales.mobile",
+          '' as "customer.sales.qq",
+          -->
+          a.order_approve_flag
+        from
+          md_customer_account_profile a
+          <!--改成微服务<include refid="profileJoins"/>-->
+        WHERE
+          a.id = #{id}
+    </select>
+
+    <!-- 获得扩展属性 -->
+    <select id="XXXgetByUserId" resultType="CustomerAccountProfile">
+        select
+        a.id,
+        a.customer_id as "customer.id",
+        <!--
+        改成从微服务中获取
+        c.name as "customer.name",
+        c.sales_id as "customer.sales.id",
+        us.name as "customer.sales.name",
+        us.mobile as "customer.sales.mobile",
+        us.qq as "customer.sales.qq",
+        -->
+        a.order_approve_flag
+        from
+          sys_user u,
+          md_customer_account_profile a
+        <!--
+        <include refid="profileJoins"/>
+        LEFT JOIN sys_user us ON c.sales_id = us.id
+        -->
+        WHERE
+          u.id = #{id}
+          and u.customer_account_profile_id = a.id
+    </select>
+
+    <!-- 查询帐号 -->
+    <select id="XXXfindList" resultType="User">
+        select <include refid="userColumns"/>,<include refid="profileColumns"/>
+        from md_customer_account_profile a
+        <include refid="userJoins"/>
+        <!-- 改成调用微服务
+        <include refid="profileJoins"/>
+        -->
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <!-- 业务员 -->
+            <!--
+            <if test="salesId != null and salesId > 0">
+                AND c.sales_id = #{salesId}
+            </if>
+            -->
+            <if test="customerAccountProfile!=null and customerAccountProfile.customer!=null and customerAccountProfile.customer.id!=null and customerAccountProfile.customer.id>0 ">
+                AND a.customer_id = #{customerAccountProfile.customer.id}
+            </if>
+            <if test="loginName!= null and loginName!= '' ">
+                AND u.login_name like CONCAT(#{loginName},'%')
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND u.name like CONCAT(#{name},'%')
+            </if>
+            <choose>
+                <when test="userType!=null and userType!=0">
+                    AND u.user_type = #{userType}
+                </when>
+                <otherwise>
+                    AND u.user_type in (3,4,9)
+                </otherwise>
+            </choose>
+            <if test="customerAccountProfile!=null and customerAccountProfile.orderApproveFlag!=null and customerAccountProfile.orderApproveFlag>0 ">
+                AND a.order_approve_flag = #{customerAccountProfile.orderApproveFlag}
+            </if>
+            <if test="delFlag != null">
+                AND u.del_flag = #{delFlag}
+            </if>
+        </trim>
+        order by
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                u.${orderBy}
+            </when>
+            <otherwise>
+                u.login_name
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 查询帐号 -->
+    <select id="findListWithOutCustomerAccountProfile11" resultType="User">
+        select <include refid="userColumns"/>
+        from sys_user u
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <choose>
+                <when test="customerAccountProfileIds !=null and customerAccountProfileIds.size > 0">
+                    customer_account_profile_id in
+                    <foreach collection="customerAccountProfileIds" item="id" index="index"
+                            open="(" close=")" separator=",">
+                          #{id}
+                    </foreach>
+                </when>
+                <otherwise>
+                    customer_account_profile_id > 0
+                </otherwise>
+            </choose>
+            <if test="loginName!= null and loginName!= '' ">
+                AND u.login_name like CONCAT(#{loginName},'%')
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND u.name like CONCAT(#{name},'%')
+            </if>
+            <choose>
+                <when test="userType!=null and userType!=0">
+                    AND u.user_type = #{userType}
+                </when>
+                <otherwise>
+                    AND u.user_type in (3,4,9)
+                </otherwise>
+            </choose>
+            <if test="delFlag != null">
+                AND u.del_flag = #{delFlag}
+            </if>
+        </trim>
+        order by
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                u.${orderBy}
+            </when>
+            <otherwise>
+                u.login_name
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 查询帐号 -->
+    <select id="XXXfindListWithOutCustomerAccountProfile" resultType="User">
+        select <include refid="userColumns"/>
+        from sys_user u
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <!--
+            <choose>
+                <when test="customerIds !=null and customerIds.size > 0">
+                    company_id in
+                    <foreach collection="customerIds" item="item" index="index"
+                             open="(" close=")" separator=",">
+                        ${item}
+                    </foreach>
+                </when>
+                <otherwise>
+                    customer_account_profile_id > 0
+                </otherwise>
+            </choose>
+            -->
+            <choose>
+                <when test="company != null and company.id != null">
+                    company_id = #{company.id}
+                </when>
+                <otherwise>
+                    customer_account_profile_id > 0 and  company_id > 0
+                </otherwise>
+            </choose>
+            <!--
+            <if test="loginName!= null and loginName!= '' ">
+                AND u.login_name like CONCAT(#{loginName},'%')
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND u.name like CONCAT(#{name},'%')
+            </if>
+            -->
+            <if test="loginName!= null and loginName!= '' ">
+                AND u.login_name = #{loginName}
+            </if>
+            <if test="name!= null and name!= '' ">
+                AND u.name = #{name}
+            </if>
+            <choose>
+                <when test="userType!=null and userType!=0">
+                    AND u.user_type = #{userType}
+                </when>
+                <otherwise>
+                    AND u.user_type in (3,4,9)
+                </otherwise>
+            </choose>
+            <if test="delFlag != null">
+                AND u.del_flag = #{delFlag}
+            </if>
+        </trim>
+        order by
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                u.${orderBy}
+            </when>
+            <otherwise>
+                u.login_name
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--
+    //mark on 2020-1-11
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into md_customer_account_profile (
+            customer_id,
+            order_approve_flag,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            remarks,
+            del_flag
+        ) values (
+            #{customer.id},
+            #{orderApproveFlag},
+            #{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+            #{delFlag}
+        )
+    </insert>
+    -->
+
+    <!--
+    //mark on 2020-1-11
+    <update id="update">
+        update
+          md_customer_account_profile
+        set
+          order_approve_flag = #{orderApproveFlag},
+          update_by = #{updateBy.id},
+		  update_date = #{updateDate},
+		  remarks = #{remarks}
+		where id = #{id}
+    </update>
+    -->
+
+    <!--
+    //mark on 2020-1-11
+    <select id="hasOtherPrimaryAccount" resultType="java.lang.Integer">
+        select count(u.id)
+        from md_customer_account_profile a
+        inner join sys_user u on a.id = u.customer_account_profile_id
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            a.customer_id = #{customerId}
+            AND u.user_type = 3
+            <if test="expectId!=null and expectId>0 ">
+                <![CDATA[
+                AND u.id <> #{expectId}
+                ]]>
+            </if>
+        </trim>
+    </select>
+    -->
+
+    <!-- 重置客户帐号密码 -->
+    <update id="XXXresetPassword">
+        update sys_user
+        SET
+        password = #{password},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate}
+        where id = #{id}
+    </update>
+
+</mapper>

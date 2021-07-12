@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.ServicePointPaidMonthlyDao">
+	<insert id="insertDefaults" parameterType="ServicePointPaidMonthly">
+		INSERT INTO
+				fi_servicepoint_payable_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+		INSERT INTO
+				fi_servicepoint_paid_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+		INSERT INTO
+				fi_servicepoint_invoice_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+		INSERT INTO
+				rpt_servicepoint_balance_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+	</insert>
+
+	<update id="incrAmount" parameterType="ServicePointPaidMonthly" >
+		UPDATE
+			fi_servicepoint_paid_monthly
+		SET
+			${monthField} = ${monthField} + #{amount}
+		WHERE
+			id = #{id}
+	</update>
+	
+</mapper>

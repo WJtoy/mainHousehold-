@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.CustomerTimelinessDao">
+    <!--
+    <sql id="columns">
+            a.id,
+            a.customer_id as "customer.id",
+            a.area_id as "area.id",
+            a.timeliness_level_id as "timelinessLevel.id",
+            a.charge_in,
+            a.charge_out,
+            a.remarks
+    </sql>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_customer_timeliness(
+			customer_id,
+			area_id,
+			timeliness_level_id,
+			charge_in,
+			charge_out,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{customer.id},
+			#{area.id},
+			#{timelinessLevel.id},
+			#{chargeIn},
+			#{chargeOut},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <select id="get" resultType="CustomerTimeliness">
+        SELECT
+               <include refid="columns"/>
+        FROM
+                md_customer_timeliness a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="findAllList" resultType="CustomerTimeliness">
+        SELECT
+            <include refid="columns"/>
+        FROM
+             md_customer_timeliness a
+        WHERE
+            a.del_flag = 0
+        ORDER BY a.create_date
+    </select>
+
+    <select id="findList" resultType="CustomerTimeliness">
+        SELECT
+            customer_id as "customer.id"
+        FROM
+           md_customer_timeliness a
+        <where>
+            a.del_flag = 0
+            <if test="customer != null and customer.id != null and customer.id > 0">
+                AND a.customer_id = #{customer.id}
+            </if>
+        </where>
+        group by a.customer_id
+        ORDER BY a.customer_id
+    </select>
+
+    <delete id="deleteByCustomerId">
+        delete from md_customer_timeliness  where customer_id = #{customerId}
+    </delete>
+
+    <select id="findListByCustomerId" resultType="TimelinessChargeModel">
+        select timeliness_level_id as "timelinessLevel.id",
+        charge_in,charge_out
+        from md_customer_timeliness
+        where
+        del_flag=0
+        and customer_id = #{customerId}
+        and area_id = #{areaId}
+    </select>
+    -->
+</mapper>

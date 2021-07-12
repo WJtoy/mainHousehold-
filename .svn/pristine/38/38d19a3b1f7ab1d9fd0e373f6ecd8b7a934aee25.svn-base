@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wolfking.jeesite.modules.rpt.dao.CustomerRevenueFeesRptDao">
+
+    <select id="getReceivableCharge" resultType="CustomerRevenueFeesRptEntity">
+    select
+    SUM(fcc.service_charge) as customerServiceCharge ,SUM(fcc.express_charge) as customerExpressCharge ,SUM(fcc.travel_charge) as customerTravelCharge, SUM(fcc.material_charge) as customerMaterialCharge,
+    SUM(fcc.time_liness_charge) as customerTimelinessCharge , SUM(fcc.urgent_charge) as customerUrgentCharge,SUM(fcc.other_charge) as customerOtherCharge,SUM(fcc.praise_fee) as customerPraiseFee
+    FROM
+    fi_customercharge fcc
+    INNER JOIN fi_customercharge_condition fccc ON fccc.id = fcc.id
+    where
+    fcc.create_date >= #{startDate}
+    AND <![CDATA[ fcc.create_date < #{endDate}]]>
+    <if test="productCategoryIds.size() != 0">
+        <choose>
+            <when test="productCategoryIds.size() == 1">
+                and fccc.product_category_id = #{productCategoryIds[0]}
+            </when>
+            <otherwise>
+                and fccc.product_category_id in
+                <foreach item="item" index="index" collection="productCategoryIds" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </otherwise>
+        </choose>
+    </if>
+    AND fcc.charge_order_type = 0
+    AND fcc.del_flag = 0
+    <if test="customerId!=null and customerId!=0">
+        AND fcc.customer_id = #{customerId}
+    </if>
+    AND fcc.quarter = #{quarter}
+    LIMIT 200000
+    </select>
+
+    <select id="getWriteOffChargeList" resultType="CustomerRevenueFeesRptEntity">
+        select
+        SUM(fcc.service_charge+fcc.express_charge+fcc.travel_charge+fcc.material_charge+fcc.other_charge + fcc.urgent_charge) AS customerWriteOffCharge,
+        SUM(fcc.praise_fee)         AS customerPraiseFee
+        FROM
+        fi_customercharge fcc
+        INNER JOIN fi_customercharge_condition fccc ON fccc.id = fcc.id
+        where
+        fcc.create_date >= #{startDate}
+        AND <![CDATA[ fcc.create_date < #{endDate}]]>
+        <if test="productCategoryIds.size() != 0">
+            <choose>
+                <when test="productCategoryIds.size() == 1">
+                    and fccc.product_category_id = #{productCategoryIds[0]}
+                </when>
+                <otherwise>
+                    and fccc.product_category_id in
+                    <foreach item="item" index="index" collection="productCategoryIds" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        AND fcc.charge_order_type = 1
+        AND fcc.del_flag = 0
+        <if test="customerId!=null and customerId!=0">
+            AND fcc.customer_id = #{customerId}
+        </if>
+        AND fcc.quarter = #{quarter}
+        LIMIT 200000
+    </select>
+
+    <select id="getPayableChargeA" resultType="CustomerRevenueFeesRptEntity">
+        select
+        SUM(fec.service_charge) as engineerServiceCharge, SUM(fec.express_charge) as engineerExpressCharge,SUM(fec.travel_charge) as engineerTravelCharge,
+        SUM(fec.material_charge) as engineerMaterialCharge,SUM(fec.other_charge) as engineerOtherCharge
+        FROM
+        fi_engineercharge fec
+        INNER JOIN fi_engineercharge_condition fecc ON fecc.id = fec.id
+        where
+        fec.create_date >= #{startDate}
+        AND <![CDATA[ fec.create_date < #{endDate}]]>
+        <if test="productCategoryIds.size() != 0">
+            <choose>
+                <when test="productCategoryIds.size() == 1">
+                    and fecc.product_category_id = #{productCategoryIds[0]}
+                </when>
+                <otherwise>
+                    and fecc.product_category_id in
+                    <foreach item="item" index="index" collection="productCategoryIds" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        AND fec.charge_order_type = 0
+        AND fec.del_flag = 0
+        <if test="customerId!=null and customerId!=0">
+            AND fec.customer_id = #{customerId}
+        </if>
+        AND fec.quarter = #{quarter}
+        LIMIT 200000
+    </select>
+
+
+    <select id="getPayableChargeB" resultType="CustomerRevenueFeesRptEntity">
+        select
+        SUM(fecm.customer_time_liness_charge) as engineerCustomerTimelinessCharge ,SUM(fecm.insurance_charge) as engineerInsuranceCharge, SUM(fecm.time_liness_charge) as engineerTimelinessCharge,
+        SUM(fecm.urgent_charge) as engineerUrgentCharge,SUM(fecm.praise_fee) as engineerPraiseFee,SUM(fecm.tax_fee) as taxFee ,SUM(fecm.info_fee) as infoFee
+        FROM
+        fi_engineercharge_master fecm
+        INNER JOIN fi_engineercharge_master_condition femc ON femc.id = fecm.id
+        where
+        fecm.create_date >= #{startDate}
+        AND <![CDATA[ fecm.create_date < #{endDate}]]>
+        <if test="productCategoryIds.size() != 0">
+            <choose>
+                <when test="productCategoryIds.size() == 1">
+                    and femc.product_category_id = #{productCategoryIds[0]}
+                </when>
+                <otherwise>
+                    and femc.product_category_id in
+                    <foreach item="item" index="index" collection="productCategoryIds" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        AND fecm.del_flag = 0
+        <if test="customerId!=null and customerId!=0">
+            AND fecm.customer_id = #{customerId}
+        </if>
+        AND fecm.quarter = #{quarter}
+        LIMIT 200000
+    </select>
+
+    <select id="getDiffCharge" resultType="CustomerRevenueFeesRptEntity">
+        select
+        sum(fecm.service_charge+fecm.express_charge+fecm.travel_charge+fecm.material_charge+fecm.other_charge) AS engineerWriteOffCharge
+        FROM
+        fi_engineercharge fecm
+        INNER JOIN fi_engineercharge_condition femc ON femc.id = fecm.id
+        where
+        fecm.create_date >= #{startDate}
+        AND <![CDATA[ fecm.create_date < #{endDate}]]>
+        <if test="productCategoryIds.size() != 0">
+            <choose>
+                <when test="productCategoryIds.size() == 1">
+                    and femc.product_category_id = #{productCategoryIds[0]}
+                </when>
+                <otherwise>
+                    and femc.product_category_id in
+                    <foreach item="item" index="index" collection="productCategoryIds" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        AND fecm.charge_order_type = 1
+        AND fecm.del_flag = 0
+        <if test="customerId!=null and customerId!=0">
+            AND fecm.customer_id = #{customerId}
+        </if>
+        AND fecm.quarter = #{quarter}
+        LIMIT 200000
+    </select>
+</mapper>

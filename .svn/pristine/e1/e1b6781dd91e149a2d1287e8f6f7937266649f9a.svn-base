@@ -1,0 +1,472 @@
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+margin: 0;
+padding: 0;
+border: 0;
+font-size: 100%;
+font: inherit;
+vertical-align: baseline;
+}
+.chatContainer {
+position: relative;
+border-radius: 2px 2px 6px 6px;
+-webkit-border-radius: 2px 2px 6px 6px;
+-moz-border-radius: 2px 2px 6px 6px;
+border: 1px solid #424448;
+_height: 400px;
+overflow: hidden;
+}
+.cloudPannel {
+  position: relative;
+  _position: static;
+}
+.chatMainPanel {
+  position: absolute;
+  width: 100%;
+  border-radius: 2px 2px 6px 6px;
+}
+/*会话窗体*/
+.chat {
+  margin-left: 312px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px #313131;
+  z-index: 20;
+  /*ie hack*/
+  _height: 400px;
+}
+/*窗体头部标题*/
+.chatTitle {
+  height: 40px;
+  border-top: 1px solid #9BA3AE;
+  border-bottom: 1px solid #333;
+  background-color: #6B7888;
+  background: -webkit-gradient(linear, left top, left bottom, from(#6b7888), to(#545e6a), color-stop(0.1, #6a7786), color-stop(0.5, #5e6977), color-stop(0.9, #56616d), color-stop(1, #545e6a));
+  background-image: -moz-linear-gradient(top, #6a7786 10%, #5e6977 50%, #56616d 90%, #545e6a 100%);
+  position: relative;
+  border-radius: 4px 4px 0 0;
+  -webkit-border-radius: 4px 4px 0 0;
+  -moz-border-radius: 4px 4px 0 0;
+  -o-border-radius: 4px 4px 0 0;
+  -ms-border-radius: 4px 4px 0 0;
+}
+.chatNameWrap {
+  border-radius: 6px 6px 0 0;
+  text-align: center;
+  font-size: 16px;
+}
+.chatNameWrap .chatName {
+  margin: 0 auto;
+  width: 400px;
+  white-space: nowrap;
+  word-wrap: normal;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  overflow: hidden;
+  padding-top: 10px;
+  font-size: 14px;
+  font-family: '微软雅黑';
+  color: #fff;
+  text-shadow: none;
+}
+.chatContent {
+  padding: 10px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.chatItem {
+  padding: 4px 0px 10px 0px;
+  _background: none;
+  _border: none;
+}
+.chatItemContent {
+  cursor: pointer;
+}
+.chatItem .time {
+  font-size: 12px;
+  margin: 5px 2px 2px 2px;
+  color: #7f7f7f;
+  float:right;
+  height:15px;
+}
+.chatItem .time .timeBg {
+  height: 1px;
+  width: 27px;
+  margin-top: 8px;
+  background-color: #B4B8BD;
+}
+.chatItem .avatar {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #ccc\9;
+  border: 1px solid #FFF;
+  box-shadow: 0px 1px 0px #B3B6BA;
+}
+.chatItem .cloud {
+  max-width: 400px;
+  cursor: default;
+  position: static;
+}
+.chatItem .cloud {
+  padding: 0px;
+  margin: 0px;
+}
+.chatItem .cloudContent {
+  text-align: left;
+  font-weight: normal;
+  font-size: 14px;
+  min-height: 30px;
+  word-wrap: break-word;
+}
+.chatItem .cloudBody {
+  -moz-border-top-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+.chatItem .cloudContent {
+  border-radius: 13px\9;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  text-shadow: none;
+}
+.chatItem .attach{
+  width:100px;height:auto;border: 0px;
+}
+.chatItem .attach img{
+  width:100%;height:auto;
+}
+.you {
+  float: left;
+  width: 100%;
+  _background: none;
+  _border: none;
+  /*-- common --*/
+  /*-- end:common --*/
+}
+.you .avatar {
+  float: left;
+}
+.you .name {
+  margin-left:53px;
+  text-align:left;
+  cursor:default;
+    max-width: 15em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.you .sign{
+	float:left;
+}
+.you .sign .title{
+	margin-top:40px;
+	/*margin-left: 6px;*/
+	text-align: center;
+	width: 40px;
+	font-size: 10px;
+}
+.you .sign .phone{
+	background: url(../images/customer.png) no-repeat 0 0;
+}
+.you .info .name{
+    margin-left:0;
+}
+
+.you .cloud {
+  float: left;
+  min-width: 50px;
+  max-width: 400px;
+  margin: 0 0 0 15px;
+}
+.you .cloud .cloudPannel .cloudFileArrow {
+  position: absolute;
+  left: -9px;
+  top: 10px;
+  width: 17px;
+  height: 24px;
+  background: url(../images/filetype_guid_right1db6f8.png) no-repeat;
+  right: -12px\9;
+}
+.you .cloudBody {
+  border: 1px solid #AFAFAF;
+  box-shadow: 0px 1px 0px #D5D5D5;
+  border: 1px solid #9f9f9f\9;
+  border-radius: 6px\9;
+  background-color: #ECECEC;
+  float:left;/*add*/
+}
+/*
+.you .cloudContent {
+  padding: 5px 13px\9;
+  padding: 7px 10px;
+  color: #030303;
+  border-top: 1px solid #FFF;
+  border-bottom: 1px solid #F2F2F2;
+  border-right: 1px solid #F2F2F2;
+  background-color: #ECECEC\9;
+  background: -webkit-gradient(linear, left top, left bottom, from(#f4f4f4), to(#e5e5e5), color-stop(0.1, #f3f3f3), color-stop(0.3, #f1f1f1), color-stop(0.5, #ececec), color-stop(0.7, #e9e9e9), color-stop(0.9, #e6e6e6), color-stop(1, #e5e5e5));
+  background-image: -moz-linear-gradient(top, #f3f3f3 10%, #f1f1f1 30%, #ececec 50%, #e9e9e9 70%, #e6e6e6 90%, #e5e5e5 100%);
+}*/
+.you .cloudContent {
+padding: 5px 13px\9;
+padding: 3px 10px;
+color: #030303;
+border-top: 1px solid #FFF;
+border-bottom: 1px solid #F2F2F2;
+border-right: 1px solid #F2F2F2;
+background-color: #ECECEC\9;
+background: -webkit-gradient(linear, left top, left bottom, from(#f4f4f4), to(#e5e5e5), color-stop(0.1, #f3f3f3), color-stop(0.3, #f1f1f1), color-stop(0.5, #ececec), color-stop(0.7, #e9e9e9), color-stop(0.9, #e6e6e6), color-stop(1, #e5e5e5));
+background-image: -moz-linear-gradient(top, #f3f3f3 10%, #f1f1f1 30%, #ececec 50%, #e9e9e9 70%, #e6e6e6 90%, #e5e5e5 100%);
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+text-shadow: none;
+border-radius: 13px\9;
+border-radius: 4px;
+overflow: hidden;
+}
+.you .cloudText .sendStatus {
+  margin-top: -8px;
+}
+/*
+.you .cloudText .cloudArrow {
+  position: absolute;
+  left: -7px;
+  top: 11px;
+  width: 13px;
+  height: 24px;
+  background: url(../images/bubble_white_guid1dbc1c.png) no-repeat;
+}
+*/
+.you .cloudText .cloudArrow {
+	position: absolute;
+	width: 13px;
+	height: 24px;
+	background: url(../images/bubble_white_guid1dbc1c.png) no-repeat;
+	float: left;
+	top: 20px;
+	left: -7px;
+}
+
+.me {
+  float: right;
+  width: 100%;
+  /*-- common --*/
+  /*-- end:common --*/
+}
+.me .avatar {
+  float: right;
+  margin-right: 2px;
+}
+.me .sign{
+	float: right;
+	/*add*/
+	position: absolute;
+	right:10px;
+}
+.me .sign .title{
+	margin-top:40px;
+	/*margin-right: 18px;*/
+	text-align: center;
+	font-size: 10px;
+	float:right;
+	/*add*/
+	position: absolute; 
+	right: 0px; 
+	/*margin-right: 10px*/
+}
+.me .sign .phone{
+	background: url(../images/service.png) no-repeat 0 0;
+}
+.me .cloud {
+  float: right;
+  min-width: 50px;
+  max-width: 400px;
+  margin: 0 15px 5px 0;
+}
+.me .cloud .cloudPannel .cloudFileArrow {
+  position: absolute;
+  width: 18px;
+  height: 25px;
+  right: -14px;
+  top: 8px;
+  background: url(../images/filetype_guid_left1db6f8.png) no-repeat 0 0;
+}
+.me .cloudBody {
+  border: 1px solid #7AA23F;
+  box-shadow: 0px 1px 0px #D5D5D5;
+  border: 1px solid #9f9f9f\9;
+  background-color: #B2CF73;
+  float:right;/*add*/
+}
+.me .cloudContent {
+  border-top: 1px solid #DCE6C8;
+  border-bottom: 1px solid #B9CF8B;
+  border-left: 1px solid #CCDEA3;
+  padding: 13px\9;
+  padding: 3px 10px;
+  border-radius: 13px\9;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  overflow: hidden;
+  color: #000;
+  text-shadow: none;
+  background: #B2CF73\9;
+  background: -webkit-gradient(linear, left top, left bottom, from(#cdeb96), to(#a4c363), color-stop(0.1, #b4d174), color-stop(0.3, #b2cf73), color-stop(0.5, #afcc74), color-stop(0.7, #abca6c), color-stop(0.9, #a9c572), color-stop(1, #a4c363));
+  background-image: -moz-linear-gradient(top, #b4d174 10%, #b2cf73 30%, #afcc74 50%, #abca6c 70%, #a9c572 90%, #a4c363 100%);
+}
+.me .cloudText .cloudBody {
+  margin-left: 8px;
+}
+.me .cloudText .cloudArrow {
+  /*position: absolute;
+  right: -12px;
+  top: 11px;*/
+  width: 13px;
+  height: 24px;
+  background: url(../images/bubble_green_guid1dbc1c.png) no-repeat;
+  position: relative;
+  float: right;
+  right: -12px;
+  top: 15px;
+  position: absolute;
+}
+/*add*/
+.me .cloudText{
+	margin-right: 60px
+}
+
+.me .cloudText .cloudContent {
+  vertical-align: top;
+}
+.me .cloudText .sendStatus {
+  margin-top: -10px;
+}
+
+.chatOperator {
+  position: relative;
+  text-align: left;
+  border-top: 1px solid #808384;
+  border-bottom: 1px solid #ddd;
+  background-color: #EAECEE;
+  background: -webkit-gradient(linear, 0 0, 0 100%, from(#f8f9fa), to(#dadddf));
+  background: -moz-linear-gradient(top, #f8f9fa, #dadddf);
+  border-radius: 0 0 4px 4px;
+  -moz-border-radius: 0 0 4px 4px;
+  -webkit-border-radius: 0 0 4px 4px;
+  color: #383e45;
+  height: 55px;
+}
+a.chatSend {
+  display: block;
+  float: right;
+  height: 28px;
+  width: 80px;
+  margin: 0px 1px 1px 0;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid #29447E;
+  border-radius: 2px;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  box-shadow: 0 1px 3px #D9D9D9;
+  text-shadow: 0 1px 1px #444;
+  background: #486CB4;
+  background: -webkit-gradient(linear, left top, left bottom, from(#6078aa), to(#465c8c), color-stop(0.1, #5e76a7), color-stop(0.5, #546b9c), color-stop(0.9, #495f8f), color-stop(1, #465c8c));
+  background-image: -moz-linear-gradient(top, #5e76a7 10%, #546b9c 50%, #495f8f 90%, #465c8c 100%);
+}
+a.chatSend:active {
+  color: #fff;
+  border: 1px solid #1B4AB2;
+  box-shadow: 0 1px 3px #d3d3d3;
+  text-shadow: 0 1px 1px #444;
+  background: #5F78AB;
+}
+a.chatSend b {
+  display: block;
+  border-radius: 3px;
+  font-size: 14px;
+  line-height: 28px;
+  border-top: 1px solid #7B8FB8;
+  text-shadow: 0 -1px 0 #4f739f;
+  text-align: center;
+}
+.chatOperator a.chatSend:active b {
+  border-top: 1px solid #5F78AB;
+}
+.lightBorder {
+border-color: #ddd;
+}
+
+.chatOperator .inputArea {
+	padding: 14px 10px 0 5px;
+	height: 43px;
+}
+.chatOperator .chatInput {
+  float: left;
+  width: 502px;
+  width: 500px\9;
+  height: 20px;
+  margin: 0 10px 0 10px;
+  padding: 7px 10px 2px;
+  outline: none;
+  box-shadow: 1px 1px 2px #bbb inset;
+  background: #EEE;
+  background: #fafafa\9;
+  border-radius: 2px;
+  border: none;
+  border-bottom: 1px solid #fff;
+  border: 1px solid #ccc\9;
+  font: 14px/1.5 Helvetica, "微软雅黑", "黑体", Arial, Tahoma;
+  line-height: 1.2em;
+  resize: none;
+}
+.chatOperator .chatInput:focus {
+  background: #fff;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 12px;
+  -webkit-border-radius: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: #6B747A;
+  -webkit-border-radius: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #F5F5F5;
+}
+/*自定义滚动条*/
+.chatMainPanel .chatScorll::-webkit-scrollbar {
+  width: 8px;
+  height: 12px;
+  -webkit-border-radius: 12px;
+}
+.chatMainPanel .chatScorll::-webkit-scrollbar-thumb {
+  background: #6B747A;
+  -webkit-border-radius: 12px;
+}
+.chatMainPanel .chatScorll::-webkit-scrollbar-track {
+  background: #fff;
+}
+.chatMainPanel .listContentWrap::-webkit-scrollbar {
+  width: 8px;
+  height: 12px;
+  -webkit-border-radius: 12px;
+}
+.chatMainPanel .listContentWrap::-webkit-scrollbar-thumb {
+  background: #6B747A;
+  -webkit-border-radius: 12px;
+}
+chatPanel .listContentWrap:-webkit-scrollbar-button:single-button {
+  display: block;
+  height: 10px;
+}
+.chatItem pre {
+	background:transparent;
+}

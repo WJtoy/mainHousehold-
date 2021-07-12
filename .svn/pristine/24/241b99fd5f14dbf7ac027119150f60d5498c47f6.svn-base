@@ -1,0 +1,317 @@
+/**
+ * Copyright &copy; 2012-2016 <a href="https://github.com/thinkgem/jeesite">JeeSite</a> All rights reserved.
+ */
+package com.wolfking.jeesite.modules.md.utils;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.kkl.kklplus.entity.b2bcenter.md.B2BProductMapping;
+import com.kkl.kklplus.entity.common.NameValuePair;
+import com.kkl.kklplus.entity.md.GlobalMappingSalesSubFlagEnum;
+import com.wolfking.jeesite.common.config.redis.RedisConstant;
+import com.wolfking.jeesite.common.config.redis.RedisTuple;
+import com.wolfking.jeesite.common.mapper.JsonMapper;
+import com.wolfking.jeesite.common.utils.DateUtils;
+import com.wolfking.jeesite.common.utils.RedisUtils;
+import com.wolfking.jeesite.common.utils.SpringContextHolder;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.Customer;
+import com.wolfking.jeesite.modules.md.entity.ServicePrice;
+import com.wolfking.jeesite.modules.md.service.CustomerService;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.UserUtils;
+import com.wolfking.jeesite.ms.providermd.service.MSCustomerService;
+import com.wolfking.jeesite.ms.utils.MSDictUtils;
+import com.wolfking.jeesite.ms.utils.MSUserUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
+import org.springframework.data.redis.connection.RedisZSetCommands;
+
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+/**
+ * 字典工具类
+ *
+ * @author ThinkGem
+ * @version 2013-5-29
+ */
+@Slf4j
+public class CustomerUtils {
+
+    private static RedisUtils redisUtils = SpringContextHolder.getBean(RedisUtils.class);
+    //	private static CustomerDao customerDao = SpringContextHolder.getBean(CustomerDao.class);
+    private static CustomerService customerService = SpringContextHolder.getBean(CustomerService.class);
+
+    private static int RETRY_TIMES = 5;
+
+    private static MSCustomerService msCustomerService = SpringContextHolder.getBean(MSCustomerService.class);
+
+    /**
+     * 所有的客户
+     *
+     * @return
+     */
+    public static List<Customer> getCustomerList() {
+        // return getCustomerList(0);
+        return getCustomerListFromMS();
+    }
+
+    /**
+     * 所有的客户
+     *
+     * @return
+     */
+    public static List<Customer> getCustomerListFromMS() {
+        return msCustomerService.findAllCustomerList();
+    }
+
+    /**
+     * 所有的客户
+     *
+     * @return
+     */
+    public static List<Customer> getCustomerList(int retryTimes) {
+        /*
+        // mark on 2020-2-11 begin
+        if(retryTimes>=RETRY_TIMES){
+            return Lists.newArrayList();
+        }
+        //String threadName = Thread.currentThread().getName();
+
+        List<Customer> list = redisUtils.zRange(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL, 0, -1, Customer.class);
+
+        // redis lock + retry
+        if (list == null || list.size() == 0) {
+            String key = "Lock:"+RedisConstant.MD_CUSTOMER_ALL;
+            Boolean locked = redisUtils.getLock(key,"1",30);
+            if(locked) {
+                //System.out.println(MessageFormat.format("{0} {1}-get from db", DateUtils.getDate("yyyy-MM-dd HH:mm:ss.SSS"),threadName));
+                list = customerService.findAll();
+                if (list != null && list.size() > 0) {
+                    Set<RedisZSetCommands.Tuple> sets = list.stream()
+                            .map(t -> new RedisTuple(redisUtils.gsonRedisSerializer.serialize(t), t.getId().doubleValue()))
+                            .collect(Collectors.toSet());
+                    try {
+                        redisUtils.zReplace(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL, sets, 0l);
+                    }catch (Exception e){}
+                    redisUtils.releaseLock(key,"1");
+                }else{
+                    return Lists.newArrayList();
+                }
+            }else{
+                retryTimes++;
+                //System.out.println(MessageFormat.format("{0} {1}-retry:{2}", DateUtils.getDate("yyyy-MM-dd HH:mm:ss.SSS"),threadName,retryTimes));
+                try {
+                    TimeUnit.MILLISECONDS.sleep(2000 + RandomUtils.nextInt(0,1000));
+                } catch (InterruptedException e) {}
+                return getCustomerList(retryTimes);//retry
+            }
+        }else{
+            //System.out.println(MessageFormat.format("{0} {1}-get from cache", DateUtils.getDate("yyyy-MM-dd HH:mm:ss.SSS"),threadName));
+        }
+        // mark on 2020-2-11 end
+        */
+
+        List<Customer> list = customerService.findAll();  // add on 2020-2-11
+        return list!=null && !list.isEmpty() ?list.stream().sorted(Comparator.comparing(Customer::getName)).collect(Collectors.toList()):Lists.newArrayList();
+    }
+
+
+
+    /**
+     * 返回所有客户
+     * 以HashMap存储客户信息，key为客户的id
+     *
+     * @return
+     */
+    public static Map<Long, Customer> getAllCustomerMap() {
+        /*
+        List<Customer> list = redisUtils.zRange(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL, 0, -1, Customer.class);
+        if (list.size() == 0) {
+            list = customerService.findAll();
+//			Customer customer = new Customer();
+//			list = customerDao.findAllList(customer);
+//			setCustomerPaymentTypeAndSalesName(list);
+            if (list != null && list.size() > 0) {
+                Set<RedisZSetCommands.Tuple> sets = list.stream()
+                        .map(t -> new RedisTuple(redisUtils.gsonRedisSerializer.serialize(t), t.getId().doubleValue()))
+                        .collect(Collectors.toSet());
+                redisUtils.remove(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL);//del
+                redisUtils.zAdd(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL, sets, 0l);
+            }
+        }
+        HashMap<Long, Customer> allCustomerMap = Maps.newHashMap();
+        if (list != null && list.size() > 0) {
+            for (Customer item : list) {
+                allCustomerMap.put(item.getId(), item);
+            }
+        }
+        return allCustomerMap;
+        */
+        //List<Customer> list = getCustomerList(); //mark on 2020-2-13
+        List<Customer> list = customerService.findAll(); //add on 2020-2-13
+        if(list == null || list.isEmpty()){
+            return Maps.newHashMap();
+        }
+        return list.stream().collect(Collectors.toMap(Customer::getId, item -> item));
+    }
+
+    public static Map<Long, String> findAllCustomerMap(List<Long> customerIds) {
+        // 调用微服务
+        List<NameValuePair<Long, String>> list = customerService.findBatchListByIds(customerIds);
+        if(list == null || list.isEmpty()){
+            return Maps.newHashMap();
+        }
+        return list.stream().collect(Collectors.toMap(NameValuePair :: getName, NameValuePair :: getValue));
+    }
+
+    /**
+     * 返回所有客户基本信息
+     * 不包含finance
+     * 以HashMap存储客户信息，key为客户的id
+     */
+    public static Map<Long, Customer> getAllCustomerBasicMap() {
+        List<Customer> list = customerService.findAllSpecifiedColumnList();
+        if(list == null || list.isEmpty()){
+            return Maps.newHashMap();
+        }
+        return list.stream().collect(Collectors.toMap(Customer::getId, item -> item));
+    }
+    /**
+     * 读取客户基本信息
+     */
+    public static Customer getCustomer(Long id) {
+        Customer customer = null;
+        if (id != null) {
+            customer = customerService.getFromCache(id);
+        }
+        return customer;
+    }
+
+    /**
+     * 登录用户所负责的客户
+     *
+     * @return
+     */
+    public static List<Customer> getMyCustomerList() {
+        return getMyCustomerListFromMS();
+        /*
+        // mark on 2020-2-13 begin
+        User user = UserUtils.getUser();
+        //List<Customer> customers = Lists.newArrayList();
+        if (user.isKefu()) {
+            // mark on 2020-2-11 begin
+//            String key = String.format(RedisConstant.SHIRO_KEFU_CUSTOMER, user.getId());
+//            if (redisUtils.exists(RedisConstant.RedisDBType.REDIS_CONSTANTS_DB, key)) {
+//                //customers = redisUtils.getList(RedisConstant.RedisDBType.REDIS_CONSTANTS_DB, key, Customer[].class);
+//                customers = redisUtils.zRange(RedisConstant.RedisDBType.REDIS_CONSTANTS_DB, key, 0, -1, Customer.class);
+//            } else {
+//                UserUtils.loadUserInfo(user, null, null);//装载customer,区域等
+//                //customers = redisUtils.getList(RedisConstant.RedisDBType.REDIS_CONSTANTS_DB, key, Customer[].class);
+//                customers = redisUtils.zRange(RedisConstant.RedisDBType.REDIS_CONSTANTS_DB, key, 0, -1, Customer.class);
+//            }
+//            if (customers != null && customers.size() > 0) {
+//                return customers.stream().sorted(Comparator.comparing(Customer::getName)).collect(Collectors.toList());
+//            } else {
+//                //return Lists.newArrayList();
+//                return getCustomerList();//all
+//            }
+            // mark on 2020-2-11 end
+            return getCustomerList();//all
+        } else if (user.isSaleman()) {
+
+            // mark on 2020-2-11 begin
+//            List<Customer> list = redisUtils.zRange(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL, 0, -1, Customer.class);
+//            if (list == null || list.size() == 0) {
+//                list = customerService.findAll();
+////				Customer customer = new Customer();
+////				list = customerDao.findAllList(customer);
+////				setCustomerPaymentTypeAndSalesName(list);
+//                if (list != null && list.size() > 0) {
+//                    Set<RedisZSetCommands.Tuple> sets = list.stream()
+//                            .map(t -> new RedisTuple(redisUtils.gsonRedisSerializer.serialize(t), t.getId().doubleValue()))
+//                            .collect(Collectors.toSet());
+//                    redisUtils.remove(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL);//del
+//                    redisUtils.zAdd(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL, sets, 0l);
+//                }
+//            }
+            // mark on 2020-2-11 end
+
+            //List<Customer> list = customerService.findAll();
+            //return list.stream().filter(t -> Objects.equals(t.getSales().getId(), user.getId())).sorted(Comparator.comparing(Customer::getName)).collect(Collectors.toList());
+            List<Customer> list = msCustomerService.findListBySalesId(user.getId().intValue());  //mark on 2020-2-13
+            return list.stream().sorted(Comparator.comparing(Customer::getName)).collect(Collectors.toList());
+
+        } else if (user.isSystemUser()) {
+            return getCustomerList();
+        }
+
+        return Lists.newArrayList();
+        // mark on 2020-2-13 end
+         */
+    }
+
+    /**
+     * 登录用户所负责的客户
+     *
+     * @return
+     */
+    public static List<Customer> getMyCustomerListFromMS() {
+        // 从微服务中获取
+        //log.warn("从微服务中获取登录用户所负责的用户");
+        User user = UserUtils.getUser();
+        List<Customer> customerList = Lists.newArrayList();
+        if(user.isCustomer()){
+            Customer customer = UserUtils.getUser().getCustomerAccountProfile().getCustomer();
+            customerList.add(customer);
+        } else if(user.isSalesPerson()){  // 业务员
+            customerList.addAll(msCustomerService.findListBySalesId(user.getId().intValue()));
+            if (customerList != null && !customerList.isEmpty()) {
+                customerList = customerList.stream().sorted(Comparator.comparing(Customer::getName)).collect(Collectors.toList());
+            }
+        } else if (user.isMerchandiser()) { //跟单员
+            customerList.addAll(msCustomerService.findListByMerchandiserId(user.getId()));
+            if (customerList != null && !customerList.isEmpty()) {
+                customerList = customerList.stream().sorted(Comparator.comparing(Customer::getName)).collect(Collectors.toList());
+            }
+        } else {
+            customerList.addAll(msCustomerService.findAllCustomerList());
+        }
+        return customerList;
+    }
+
+    /**
+     * 获取所有的VIP客户列表 //add on 2019-12-9
+     * @return
+     */
+    public static List<Customer> getVipCustomerListFromMS() {
+        return msCustomerService.findListByVipCustomer();
+    }
+
+
+    /**
+     * 获得最大id的客户
+     * @return
+     */
+    public static Customer getMaxCustomer(){
+        /*
+        List<Customer> list = redisUtils.zRevRange(RedisConstant.RedisDBType.REDIS_MD_DB, RedisConstant.MD_CUSTOMER_ALL,0,0,Customer.class);
+        if(list != null && !list.isEmpty()){
+            return list.get(0);
+        }
+        List<Customer> customers = CustomerUtils.getCustomerList();
+         */
+
+        List<Customer> customers = getCustomerListFromMS();
+        if(customers != null && !customers.isEmpty()) {
+            return customers.stream().sorted(Comparator.comparing(Customer::getId).reversed()).findFirst().orElse(null);
+        }
+        return null;
+    }
+
+}

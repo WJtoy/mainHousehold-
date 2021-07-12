@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.sd.dao.TmallAnomalyRecourseDao">
+
+    <sql id="SimpleSelectColumns">
+        a.id,
+        a.quarter,
+        a.order_id,
+        a.area_name,
+        a.order_no,
+        a.anomaly_recourse_id,
+        a.question_type  as "questionType.value",
+        a.status,
+        a.submit_date,
+        a.recourse_json,
+        a.replier_id,
+        a.replier_name,
+        a.reply_date,
+        a.reply_content
+    </sql>
+
+    <!-- 按id读取 -->
+    <select id="get" parameterType="java.lang.Long" resultType="TmallAnomalyRecourse">
+        SELECT
+        <include refid="SimpleSelectColumns"/>
+        FROM  sd_tmall_anomaly_recourse a
+        where id = #{id}
+        limit 1
+    </select>
+
+    <!-- 按订单id或订单号读取 -->
+    <select id="getListByOrder" resultType="TmallAnomalyRecourse">
+        SELECT
+             <include refid="SimpleSelectColumns"/>
+        FROM  sd_tmall_anomaly_recourse a
+        <where>
+            <if test="quarter != null and quarter != ''.toString()">
+                and a.quarter = #{quarter}
+            </if>
+            <if test="orderId != null and orderId > 0">
+                and a.order_id = #{orderId}
+            </if>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                and a.order_no = #{orderNo}
+            </if>
+        </where>
+        order by id
+    </select>
+
+    <insert id="insert" parameterType="TmallAnomalyRecourse" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO sd_tmall_anomaly_recourse (
+            quarter,
+            order_id,
+            order_no,
+            anomaly_recourse_id,
+            area_id,
+            area_name,
+            question_type,
+            status,
+            service_code,
+            submit_date,
+            recourse_json,
+            replier_id,
+            replier_name,
+            reply_date,
+            reply_content,
+            can_rush,
+            customer_id,
+            product_category_id,
+            province_id,
+            city_id,
+            kefu_type,
+            create_date
+        )
+        VALUES
+        (
+            #{quarter},
+            #{orderId},
+            #{orderNo},
+            #{anomalyRecourseId},
+            #{areaId},
+            #{areaName},
+            #{questionType.value},
+            #{status},
+            #{serviceCode},
+            #{submitDate},
+            #{recourseJson},
+            #{replierId},
+            #{replierName},
+            #{replyDate},
+            #{replyContent},
+            #{canRush},
+            #{customerId},
+            #{productCategoryId},
+            #{provinceId},
+            #{cityId},
+            #{kefuType},
+            #{createDate}
+        );
+    </insert>
+
+    <!-- 如更改店铺Id，md_b2b_product_map中对应的数据也要同步变更 -->
+    <update id="update" parameterType="TmallAnomalyRecourse">
+        UPDATE sd_tmall_anomaly_recourse
+        <set>
+            status = #{status},
+            replier_id = #{replierId},
+            replier_name = #{replierName},
+            reply_date = #{replyDate},
+            reply_content = #{replyContent}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="findList" resultType="TmallAnomalyRecourse">
+        SELECT
+        <include refid="SimpleSelectColumns"/>
+        FROM  sd_tmall_anomaly_recourse a
+        <where>
+            <choose>
+                <when test="submitStartDate != null and submitEndDate != null">
+                    and submit_date between #{submitStartDate} and #{submitEndDate}
+                </when>
+                <when test="submitStartDate != null">
+                    <![CDATA[ and submit_date >= #{submitStartDate} ]]>
+                </when>
+                <when test="submitEndDate != null">
+                    <![CDATA[ and submit_date <= #{submitEndDate} ]]>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                and a.order_no = #{orderNo}
+            </if>
+            <if test="questionType != null and questionType != ''.toString()">
+                and a.question_type = #{questionType}
+            </if>
+            <if test="status != null and status >=0">
+                and a.status = #{status}
+            </if>
+        </where>
+        order by submit_date
+    </select>
+
+</mapper>

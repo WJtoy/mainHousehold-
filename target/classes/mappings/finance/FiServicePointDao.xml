@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.finance.md.dao.FiServicePointDao">
+
+    <select id="getFinanceFromMaster" resultType="ServicePointFinance">
+        /*!mycat:db_type=master*/
+        SELECT fi.id AS "id",
+                fi.invoice_flag AS "invoiceFlag",
+                fi.discount as "discount",
+                fi.payment_type as "paymentType.value",
+                '' as "paymentType.label",
+                fi.bank as "bank.value",
+                '' as "bank.label",
+                fi.branch as "branch",
+                fi.bank_no as "bankNo",
+                fi.bank_owner as "bankOwner",
+                fi.bank_issue as "bankIssue.value",
+                '' as "bankIssue.label",
+                fi.balance as "balance",
+                fi.last_pay_date as "lastPayDate",
+                fi.last_pay_amount as "lastPayAmount",
+                fi.order_payment_amount as "orderPaymentAmount",
+                fi.debts_amount as "debtsAmount",
+                fi.debts_descrption as "debtsDescrption",
+                fi.refund_amount as "refundAmount",
+                fi.replenish_amount as "replenishAmount",
+                fi.total_amount as "totalAmount",
+                fi.invoice_flag as "invoiceFlag",
+                fi.discount_flag as "discountFlag",
+                fi.deposit as "deposit",
+                fi.unit as "unit.value",
+                '' as "unit.label"
+        FROM md_servicepoint_finance fi
+        where fi.id = #{id}
+    </select>
+
+
+    <select id="findServicePointIdsFromFinance" resultType="Long">
+        SELECT
+        msf.id                  AS 'id'
+        FROM  md_servicepoint_finance msf
+        <where>
+            <if test="invoiceFlag != null and invoiceFlag >=0">
+                AND msf.invoice_flag = #{invoiceFlag}
+            </if>
+            <if test="discountFlag != null and discountFlag >=0">
+                AND msf.discount_flag = #{discountFlag}
+            </if>
+        </where>
+        LIMIT 2000;
+    </select>
+
+    <insert id="insertFI">
+        INSERT INTO md_servicepoint_finance (
+        id,
+        payment_type,
+        bank,
+        branch,
+        bank_no ,
+        bank_owner,
+        bank_issue,
+        order_payment_amount,
+        debts_amount,
+        debts_descrption,
+        refund_amount ,
+        replenish_amount,
+        balance,
+        total_amount,
+        invoice_flag,
+        discount,
+        discount_flag,
+        unit
+        ) VALUES (
+        #{id},
+        #{paymentType.value},
+        #{bank.value},
+        #{branch},
+        #{bankNo},
+        #{bankOwner},
+        #{bankIssue.value},
+        #{orderPaymentAmount},
+        #{debtsAmount},
+        #{debtsDescrption},
+        #{refundAmount},
+        #{replenishAmount},
+        #{balance},
+        #{totalAmount},
+        #{invoiceFlag},
+        #{discount},
+        #{discountFlag},
+        #{unit.value}
+        )
+    </insert>
+
+
+    <!-- 获取网点的结算方式 -->
+    <select id="getServicePointPaymentType" resultType="java.lang.Integer">
+        SELECT
+              payment_type
+        FROM  md_servicepoint_finance
+        WHERE id  = #{servicePointId}
+    </select>
+
+    <update id="updateFI">
+        UPDATE md_servicepoint_finance
+        SET
+        payment_type = #{paymentType.value},
+        bank = #{bank.value},
+        branch = #{branch},
+        bank_no = #{bankNo},
+        bank_owner = #{bankOwner},
+        bank_issue = #{bankIssue.value},
+        unit = #{unit.value},
+        invoice_flag = #{invoiceFlag},
+        discount = #{discount},
+        discount_flag = #{discountFlag}
+        <if test="debtsDescrption != null">
+            , debts_descrption = #{debtsDescrption}
+        </if>
+        <if test="debtsAmount != null">
+            , debts_amount = #{debtsAmount}
+        </if>
+        WHERE
+        id = #{id}
+    </update>
+</mapper>

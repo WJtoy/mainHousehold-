@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.BrandCategoryDao">
+    <!-- 2020-1-6
+    <sql id="brandCategoryColumns">
+            a.id,
+            a.brand_id as "brand.id",
+            a.product_category_id as "category.id",
+            a.remarks
+    </sql>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_productcategory_brand(
+			product_category_id,
+			brand_id,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{category.id},
+			#{brand.id},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_productcategory_brand
+        SET
+            product_category_id = #{category.id},
+            brand_id = #{brand.id},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete from
+            md_productcategory_brand
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="get" resultType="BrandCategory">
+        SELECT
+                <include refid="brandCategoryColumns"/>
+        FROM
+                md_productcategory_brand a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+
+    <select id="findAllList" resultType="BrandCategory">
+        SELECT
+                <include refid="brandCategoryColumns"/>
+        FROM
+                md_productcategory_brand a
+        WHERE
+                a.del_flag = 0
+        ORDER BY
+                a.create_date
+        limit 5000
+    </select>
+
+    <select id="findList" resultType="BrandCategory">
+        SELECT
+                <include refid="brandCategoryColumns"/>
+        FROM
+               md_productcategory_brand a
+        <where>
+            <if test="brand != null and brand.id != null and brand.id > 0">
+                AND   a.brand_id = #{brand.id}
+            </if>
+            <if test="category != null and category.id != null and category.id >0">
+              AND   a.product_category_id = #{category.id}
+            </if>
+            AND   a.del_flag = 0
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.product_category_id,a.brand_id
+            </otherwise>
+        </choose>
+    </select>
+
+    <delete id="deteleByCategoryId">
+        delete from md_productcategory_brand
+        where product_category_id = #{category.id}
+    </delete>
+
+    <select id="getBrandIdsByCategoryId" resultType="java.lang.Long">
+        select brand_id
+        from md_productcategory_brand
+        where del_flag=0
+        AND product_category_id = #{categoryId}
+        limit 2000
+    </select>
+    -->
+</mapper>

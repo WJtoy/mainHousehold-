@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+	<title>订单配件申请列表</title>
+	<%@ include file="/WEB-INF/views/include/head.jsp" %>
+	<meta name="decorator" content="default" />
+	<%@include file="/WEB-INF/views/include/treetable.jsp" %>
+	<script src="${ctxStatic}/sd/Order.js?_v=${OrderJsVersion}" type="text/javascript"></script>
+	<c:set var="currentuser" value="${fns:getUser() }"/>
+	<script type="text/javascript">
+		Order.rootUrl = "${ctx}";
+		var this_index = 0;
+		<%String parentIndex = request.getParameter("parentIndex");%>
+		var parentIndex = '<%=parentIndex==null?"":parentIndex %>';
+		if(parentIndex != ''){
+			this_index = parentIndex;
+		}
+		var quarter = "";
+		<c:if test="${quarter != null}">
+		quarter = ${quarter};
+		</c:if>
+		function reloadApproveList(){
+			location.reload();
+			// var iframeWin = $(parent.document).contents().find("#layui-layer-iframe" + this_index)[0];
+			<%--iframeWin.src = "${ctx}/sd/material/list?orderId=" +$("#orderId").val() + "&orderNo=" + $("#orderNo").val() + "&quarter=" + quarter + "&parentIndex=" + this_index;--%>
+		}
+
+		$(document).ready(function() {
+			if(this_index == 0){
+				this_index = top.layer.index;
+			}
+			$("#treeTable").treeTable({expandLevel : 2});
+		});
+
+		function closeme(){
+			window.opener.repage();
+			window.close();
+		}
+
+		function materialMasterApprove(masterId,orderId,btn)
+		{
+			var $btn = undefined;
+			if(btn){
+				$btn = $("#" + btn);
+				if($btn.prop("disabled") === true){
+					return false;
+				}else{
+					$btn.prop("disabled", true);
+					$btn.addClass("disabled");
+				}
+			}
+			var confirmClickTag = 0;
+			top.layer.confirm('确定要 <font color="blue">通过</font> 该项申请配件吗?', {
+				icon: 3
+				,title:'系统确认'
+				,zIndex : 19891015
+				,cancel: function(index, layero){
+					//点击右上角的X
+					if($btn){
+						$btn.removeAttr("disabled");
+						$btn.removeClass("disabled");
+					}
+				}
+			}, function(index,layero){
+				if (confirmClickTag == 1){
+					return false;
+				}
+				var btn0 = $(".layui-layer-btn0",layero);
+				if(btn0.hasClass("layui-btn-disabled")){
+					return false;
+				}
+				confirmClickTag = 1;
+				btn0.addClass("layui-btn-disabled").attr("disabled","disabled");
+				var loadingIndex = layer.msg('正在提交，请稍等...', {
+					icon: 16,
+					time: 0,
+					shade: 0.3
+				});
+				top.layer.close(index);//关闭本身
+				var data = {};
+				data.masterId = masterId;
+				data.quarter = quarter;
+				data.isMaterialReturn = 0;
+				var items = [];
+				$("input[type='checkbox'][class='isReturn_" + masterId+"']:checked").each(function() {
+					var itemId = $(this).data("itemid");
+					items.push('' + itemId);
+				});
+				data.itemIds = items.join(",");
+				if(data.itemIds.length>0){
+					data.isMaterialReturn = 1;
+				}
+				$.ajax({
+					async: false,
+					cache : false,
+					type : "POST",
+					url : "${ctx}/sd/material/materialApprove",
+					data : data,
+					beforeSend: function () {
+					},
+					complete: function () {
+						if(loadingIndex) {
+							layer.close(loadingIndex);
+						}
+						//console.log("" + new Date().getTime() + " [complete] clickTag:" + clickTag + " ,ajaxSuccess:" + ajaxSuccess);
+					},
+					success : function(data) {
+						if(ajaxLogout(data)){
+							return false;
+						}
+						if (data.success)
+						{
+							reloadApproveList();
+						}else
+						{
+							if($btn){
+								$btn.removeAttr("disabled");
+								$btn.removeClass("disabled");
+							}
+							layerError("审核失败:" + data.message, "错误提示");
+						}
+					},
+					error : function(e)
+					{
+						if(loadingIndex) {
+							layer.close(loadingIndex);
+						}
+						if($btn){
+							$btn.removeAttr("disabled");
+							$btn.removeClass("disabled");
+						}
+						ajaxLogout(e.responseText,null,"审核失败，请重试!");
+					}
+				});
+			},function(index) {//cancel
+				if($btn){
+					$btn.removeAttr("disabled");
+					$btn.removeClass("disabled");
+				}
+			});
+			return false;
+		}
+
+		function materialMasterReject(masterId,orderId,btn)
+		{
+			var $btn = undefined;
+			if(btn){
+				$btn = $("#" + btn);
+				if($btn.prop("disabled") === true){
+					return false;
+				}else{
+					$btn.prop("disabled", true);
+					$btn.addClass("disabled");
+				}
+			}
+			var confirmClickTag = 0;
+			top.layer.confirm('确定要 <font color="red">驳回</font> 该项申请配件吗?', {
+				icon: 3
+				,title:'系统确认'
+				,cancel: function(index, layero){
+					//点击右上角的X
+					if($btn){
+						$btn.removeAttr("disabled");
+						$btn.removeClass("disabled");
+					}
+				}
+			}, function(index,layero){
+				var btn0 = $(".layui-layer-btn0",layero);
+				if(btn0.hasClass("layui-btn-disabled")){
+					return false;
+				}
+				if(confirmClickTag == 1){
+					return false;
+				}
+				confirmClickTag = 1;
+				btn0.addClass("layui-btn-disabled").attr("disabled","disabled");
+				top.layer.close(index);//关闭本身
+				var data = {masterId : masterId,orderId:orderId,quarter:quarter};
+				$.ajax({
+					async: false,
+					cache : false,
+					type : "POST",
+					url : "${ctx}/sd/material/materialmasterreject",
+					data : data,
+					beforeSend: function () {
+					},
+					complete: function () {
+						//console.log("" + new Date().getTime() + " [complete] clickTag:" + clickTag + " ,ajaxSuccess:" + ajaxSuccess);
+					},
+					success : function(data)
+					{
+						if(ajaxLogout(data)){
+							return false;
+						}
+						if (data.success)
+						{
+							location.reload();
+						}else{
+							if($btn){
+								$btn.removeAttr("disabled");
+								$btn.removeClass("disabled");
+							}
+						}
+					},
+					error : function(e)
+					{
+						if($btn){
+							$btn.removeAttr("disabled");
+							$btn.removeClass("disabled");
+						}
+						ajaxLogout(e.responseText,null,"驳回失败，请重试!");
+					}
+				});
+			},function(index) {//cancel
+				if($btn){
+					$btn.removeAttr("disabled");
+					$btn.removeClass("disabled");
+				}
+			});
+			return false;
+		}
+
+		function returnForm(id,formNo){
+			top.layer.open({
+				type: 2,
+				id: 'layer_material_return',
+				zIndex:19891015,
+				title:'返件信息 [配件单号: ' + formNo + ']',
+				content: '${ctx}/sd/material/return/form?materialMasterId=' + id + "&parentIndex=" + (this_index || '') + "&quarter=" + (quarter || ''),
+				area: ['1000px', '800px'],
+				shade: 0.3,
+				maxmin: false,
+				success: function(layero,index){
+					//console.log('materil approve list:' + this_index);
+					setCookie('layer.parent.id',this_index);
+				},
+				end:function(layero,index){}
+			});
+		}
+
+		function expressForm(id,formNo){
+			top.layer.open({
+				type: 2,
+				id: 'layer_material_express',
+				zIndex:19891015,
+				title:'配件申请单 [' + formNo + '] - 填写物流信息',
+				content: '${ctx}/sd/material/expressForm?materialMasterId=' + id + "&parentIndex=" + (this_index || '') + "&quarter=" + (quarter || ''),
+				area: ['1000px', '600px'],
+				shade: 0.3,
+				maxmin: false,
+				success: function(layero,index){
+					setCookie('layer.parent.id',this_index);
+				},
+				end:function(layero,index){}
+			});
+		}
+
+		function closeForm(id,formNo){
+			top.layer.open({
+				type: 2,
+				id: 'layer_material_close',
+				zIndex:19891015,
+				title:'<font color="red">关闭</font>配件申请单 [' + formNo + ']',
+				content: '${ctx}/sd/material/close?id=' + id + "&quarter=" + (quarter || ''),
+				area: ['600px', '400px'],
+				shade: 0.3,
+				maxmin: false,
+				success: function(layero,index){
+					setCookie('layer.parent.id',this_index);
+				},
+				end:function(layero,index){}
+			});
+		}
+	</script>
+	<style type="text/css">
+		.table thead th,.table tbody td {
+			text-align: center;
+			vertical-align: middle;
+			BackColor: Transparent;
+		}
+		.table tbody td.tdleft{text-align: left!important;padding-left: 15px;}
+		.td_left {text-align: left!important;}
+		.alert { padding: 0px 0px 0px 0px !important;margin-bottom: 0px !important;}
+	</style>
+</head>
+<body>
+<input type="hidden" id="orderId" name="orderId" value="${orderId}" />
+<input type="hidden" id="orderNo" name="orderNo" value="${orderNo}" />
+
+<fieldset style="margin:0px 4px 4px 4px;">
+	<c:if test="${materials != null && materials.size() >0}">
+		<c:set var="firstMaterialForm" value="${materials[0]}" />
+	</c:if>
+	<legend>
+		<c:if test="${firstMaterialForm ne null}">
+			<c:choose>
+				<c:when test="${currentuser.isCustomer()==true || currentuser.isSaleman()}">
+					<a href="javascript:void(0);" onclick="Order.viewOrderDetail('${firstMaterialForm.orderId}','${firstMaterialForm.quarter}');" title="点击查看订单详情">${orderNo}</a>
+				</c:when>
+				<c:otherwise>
+					<a href="javascript:void(0);" onclick="Order.showKefuOrderDetail('${firstMaterialForm.orderId}','${firstMaterialForm.quarter}');" title="点击查看订单详情">${orderNo}</a>
+				</c:otherwise>
+			</c:choose>
+		</c:if>
+		配件列表
+	</legend>
+	<c:set var="index" value="0" />
+	<table id="treeTable" width="100%"
+		   class="table table-hover table-bordered table-condensed"
+		   style="margin-bottom: 0px;table-layout: fixed;">
+		<thead>
+		<tr>
+			<th width="80" class="td_left">序号</th>
+			<th width="200">产品</th>
+			<th width="60">状态</th>
+			<th width="70">类型</th>
+			<th width="100">快递公司</th>
+			<th width="140">快递单号</th>
+			<th width="100">总价</th>
+			<th width="130">申请时间</th>
+			<th width="70">附件图片</th>
+			<th width="70">是否返件</th>
+			<th width="100">操作</th>
+		</tr>
+		</thead>
+		<tbody>
+		<c:if test="${firstMaterialForm ne null}">
+			<c:forEach items="${materials}" var="master" varStatus="i" begin="0">
+				<!-- sub Form -->
+				<c:forEach items="${master.subForms}" var="subForm" varStatus="s" begin="0">
+					<!-- header -->
+					<c:choose>
+						<c:when test="${s.index == 0}">
+							<tr id="${master.id}" >
+								<td class="td_left">${i.index+1}</td>
+								<td>${subForm.product.name}<br/>(${master.masterNo})</td>
+								<td><label > ${master.status.label}</label></td>
+								<td><label >${master.applyType.label}</label></td>
+								<td><label >${master.expressCompany.label}</label></td>
+								<td>
+									<a href="http://www.kuaidi100.com/chaxun?com=${master.expressCompany.value}&nu=${master.expressNo }" target="_blank" title="点击进入快递100">
+											${master.expressNo }
+									</a>
+								</td>
+								<td>
+									<c:if test="${master.applyType.value eq '1'}">
+										<label style="color: green;"><b><fmt:formatNumber value="${master.totalPrice }" pattern="0.00"/></b></label>
+									</c:if>
+								</td>
+								<td>${master.createDate}</td>
+								<td>
+									<a href="javascript:void(0);" onclick="layerWindow('layer_material_photo','${ctx}/sd/material/materialMasterAttachmentForm?masterId=${master.id}&quarter=${master.quarter}','查看照片',1100,700)">查看照片</a>
+								</td>
+								<td>
+										<%-- 第一个子单 --%>
+									<c:if test="${master.waitingB2BCommand == 0}">
+										<c:if test="${s.index == 0}">
+											<c:choose>
+												<c:when test="${master.status.value eq '1'}">
+													<div class="alert alert-info">返件，请勾选配件</div>
+												</c:when>
+												<c:otherwise>
+													${master.returnFlag == 1?'':'否'}
+<%--													<c:if test="${master.returnFlag == 1}">--%>
+<%--														<a href="javascript:void(0);" id="lnk_return_${i.index}" onclick="returnForm('${master.id}','${master.masterNo}');">查看返件</a>--%>
+<%--													</c:if>--%>
+												</c:otherwise>
+											</c:choose>
+										</c:if>
+									</c:if>
+									<c:if test="${s.index == 0}">
+										<c:if test="${master.status.intValue gt 1 && master.returnFlag == 1}">
+											<a href="javascript:void(0);" id="lnk_return_${i.index}" onclick="returnForm('${master.id}','${master.masterNo}');">查看返件</a>
+										</c:if>
+									</c:if>
+								</td>
+								<td>
+									<c:choose>
+										<c:when test="${master.status.value eq '1'}">
+											<c:choose>
+												<c:when test="${master.waitingB2BCommand == 0}">
+													<a href="javascript:void(0);" id="lnk_approve_${i.index}" class="btn btn-primary btn-mini" onclick="materialMasterApprove('${master.id}','${master.orderId}','lnk_approve_${i.index}')">确认</a>
+													<a href="javascript:void(0);" id="lnk_reject_${i.index}" class="btn btn-danger btn-mini" onclick="materialMasterReject('${master.id}','${master.orderId}','lnk_reject_${i.index}')">驳回</a><br/>
+												</c:when>
+												<c:otherwise>
+													<div class="alert alert-block">待商家系统处理</div>
+												</c:otherwise>
+											</c:choose>
+										</c:when>
+										<c:when test="${master.status.value eq '2'}">
+											<c:choose>
+												<c:when test="${master.waitingB2BCommand == 0}">
+													<a href="javascript:void(0);" onclick="expressForm('${master.id}','${master.masterNo}');">填写物流单号</a>&nbsp;<br/>
+													<c:if test="${(currentuser.isKefu()==true || currentuser.isAdmin()==true) && master.returnFlag eq 1}">
+														<a href="javascript:void(0);" id="lnk_close_${i.index}" onclick="closeForm('${master.id}','${master.masterNo}');">关闭申请单</a>&nbsp;
+													</c:if>
+												</c:when>
+												<c:otherwise>
+													<div class="alert alert-block">待商家系统处理</div>
+												</c:otherwise>
+											</c:choose>
+										</c:when>
+										<c:when test="${(currentuser.isKefu()==true || currentuser.isAdmin()==true) && master.status.value eq '3' && master.returnFlag eq 1}">
+											<a href="javascript:void(0);" id="lnk_close_${i.index}" onclick="closeForm('${master.id}','${master.masterNo}');">关闭申请单</a>&nbsp;
+										</c:when>
+									</c:choose>
+								</td>
+							</tr>
+						</c:when>
+						<c:otherwise>
+							<tr id="${master.id}_${s.index}" pId="${master.id}" title="配件申请" >
+								<td class="td_left"></td>
+								<td>${subForm.product.name}</td>
+								<td colspan="9"></td>
+							</tr>
+						</c:otherwise>
+					</c:choose>
+					<!-- body -->
+					<c:forEach items="${subForm.materials}" var="item" varStatus="j" begin="0">
+						<tr id="${master.id}_${s.index}_${j.index}" pId="${master.id}" title="配件申请产品详情" >
+							<td>
+								&nbsp;
+							</td>
+							<td style="text-align: right;"><label style="color: blue;"> ${item.materialName}</label></td>
+							<td>
+								<c:if test="${item.returnFlag == 1}">
+									<span class='label label-important'>返件</span>
+								</c:if>
+							</td>
+							<td colspan="3" >
+								<c:if test="${master.applyType.value eq '1'}">
+									价格：<label style="color: blue;"><fmt:formatNumber value="${item.price}" pattern="0.00"></fmt:formatNumber></label>
+								</c:if>
+								<label style="margin-left: 20px;"> 数量：</label><label style="color: blue;">${item.qty }</label></td>
+							<td>
+								<c:if test="${master.applyType.value eq '1'}">
+									小计：<label style="color: green;"><fmt:formatNumber value="${item.totalPrice}" pattern="0.00"/></label>
+								</c:if>
+							</td>
+							<td></td>
+							<td></td>
+							<td>
+								<c:if test="${master.waitingB2BCommand == 0}">
+									<c:if test="${master.status.value eq '1'}">
+										<input type="checkbox" id="chk_${master.id}_${s.index}_${j.index}" data-itemid="${item.id}" class="isReturn_${master.id}" <c:if test="${item.returnFlag == 1}">checked="checked"</c:if>/>
+										<label for="chk_${master.id}_${s.index}_${j.index}">返件</label>
+									</c:if>
+								</c:if>
+							</td>
+							<td></td>
+						</tr>
+
+					</c:forEach>
+				</c:forEach>
+				<c:if test="${ not empty master.remarks }">
+					<tr id="" pId="${master.id}" title="配件申请故障描述">
+						<td colspan="2" style="text-align: right;"><span class="label label-warning">故障描述:</span></td>
+						<td colspan="9" class="tdleft">${master.remarks }</td>
+					</tr>
+				</c:if>
+			</c:forEach>
+		</c:if>
+		</tbody>
+	</table>
+</fieldset>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.ms.b2bcenter.sd.dao.B2BOrderDao">
+
+    <select id="getOrderInfo" resultType="Order">
+        SELECT
+              id,
+              order_no,
+              quarter
+        FROM  sd_order
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+              AND quarter = #{quarter}
+            </if>
+              AND workcard_id = #{b2bOrderNo}
+            <if test="dataSource != null and dataSource != 0 ">
+              AND data_source = #{dataSource}
+            </if>
+        </where>
+        LIMIT 1
+    </select>
+
+    <select id="getDataSourceIdByOrderId" resultType="Integer">
+        SELECT data_source
+        FROM sd_order a
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+            AND a.id = #{orderId}
+        </where>
+        LIMIT 1
+    </select>
+
+    <select id="getCustomerIdByOrderId" resultType="Long">
+        SELECT a.customer_id
+        FROM sd_order_condition a
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+            AND a.order_id = #{orderId}
+        </where>
+        LIMIT 1
+    </select>
+
+    <select id="getB2BOrderReturnApproveList" resultType="Order">
+        SELECT
+        soc.order_id              AS "id",
+        soc.quarter,
+        soc.order_no,
+        soc.create_date           AS "orderCondition.createDate",
+        sos.cancel_apply_date     AS "orderStatus.cancelApplyDate",
+        sos.cancel_apply_by       AS "orderStatus.cancelApplyBy.id",
+        ''                        AS "orderStatus.cancelApplyBy.name",
+        sos.cancel_responsible    AS "orderStatus.cancelResponsible.value",
+        sos.cancel_apply_comment  AS "orderStatus.cancelApplyComment",
+        soc.user_name             AS "orderCondition.userName",
+        soc.phone1                AS "orderCondition.phone1",
+        soc.phone2                AS "orderCondition.phone2",
+        soc.area_id               AS "orderCondition.area.id",
+        soc.area_name             AS "orderCondition.area.name",
+        soc.address               AS "orderCondition.address",
+        so.description,
+        sof.expect_charge         AS "orderFee.expectCharge",
+        sof.blocked_charge        AS "orderFee.blockedCharge",
+        soc.order_id
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        INNER JOIN sd_order so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="returnBy!=null and returnBy!=''.toString() ">
+            LEFT JOIN sys_user suc ON suc.id = sos.cancel_apply_by
+        </if>
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    AND soc.status = 60 AND so.data_source = 8 <!-- B2B工单 -->
+                </when>
+                <otherwise>
+                    <choose>
+                        <when test="beginDate != null and endDate != null">
+                            <![CDATA[ AND sos.cancel_apply_date between #{beginDate} and #{endDate}]]>
+                        </when>
+                        <when test="beginDate != null">
+                            <![CDATA[ AND sos.cancel_apply_date >= #{beginDate} ]]>
+                        </when>
+                        <when test="endDate != null">
+                            <![CDATA[ AND sos.cancel_apply_date <= #{endDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    AND soc.status = 60 AND so.data_source = 8 <!-- B2B工单 -->
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <if test="returnBy!=null and returnBy!=''.toString() ">
+                        AND suc.name LIKE CONCAT(#{returnBy}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+</mapper>

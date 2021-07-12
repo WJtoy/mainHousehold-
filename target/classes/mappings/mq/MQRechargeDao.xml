@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.mq.dao.MQRechargeDao">
+
+    <sql id="messageColumns">
+        a.id,
+        a.quarter,
+        a.customer_id,
+        a.recharge_id,
+        a.message_content,
+        a.create_at
+    </sql>
+
+    <!-- 待重送记录 -->
+    <select id="getRetryList" resultType="com.wolfking.jeesite.modules.mq.entity.MQRecharge">
+        select <include refid="messageColumns" />
+        from mq_recharge a
+        <where>
+            <if test="startAt > 0 or endAt > 0">
+                <choose>
+                    <when test="startAt>0 and endAt > 0">
+                        a.create_at between #{startAt} and #{endAt}
+                    </when>
+                    <when test="startAt>0">
+                        a.create_at >= #{startAt}
+                    </when>
+                    <otherwise>
+                        AND <![CDATA[ a.create_at <= #{endAt} ]]>
+                    </otherwise>
+                </choose>
+            </if>
+            and a.status = 40
+            <![CDATA[ AND a.retry_times < 3 ]]>
+        </where>
+        order by a.id
+        <if test="pageSize != null and pageSize > 0">
+            limit #{pageSize}
+        </if>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO mq_recharge
+        (
+         id,quarter,customer_id,recharge_id,retry_times,status,
+         remarks,message_content,trigger_by,trigger_at,create_at
+        )
+        VALUES
+        (
+         #{id},#{quarter},#{customerId},#{rechargeId},#{retryTimes},#{status},
+         #{remarks},#{messageContent},#{triggerBy},#{triggerAt},#{createAt}
+        )
+    </insert>
+
+    <update id="updateRechargeMessage">
+        update mq_recharge
+        set
+          <if test="retryTimes != null and retryTimes>0">
+          retry_times = retry_times + 1,
+          </if>
+          status = #{status},
+          remarks = #{remarks},
+          update_at = #{updateAt}
+        where id = #{id}
+    </update>
+
+    <!-- 消费成功 -->
+    <update id="mqConsumeSuccess">
+        update mq_recharge
+        set
+            retry_times = retry_times + 1,
+            status = 30,
+            update_at = #{updateAt}
+        where
+            customer_id = #{customerId}
+            and recharge_id = #{rechargeId}
+    </update>
+
+    <!-- 消费失败 -->
+    <update id="mqConsumeFail">
+        update mq_recharge
+        set
+            retry_times = retry_times + 1,
+            status = 40,
+            update_at = #{updateAt}
+            <if test="remarks != null and remarks !=''.trim()">
+                ,remarks = #{remarks}
+            </if>
+        where
+            customer_id = #{customerId}
+            and recharge_id = #{rechargeId}
+    </update>
+
+</mapper>

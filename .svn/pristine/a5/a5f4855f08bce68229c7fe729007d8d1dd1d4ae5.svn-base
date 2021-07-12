@@ -1,0 +1,260 @@
+server:
+  port: 8080
+#  tomcat:
+#    uri-encoding: UTF-8
+#    basedir: .\data\jeesite\tomcat
+#    max-threads: 2000
+#    min-spare-threads: 10
+#    accesslog:
+#      pattern: common
+#      enabled: true
+#      directory: ..\logs
+#      prefix: jeesite_access_log
+#      suffix: .log
+#      request-attributes-enabled: true
+#      rename-on-rotate: true
+#  session:
+#    tracking-modes: COOKIE
+eureka:
+  instance:
+    prefer-ip-address: true
+    metadata-map:
+      zone: dev
+      function: kklplus-web
+  client:
+    serviceUrl:
+      defaultZone: http://dev:dev.123@192.168.0.233:8800/eureka/
+    healthcheck:
+      enabled: true
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000
+info:
+  app:
+    name: ${spring.application.name}
+    desc: WEB应用
+  version: "@project.version@"
+management:
+  security:
+    enabled: false
+    roles: SUPERUSER
+  add-application-context-header: false
+logging:
+  level:
+    root: ERROR
+    com.woflking: DEBUG
+#    org.apache.shiro.cache.ehcache.EhCacheManager: WARN
+  path: ./kklplus/logs
+spring:
+  application:
+    name: kklplus-web
+  #自动重启
+  devtools:
+    restart:
+    livereload:
+      enabled: true
+  jmx:
+    default-domain: kklplus-web
+  #数据库的配置
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://119.23.43.232:18355/kklplus?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+    username: kklplus
+    password: kklplus.Test
+    hikari:
+      minimumIdle: 20
+      maximumPoolSize: 50
+      autoCommit: true
+      idleTimeout: 300000
+      poolName: kklplus-web
+      maxLifetime: 1800000
+      connectionTimeout: 600000
+      connectionTestQuery: SELECT 1
+#  jpa:
+#      show-sql: true
+#  session:
+#    store-type: redis
+#springMvc的配置
+  mvc:
+     view:
+       prefix: /WEB-INF/views/
+       suffix: .jsp
+     servlet:
+       load-on-startup: 1
+#spring-ehcache的配置
+#  cache:
+#    type: ehcache
+#    ehcache:
+#      config: classpath:ehcache.xml
+#redis cluster配置
+#  redis:
+#      cluster:
+#        nodes:
+#          - 127.0.0.1:6379
+#          - 127.0.0.1:6379
+#        max-redirects: 1000
+# redis数据库连接配置(covert)
+# 以下为Redis单机版配置
+# Redis数据库索引（默认为0）
+  redis:
+    database: 0
+    #host: 119.23.43.232
+    #port: 19549
+    #password: by0Redis123
+    host: 192.168.0.233
+    port: 6379
+    password:
+    pool:
+      max-active: 1000
+      max-wait: -1
+      max-idle: 100
+      min-idle: 0
+    timeout: 0
+  rabbitmq:
+    #host: 119.23.43.232
+    #port: 37777
+    #username: by
+    #password: rabbitmq@BY123
+    host: 192.168.0.233
+    port: 5672
+    username: admin
+    password: admin
+    publisherConfirms: true
+    cache:
+      connection:
+        mode: channel
+    listener:
+      simple:
+        auto-startup: true
+        acknowledge-mode: manual
+        concurrency: 1
+        max-concurrency: 1
+        prefetch: 1
+    template:
+      retry:
+        enabled: true
+  http:
+    multipart:
+      max-file-size: 10Mb
+      max-request-size: 10Mb
+#mybatis的配置
+mybatis:
+  config-location: classpath:/mybatis-config.xml
+  mapper-locations: classpath:/mappings/**/*.xml
+  type-aliases-package: com.wolfking.jeesite
+#admin页面管理Path
+adminPath:
+#分页配置
+page:
+  pageSize: 12
+#文件上传的路径
+userfiles:
+  basedir: /data/jeesite/upload
+  uploaddir: /data/images
+  host: https://www.kklgo.com/uploads
+cache:
+  #普通redis缓存过期时间,单位秒,12*60*60
+  timeout: 518400
+#kuaidi100 sttings
+KDSign: CBvLQHHh8105
+KDBackURL: http://www.kklgo.com/portal/kuaidiMessage
+#短信服务
+shortmessage:
+  sign:
+  url: http://sms.1xinxi.cn/asmx/smsservice.aspx
+  name: kkl
+  password: A5EBE056F4E7CDD58B9B05BE74BA
+  #不发用户短信的订单来源
+  ignore-data-sources: 7
+#项目启动时缓存基础数据的开关
+loadInRedis: true
+#是否启用定时任务
+scheduleEnabled: false
+#推送开关
+pushEnabled: false
+#子系统
+site:
+  code: CW
+  name: 厨卫
+#智能回访开关
+#voiceServiceEnabled: true
+voiceService:
+  enabled: true
+  autoGrade: true
+#系统上线时间
+GoLiveDate: 2019-01-01
+#工单单号前缀
+OrderPrefix: K
+#投诉单号前缀
+ComplainNoPrefix: C
+#平台服务费
+PlatformFeeRate: 0.05
+#信息费平台费移至对帐后启用
+InfoFeeRate: 0.05
+#唯一序号
+sequence:
+  workerid: 0
+  datacenterid: 0
+ms:
+  b2bcenter:
+    enabled: true
+    #配件流程是否在b2b中处理
+    material:
+      11: joyoung
+  tmall:
+    enabled: true
+  canbo:
+    enabled: true
+  jd:
+    enabled: true
+  inse:
+    enabled: true
+  konka:
+    enabled: true
+  xYingYan:
+    enabled: true
+    app-key: xyingyan123
+    app-secret: test123
+    methods[0]: /ms/xyingyan/createOrder
+  voiceService:
+    enabled: true
+  #充值微服务接口开关
+  rechargeService:
+    enabled: true
+    #秘钥
+    accessKey: 011b712cb1a811e98df800163e048532
+    #微服务接收url
+    submitUrl: http://localhost:8851/recharge/submitForm
+SyncServicePoint2ES:  true
+#订单自动派单开关
+autoPlanFlag: true
+#物流接口开关
+#logisticsFlag: false
+logistics:
+  orderFlag: true
+  materialFlag: true
+#查询限制
+queryLimit:
+  #限制按地址查询并发数
+  address: 10
+cancelOrder:
+  noticeType: 0
+updateSubAreaIdCron: "0 44 10 7 4 ?"
+updateSubAreaId:
+  enabled: false
+  quarter: 20193
+  status: 80
+# 访问令牌
+requestAccessToken:
+  #专线(内网)访问
+  specialLine: kkl
+  #域名访问
+  domain: www

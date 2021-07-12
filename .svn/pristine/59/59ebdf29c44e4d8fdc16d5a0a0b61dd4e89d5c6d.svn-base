@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.rpt.dao.SpecialFeesDetailsOfRptDao">
+    <select id="getRemoteCostOfOrder" resultType="SpecialFeesDetailsOfRptEntity">
+        select soc.order_no AS 'orderNo', soc.order_id AS 'orderId', soc.servicepoint_id AS 'servicepointId',
+        soc.engineer_id as 'engineerId', sod.engineer_travel_charge AS 'engineerTravelCharge'
+        from sd_order_condition soc
+        inner join sd_orderdetail sod on sod.order_id = soc.order_id
+        inner join sys_area sa1 on sa1.id = soc.area_id
+        inner join sys_area sa2 on sa2.id = sa1.parent_id
+        where <!-- soc.status = 80 --> soc.grade_flag > 0 and sod.del_flag = 0
+        and soc.close_date >= #{startDate} and <![CDATA[ soc.close_date < #{endDate}]]>
+        and sod.engineer_travel_charge != 0
+        and sa2.parent_id = #{parentId}
+        <if test="productCategoryIds.size() != 0">
+            and soc.product_category_id in
+            <foreach item="productCategoryIds" index="index" collection="productCategoryIds" open="("
+                     separator="," close=")">
+                #{productCategoryIds}
+            </foreach>
+        </if>
+        LIMIT 20000
+    </select>
+
+    <select id="getOtherCostsOfTheOrder" resultType="SpecialFeesDetailsOfRptEntity">
+        select soc.order_no AS 'orderNo', soc.order_id AS 'orderId', soc.servicepoint_id AS 'servicepointId',
+        soc.engineer_id as 'engineerId', sod.engineer_other_charge AS 'engineerOtherCharge'
+        from sd_order_condition soc
+        inner join sd_orderdetail sod on sod.order_id = soc.order_id
+        inner join sys_area sa1 on sa1.id = soc.area_id
+        inner join sys_area sa2 on sa2.id = sa1.parent_id
+        where <!-- soc.status = 80 --> soc.grade_flag > 0 and sod.del_flag = 0
+        and soc.close_date >= #{startDate} and <![CDATA[ soc.close_date < #{endDate}]]>
+        and sod.engineer_other_charge != 0
+        and sa2.parent_id = #{parentId}
+        <if test="productCategoryIds.size() != 0">
+            and soc.product_category_id in
+            <foreach item="productCategoryIds" index="index" collection="productCategoryIds" open="("
+                     separator="," close=")">
+                #{productCategoryIds}
+            </foreach>
+        </if>
+        LIMIT 20000
+    </select>
+
+    <select id="getRemoteCostOfOrderChargeDate" resultType="SpecialFeesDetailsOfRptEntity">
+    select soc.order_no AS 'orderNo', soc.order_id AS 'orderId', soc.servicepoint_id AS  'servicepointId',
+     soc.engineer_id as 'engineerId', sod.engineer_travel_charge AS 'engineerTravelCharge'
+    from sd_order_condition soc
+	inner join sd_orderdetail sod on sod.order_id = soc.order_id
+    inner join sd_order_status sos on sos.order_id = soc.order_id
+    inner join sys_area sa1 on sa1.id = soc.area_id
+    inner join sys_area sa2 on sa2.id = sa1.parent_id
+    where <!-- soc.status = 80 --> soc.grade_flag > 0 and sod.del_flag = 0
+    and sos.charge_date >= #{startDate} and <![CDATA[ sos.charge_date < #{endDate}]]>
+    and sod.engineer_travel_charge != 0
+    and sa2.parent_id = #{parentId}
+    <if test="productCategoryIds.size() != 0">
+        and soc.product_category_id in
+        <foreach item="productCategoryIds" index="index" collection="productCategoryIds" open="("
+           separator="," close=")">
+            #{productCategoryIds}
+        </foreach>
+    </if>
+    LIMIT 20000
+    </select>
+
+    <select id="getOtherCostsOfTheOrderChargeDate" resultType="SpecialFeesDetailsOfRptEntity">
+    select soc.order_no AS 'orderNo', soc.order_id AS 'orderId', soc.servicepoint_id AS  'servicepointId',
+    soc.engineer_id as 'engineerId', sod.engineer_other_charge AS 'engineerOtherCharge'
+    from sd_order_condition soc
+	inner join sd_orderdetail sod on sod.order_id = soc.order_id
+	inner join sd_order_status sos on sos.order_id = soc.order_id
+    inner join sys_area sa1 on sa1.id = soc.area_id
+    inner join sys_area sa2 on sa2.id = sa1.parent_id
+    where <!-- soc.status = 80 --> soc.grade_flag > 0 and sod.del_flag = 0
+    and sos.charge_date >= #{startDate} and <![CDATA[ sos.charge_date < #{endDate}]]>
+    and sod.engineer_other_charge != 0
+    and sa2.parent_id = #{parentId}
+    <if test="productCategoryIds.size() != 0">
+        and soc.product_category_id in
+        <foreach item="productCategoryIds" index="index" collection="productCategoryIds" open="("
+             separator="," close=")">
+           #{productCategoryIds}
+        </foreach>
+    </if>
+    LIMIT 20000
+    </select>
+
+
+</mapper>

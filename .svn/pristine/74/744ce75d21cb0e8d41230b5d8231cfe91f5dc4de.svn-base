@@ -1,0 +1,914 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.CustomerDao">
+    <sql id="customerColumns">
+          a.id,
+          a.code,
+          a.name,
+          a.full_name,
+          a.sales_id as "sales.id",
+          '' as "sales.name",
+          '' as "sales.mobile",
+          '' as "sales.qq",
+          a.address,
+          a.zip_code,
+          a.master,
+          a.mobile,
+          a.phone,
+          a.fax,
+          a.email,
+          a.contract_date,
+          a.project_owner,
+          a.project_owner_phone,
+          a.project_owner_qq,
+          a.service_owner,
+          a.service_owner_phone,
+          a.service_owner_qq,
+          a.finance_owner,
+          a.finance_owner_phone,
+          a.finance_owner_qq,
+          a.technology_owner,
+          a.technology_owner_phone,
+          a.technology_owner_qq,
+          a.default_brand,
+          a.effect_flag,
+          a.logo AS "logo.id",
+          a.attachment1 AS "attachment1.id",
+          a.attachment2 AS "attachment2.id",
+          a.attachment3 AS "attachment3.id",
+          a.attachment4 AS "attachment4.id",
+          a.isfrontshow,
+          a.sort,
+          a.description,
+          a.min_upload_number,
+          a.max_upload_number,
+          a.return_address,
+          a.order_approve_flag,
+          a.create_by,
+          a.create_date,
+          a.update_by,
+          a.update_date,
+          a.remarks,
+          a.del_flag,
+          a.short_message_flag,
+          a.time_liness_flag,
+          a.urgent_flag
+    </sql>
+
+    <sql id="customerFullColumns">
+        a.id,
+        a.code,
+        a.name,
+        a.full_name,
+        a.sales_id as "sales.id",
+        '' as "sales.name",
+        '' as "sales.mobile",
+        '' as "sales.qq",
+        a.address,
+        a.zip_code,
+        a.master,
+        a.mobile,
+        a.phone,
+        a.fax,
+        a.email,
+        a.contract_date,
+        a.project_owner,
+        a.project_owner_phone,
+        a.project_owner_qq,
+        a.service_owner,
+        a.service_owner_phone,
+        a.service_owner_qq,
+        a.finance_owner,
+        a.finance_owner_phone,
+        a.finance_owner_qq,
+        a.technology_owner,
+        a.technology_owner_phone,
+        a.technology_owner_qq,
+        a.default_brand,
+        a.effect_flag,
+        a.logo AS "logo.id",
+        a.attachment1 AS "attachment1.id",
+        a.attachment2 AS "attachment2.id",
+        a.attachment3 AS "attachment3.id",
+        a.attachment4 AS "attachment4.id",
+        a.isfrontshow,
+        a.sort,
+        a.description,
+        a.min_upload_number,
+        a.max_upload_number,
+        a.return_address,
+        a.order_approve_flag,
+        a.create_by,
+        a.create_date,
+        a.update_by,
+        a.update_date,
+        a.remarks,
+        a.del_flag,
+        a.short_message_flag,
+        a.time_liness_flag,
+        a.urgent_flag,
+        f.id AS "finance.id",
+        f.payment_type AS "finance.paymentType.value",
+        f.rebate_rate AS "finance.rebateRate",
+        f.level AS "finance.level",
+        f.lock_flag AS "finance.lockFlag",
+        f.public_bank AS "finance.publicBank",
+        f.public_account AS "finance.publicAccount",
+        f.public_name AS "finance.publicName",
+        f.public_branch AS "finance.publicBranch",
+        f.private_bank AS "finance.privateBank",
+        f.private_account AS "finance.privateAccount",
+        f.private_name AS "finance.privateName",
+        f.private_branch AS "finance.privateBranch",
+        f.credit AS "finance.credit",
+        f.credit_flag AS "finance.creditFlag",
+        f.block_amount AS "finance.blockAmount",
+        f.order_payment_amount AS "finance.ordePaymentAmount",
+        f.refund_amount AS "finance.refundAmount",
+        f.replenish_amount AS "finance.replenishAmount",
+        f.balance AS "finance.balance",
+        f.prepaid_amount AS "finance.prepaidAmount",
+        f.total_amount AS "finance.totalAmount",
+        f.unit AS "finance.unit",
+        f.taxpayer_code AS "finance.taxpayerCode",
+        f.deposit AS "finance.deposit",
+        f.invoice_flag as "finance.invoiceFlag"
+    </sql>
+
+    <sql id="customerJoins">
+        LEFT JOIN md_customer_finance AS f ON a.id = f.id
+    </sql>
+
+    <!-- mark on 2020-2-10
+    <select id="findAllList" resultType="Customer">
+      select
+        a.id,
+        a.code,
+        a.name,
+        a.phone,
+        a.mobile,
+        a.full_name,
+        a.sales_id as "sales.id",
+        '' as "sales.name",
+        '' as "sales.qq",
+        '' as "sales.mobile",
+        a.address,
+        a.master,
+        a.contract_date,
+        a.default_brand,
+        a.return_address,
+        a.remarks,
+        a.short_message_flag,
+        f.payment_type AS "finance.paymentType.value",
+        '' AS "finance.paymentType.label",
+        f.deposit AS "finance.deposit",
+        f.invoice_flag as "finance.invoiceFlag",
+        a.min_upload_number,
+        a.max_upload_number,
+        a.time_liness_flag,
+        a.urgent_flag,
+        a.payment_type AS "paymentType.value"
+      FROM md_customer a
+      INNER JOIN md_customer_finance AS f ON a.id = f.id
+      where a.del_flag = 0
+      order by a.code
+      limit 20000
+    </select>
+    -->
+
+    <!-- mark on 2020-2-10
+    <select id="findListByUserIdOrCustomerId" parameterType="java.util.Map" resultType="Customer">
+        select <include refid="customerColumns"/>
+        FROM md_customer a
+             LEFT JOIN sys_user_customer c
+              on a.id = c.customer_id
+        where a.del_flag = 0
+              <if test="userId != null">
+                  and c.user_id = #{userId}
+              </if>
+              <if test="customerId != null">
+                and c.customer_id = #{customerId}
+              </if>
+    </select>
+    -->
+
+    <!-- 获得某业务负责的客户 -->
+    <!-- mark on 2020-2-10
+    <select id="getCustomerListOfSales"  resultType="Customer">
+        select
+            a.id,
+            a.name
+        FROM
+            md_customer a
+        where
+            a.del_flag = 0
+            and a.sales_id = #{id}
+        limit 5000
+    </select>
+    -->
+
+    <!-- 读取已分配客服的客户id -->
+    <!--mark on 2020-2-10
+    <select id="getCustomerIdsAssignedService" resultType="java.lang.Long">
+        select DISTINCT  uc.customer_id
+        from sys_user ku,sys_user_customer uc
+        where ku.user_type = 2
+            and ku.id = uc.user_id
+    </select>
+    -->
+
+    <!--mark on 2020-2-10
+    <select id="findSpecList" resultType="Customer">
+        SELECT
+        <include refid="customerColumns"/>
+        FROM md_customer a
+        WHERE a.del_flag = #{DEL_FLAG_NORMAL} AND (a.code like CONCAT('%',#{code},'%') OR #{code}='')
+        AND (a.name like CONCAT('%',#{name},'%') OR #{name}='')
+        ORDER BY a.name
+    </select>
+    -->
+
+    <!--mark on 2020-2-11
+    <select id="rptFindCustomerList" resultType="Customer">
+        SELECT
+        <include refid="customerFullColumns"/>
+        FROM md_customer a
+        <include refid="customerJoins"/>
+        <where>
+            a.del_flag = 0
+            <if test="sales != null and sales.id != null and sales.id >0">
+                AND a.sales_id = #{sales.id}
+            </if>
+            <if test="code != null and code != ''">
+                AND a.code like CONCAT('%',#{code},'%')
+            </if>
+            <if test="name != null and name != ''">
+                AND a.name like CONCAT('%',#{name},'%')
+            </if>
+            <if test="finance.paymentType != null and finance.paymentType.value != ''">
+                AND a.payment_type=#{finance.paymentType.value}
+            </if>
+        </where>
+        ORDER BY a.name
+    </select>
+    -->
+
+    <!-- mark on 2020-2-10
+    <select id="findApproveList" resultType="com.wolfking.jeesite.modules.md.entity.Customer">
+        SELECT
+        <include refid="customerColumns"/>
+        FROM md_customer a
+        WHERE a.del_flag = #{DEL_FLAG_AUDIT} AND (a.code like CONCAT('%',#{code},'%') OR #{code}='')
+        AND (a.name like CONCAT('%',#{name},'%') OR #{name}='')
+
+        ${sqlMap.dsf}
+        ORDER BY a.name
+    </select>
+    -->
+
+    <!--mark on 2020-2-11
+    <select id="get" resultType="Customer">
+        select <include refid="customerFullColumns"/>
+        FROM md_customer a
+        <include refid="customerJoins"/>
+        where a.id=#{id}
+        order by a.code
+    </select>
+    -->
+
+    <!--mark on 2020-2-11
+    <select id="getApprove" resultType="Customer">
+        select <include refid="customerFullColumns"/>
+        FROM md_customer a
+        <include refid="customerJoins"/>
+        where a.del_flag = 2 AND a.id=#{id}
+        order by a.code
+    </select>
+    -->
+
+    <!-- 查询客户的基础知识，供“客户信息”报表使用 -->
+    <!-- mark on 2020-2-11
+    <select id="getCustomerBaseInfoList" parameterType="java.util.Map" resultType="CustomerBaseInfoRptEntity">
+        select 	mc.id, mc.code, mc.name, mc.full_name, mc.contract_date, mc.sales_id as 'sales.id',
+                mc.payment_type as 'paymentType.value', mcf.deposit,
+                mcf.taxpayer_code, mc.address, mc.phone, mc.fax,
+                mcf.public_name, mcf.public_bank, mcf.public_branch, mcf.public_account,
+                mcf.private_name, mcf.private_bank, mcf.private_branch, mcf.private_account,
+                mc.master, mobile, mc.email,
+                mc.project_owner, mc.project_owner_phone, mc.project_owner_qq,
+                mc.service_owner, mc.service_owner_phone, mc.service_owner_qq,
+                mc.technology_owner, mc.technology_owner_phone, mc.technology_owner_qq,
+                mc.finance_owner, mc.finance_owner_phone, mc.finance_owner_qq
+        from 	md_customer mc
+                left join md_customer_finance mcf on mcf.id = mc.id
+        <where>
+                mc.del_flag = 0
+                <if test="customerId != null">
+                   and mc.id = #{customerId}
+                </if>
+                <if test="paymentType != null">
+                    and mc.payment_type = #{paymentType}
+                </if>
+        </where>
+        order by mc.code
+    </select>
+    -->
+
+    <!-- 查询客户的产品列表，供“客户信息”报表使用 -->
+    <!--mark on 2020-2-11
+    <select id="getCustomerProducts" parameterType="java.util.Map" resultType="Product">
+        select 	mcp.customer_id as customerId, group_concat(distinct mp.name) as name
+        from	md_customer_product mcp
+                left join md_product mp on mp.id = mcp.product_id
+                left join md_customer mc on mc.id = mcp.customer_id
+        <where>
+                <if test="customerId != null">
+                   and mcp.customer_id = #{customerId}
+                </if>
+                <if test="paymentType != null">
+                    and mc.payment_type = #{paymentType}
+                </if>
+                AND mc.del_flag = 0
+        </where>
+        group by mcp.customer_id
+    </select>
+    -->
+
+    <!-- 备份2019-8-17
+    <select id="getCustomerProductsWithOutCustomer" parameterType="java.util.Map" resultType="Product">
+        select 	mcp.customer_id as customerId, group_concat(distinct mp.name) as name
+        from	md_customer_product mcp
+        left join md_product mp on mp.id = mcp.product_id
+        <where>
+            <if test="customerId != null">
+                and mcp.customer_id = #{customerId}
+            </if>
+        </where>
+        group by mcp.customer_id
+    </select>
+     -->
+
+    <!--mark on 2020-2-11
+    <select id="getCustomerProductsWithOutCustomer" parameterType="java.util.Map" resultType="Product">
+        select 	mcp.customer_id as customerId, group_concat(distinct mcp.product_id) as productIds
+        from	md_customer_product mcp
+        <where>
+            <if test="customerId != null">
+                and mcp.customer_id = #{customerId}
+            </if>
+        </where>
+        group by mcp.customer_id
+        limit 5000
+    </select>
+    -->
+
+    <!--mark on 2020-2-11
+    <select id="existsCustomerByCode" resultType="Long">
+        select id
+        FROM md_customer a
+        where a.code=#{code} AND a.del_flag = 0
+        LIMIT 1
+    </select>
+    -->
+
+    <!--mark on 2020-2-11
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_customer
+            (code,name,full_name,sales_id,address,zip_code,MASTER,mobile,phone,fax,email,contract_date,
+            project_owner,project_owner_phone,project_owner_qq,service_owner,service_owner_phone,service_owner_qq,finance_owner,
+            finance_owner_phone,finance_owner_qq,technology_owner,technology_owner_phone,technology_owner_qq,default_brand,
+            effect_flag,logo,attachment1,attachment2,attachment3,attachment4,
+            isfrontshow,sort,description,min_upload_number,max_upload_number,return_address,order_approve_flag,create_by,
+            create_date,update_by,update_date,remarks,del_flag,short_message_flag,time_liness_flag,urgent_flag,
+            payment_type,merchandiser_id,vip_flag
+            )
+            VALUES
+            (
+            #{code},#{name},#{fullName},#{sales.id},#{address},#{zipCode},#{master},#{mobile},#{phone},#{fax},#{email},
+            #{contractDate},#{projectOwner},#{projectOwnerPhone},#{projectOwnerQq},#{serviceOwner}, #{serviceOwnerPhone},#{serviceOwnerQq},
+            #{financeOwner},#{financeOwnerPhone},#{financeOwnerQq},#{technologyOwner},#{technologyOwnerPhone},#{technologyOwnerQq},
+            #{defaultBrand},#{effectFlag},#{logo.id},#{attachment1.id},#{attachment2.id},
+            #{attachment3.id},#{attachment4.id},#{isFrontShow},#{sort},#{description},#{minUploadNumber},#{maxUploadNumber},#{returnAddress},#{orderApproveFlag},
+            #{createBy.id},NOW(),#{updateBy.id},NOW(),#{remarks},#{delFlag},#{shortMessageFlag},#{timeLinessFlag},#{urgentFlag},
+            #{paymentType.value},#{merchandiser.id},#{vipFlag}
+            )
+    </insert>
+
+    <update id="update">
+        UPDATE
+          md_customer
+        <set>
+            <if test="code != null and code != ''.toString()" >
+                code = #{code},
+            </if>
+            <if test="name != null and name != ''.toString()" >
+                name = #{name},
+            </if>
+            <if test="fullName != null and fullName != ''.toString()" >
+                full_name = #{fullName},
+            </if>
+            <if test="sales != null and sales.id != null" >
+                sales_id = #{sales.id},
+            </if>
+            <if test="address != null and address != ''.toString()" >
+                address = #{address},
+            </if>
+            <if test="zipCode != null and zipCode != ''.toString()" >
+                zip_code = #{zipCode},
+            </if>
+            <if test="master != null" >
+                master = #{master},
+            </if>
+            <if test="mobile != null" >
+                mobile = #{mobile},
+            </if>
+            <if test="phone != null" >
+                phone = #{phone},
+            </if>
+            <if test="fax != null" >
+                fax = #{fax},
+            </if>
+            <if test="email != null" >
+                email = #{email},
+            </if>
+            <if test="contractDate != null" >
+                contract_date = #{contractDate},
+            </if>
+            <if test="projectOwner != null" >
+                project_owner = #{projectOwner},
+            </if>
+            <if test="projectOwnerPhone != null" >
+                project_owner_phone = #{projectOwnerPhone},
+            </if>
+            <if test="projectOwnerQq != null" >
+                project_owner_qq = #{projectOwnerQq},
+            </if>
+            <if test="serviceOwner != null" >
+                service_owner = #{serviceOwner},
+            </if>
+            <if test="serviceOwnerPhone != null" >
+                service_owner_phone = #{serviceOwnerPhone},
+            </if>
+            <if test="serviceOwnerQq != null" >
+                service_owner_qq = #{serviceOwnerQq},
+            </if>
+            <if test="financeOwner != null" >
+                finance_owner = #{financeOwner},
+            </if>
+            <if test="financeOwnerPhone != null" >
+                finance_owner_phone = #{financeOwnerPhone},
+            </if>
+            <if test="financeOwnerQq != null" >
+                finance_owner_qq = #{financeOwnerQq},
+            </if>
+            <if test="technologyOwner != null" >
+                technology_owner = #{technologyOwner},
+            </if>
+            <if test="technologyOwnerPhone != null" >
+                technology_owner_phone = #{technologyOwnerPhone},
+            </if>
+            <if test="technologyOwnerQq != null" >
+                technology_owner_qq = #{technologyOwnerQq},
+            </if>
+            <if test="defaultBrand != null" >
+                default_brand = #{defaultBrand},
+            </if>
+            <if test="effectFlag != null" >
+                effect_flag = #{effectFlag},
+            </if>
+            <if test="logo != null and logo.id != null" >
+                logo = #{logo.id},
+            </if>
+            <if test="attachment1 != null and attachment1.id != null" >
+                attachment1 = #{attachment1.id},
+            </if>
+            <if test="attachment2 != null and attachment2.id != null" >
+                attachment2 = #{attachment2.id},
+            </if>
+            <if test="attachment3 != null and attachment3.id != null" >
+                attachment3 = #{attachment3.id},
+            </if>
+            <if test="attachment4 != null and attachment4.id != null" >
+                attachment4 = #{attachment4.id},
+            </if>
+            <if test="isFrontShow != null" >
+                isfrontshow = #{isFrontShow},
+            </if>
+            <if test="sort != null" >
+                sort = #{sort},
+            </if>
+            <if test="description != null" >
+                description = #{description},
+            </if>
+            <if test="minUploadNumber != null" >
+                min_upload_number = #{minUploadNumber},
+            </if>
+            <if test="maxUploadNumber != null" >
+                max_upload_number = #{maxUploadNumber},
+            </if>
+            <if test="returnAddress != null" >
+                return_address = #{returnAddress},
+            </if>
+            <if test="orderApproveFlag != null" >
+                order_approve_flag = #{orderApproveFlag},
+            </if>
+            <if test="updateBy != null and updateBy.id != null" >
+                update_by = #{updateBy.id},
+            </if>
+            update_date = NOW(),
+            <if test="remarks != null" >
+                remarks = #{remarks},
+            </if>
+            <if test="delFlag != null" >
+                del_flag = #{delFlag},
+            </if>
+            <if test="shortMessageFlag != null" >
+                short_message_flag = #{shortMessageFlag},
+            </if>
+            <if test="timeLinessFlag != null" >
+                time_liness_flag = #{timeLinessFlag},
+            </if>
+            <if test="urgentFlag != null" >
+                urgent_flag = #{urgentFlag},
+            </if>
+            <if test="paymentType != null" >
+                payment_type = #{paymentType.value},
+            </if>
+            <if test="merchandiser != null and merchandiser.id != null" >
+                merchandiser_id = #{merchandiser.id},
+            </if>
+            <if test="vipFlag != null">
+                vip_flag= #{vipFlag}
+            </if>
+        </set>
+        WHERE
+          id = #{id}
+    </update>
+
+    <update id="deleteById">
+        UPDATE
+            md_customer
+        SET
+            update_by = #{updateBy.id},
+            update_date = NOW(),
+            del_flag = 1
+        WHERE
+            id = #{id}
+    </update>
+    -->
+
+    <!-- 以下为客户服务价格管理 -->
+
+    <sql id="basePriceColumn">
+        p.id,
+        p.customer_id as "customer.id",
+        <!--
+        改成Customer微服务调用了
+        s.code as "customer.code",
+        s.name as "customer.name",
+        -->
+        p.product_id as "product.id",
+        <!--
+        改成Product微服务调用了
+        sp.name as "product.name",
+        sp.sort as "product.sort",
+        -->
+        p.service_type_id as "serviceType.id",
+        p.price,
+        p.discount_price,
+        p.blocked_price,
+        p.unit,
+        p.create_by as "createBy.id",
+        p.create_date,
+        p.update_by as "updateBy.id",
+        p.update_date,
+        p.remarks,
+        p.del_flag
+    </sql>
+
+    <sql id="priceColumn">
+        p.id,
+        p.customer_id as "customer.id",
+        <!--
+        改成从微服务中获取了
+        s.code as "customer.code",
+        s.name as "customer.name",
+        -->
+        p.product_id as "product.id",
+        <!--
+        改成调用product微服务
+        sp.name as "product.name",
+        sp.sort as "product.sort",
+        -->
+        p.service_type_id as "serviceType.id",
+        <!--
+        改成调用微服务获取服务类型 and on 2019-10-14
+        st.name as "serviceType.name",
+        st.code as "serviceType.code",
+        st.sort as "serviceType.sort",
+        st.warranty_status AS 'serviceType.warrantyStatus.value',
+        -->
+        p.price,
+        p.discount_price,
+        p.blocked_price,
+        p.unit,
+        p.create_by as "createBy.id",
+        p.create_date,
+        p.update_by as "updateBy.id",
+        p.update_date,
+        p.remarks,
+        p.del_flag
+    </sql>
+
+    <!-- 获得某个客户下的价格 -->
+    <select id="getPrices_del" resultType="CustomerPrice">
+        select <include refid="basePriceColumn"/>
+        from md_customer_price p
+        <!--
+        改成Customer微服务调用了
+        INNER join md_customer s on p.customer_id = s.id
+        -->
+        <!--
+         改成Product微服务调用了
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        where p.customer_id = #{id}
+        <if test="delFlag != null">
+            and p.del_flag = #{delFlag}
+        </if>
+        <!--order by sp.name-->
+        limit 2000
+    </select>
+
+    <!-- 获得某个客户下的价格(for cache) -->
+    <select id="getPricesForCache_Del" resultType="CustomerPrice">
+        select <include refid="priceColumn"/>
+        from md_customer_price p
+        <!--
+        改成从微服务中获取
+        INNER join md_customer s on p.customer_id = s.id
+        -->
+        <!--
+        改成调用product微服务
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        <!--
+        改成调用微服务 获取服务类型 add on 2019-10-14
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        -->
+        where p.customer_id = #{id}
+        and p.del_flag = 0
+        <!--
+        性能不佳，代码中排序
+        order by sp.sort,st.sort
+        -->
+        limit 2000
+    </select>
+
+    <!-- 按id列表获得价格列表(for cache) -->
+    <select id="getPricesByPriceIds_Del" resultType="CustomerPrice">
+        select <include refid="priceColumn"/>
+        from md_customer_price p
+        <!--
+        改成微服务中获取
+        INNER join md_customer s on p.customer_id = s.id
+        -->
+        <!--
+        改成调用product微服务
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        <!--
+        改成调用微服务 add on 2019-10-14
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        -->
+        where p.id in
+        <foreach collection="ids" item="id" index="index"
+                 open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 按多个id获得客户下价格 -->
+    <!--
+    <select id="getPricesByCustomers" resultType="CustomerPrice">
+        SELECT
+                mcp.id,
+                mcp.customer_id       AS "customer.id",
+                mcp.product_id        AS "product.id",
+                mcp.service_type_id   AS "serviceType.id",
+                mcp.price,
+                mcp.discount_price,
+                mcp.price_type        AS "priceType.value",
+                mcp.del_flag
+        FROM
+                md_customer_price mcp
+        <where>
+            <if test="ids != null and ids.size > 0">
+                AND mcp.customer_id IN
+                <foreach collection="ids" item="id" index="index" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="productId != null and productId >0">
+                AND mcp.product_id = #{productId}
+            </if>
+            <if test="serviceTypeId != null">
+                AND mcp.serviceType_id = #{serviceTypeId}
+            </if>
+        </where>
+        LIMIT 500
+    </select>
+    -->
+
+    <!-- 分页获得客户id -->
+    <!-- mark on 2020-2-11
+    <select id="findCustomerIdList" resultType="Customer">
+        select distinct s.id,s.code,s.name
+        from md_customer_price p
+        inner join md_customer s on p.customer_id = s.id
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND p.customer_id = #{customer.id}
+            </if>
+            <if test="product!= null and product.id != null and product.id>0 ">
+                AND p.product_id = #{product.id}
+            </if>
+        </trim>
+        order by s.code
+    </select>
+    -->
+
+    <!-- 待审核价格 -->
+    <select id="findApprovePriceList_del" resultType="CustomerPrice">
+        select <include refid="priceColumn"/>
+        from md_customer_price p
+        <!--
+        改成微服务获取
+        INNER join md_customer s on p.customer_id = s.id and s.del_flag = 0
+        -->
+        <!--
+        改成product微服务调用了
+        INNER JOIN md_product sp on p.product_id = sp.id and sp.del_flag = 0
+        -->
+        <!--
+        改成调用微服务获取服务类型 add on 2019-10-14
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        -->
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            p.del_flag = 2
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND p.customer_id = #{customer.id}
+            </if>
+            <if test="product!= null and product.id != null and product.id>0 ">
+                AND p.product_id = #{product.id}
+            </if>
+        </trim>
+        <!--
+        改成微服务调用
+        order by sp.name,st.code
+        -->
+        <!--
+        改成微服务获取后,s.code没法获取
+        order by s.code,sp.name,st.code
+        -->
+    </select>
+
+    <!--mark on 2020-2-11
+    <insert id="insertPrices">
+        insert into md_customer_price
+        (customer_id,product_id,service_type_id,price,discount_price,blocked_price,unit,create_by,create_date,update_by,update_date,remarks,del_flag)
+        <foreach collection="prices" item="price" separator=" union all ">
+            SELECT #{customer.id},#{price.product.id},#{price.serviceType.id},#{price.price},#{price.discountPrice},#{price.blockedPrice},#{price.unit.value},#{price.createBy.id},#{price.createDate},#{price.createBy.id},#{price.createDate},#{price.remarks},0
+        </foreach>
+    </insert>
+    -->
+
+    <!--mark on 2020-2-11
+    <insert id="insertPrice" useGeneratedKeys="true" keyProperty="id">
+        insert into md_customer_price
+        (customer_id,product_id,service_type_id,price,discount_price,blocked_price,unit,create_by,create_date,update_by,update_date,remarks,del_flag)
+        values (#{customer.id},#{product.id},#{serviceType.id},#{price},#{discountPrice},#{blockedPrice},#{unit.value},#{createBy.id},#{createDate},#{createBy.id},#{createDate},#{remarks},
+        <choose>
+            <when test="delFlag != null">
+                #{delFlag}
+            </when>
+            <otherwise>0</otherwise>
+        </choose>
+      )
+    </insert>
+    -->
+
+    <!-- 审核价格 -->
+    <!--mark on 2020-2-11
+    <update id="approvePrices">
+        update md_customer_price
+        SET
+          del_flag = 0,
+          update_by = #{updateBy},
+          update_date = now()
+        where id in
+        <foreach collection="ids" item="id" index="index"
+                 open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+    -->
+
+    <!-- 停用价格 -->
+    <!--//mark on 2020-2-11
+    <update id="stopPrices">
+        update md_customer_price
+        SET
+          del_flag = 1,
+          update_by = #{updateBy},
+          update_date = now()
+        where id in
+        <foreach collection="ids" item="id" index="index"
+                 open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+    -->
+
+    <select id="getPrice_del" resultType="CustomerPrice">
+        select <include refid="priceColumn"/>
+        from md_customer_price p
+        <!--
+        改成微服务调用
+        INNER join md_customer s on p.customer_id = s.id and s.del_flag = 0
+        -->
+        <!--
+        改成product微服务调用
+        INNER JOIN md_product sp on p.product_id = sp.id  and sp.del_flag = 0
+        -->
+        <!--
+        改成调用微服务获取服务类型 add on 2019-10-14
+        INNER JOIN md_service_type st on p.service_type_id = st.id and st.del_flag = 0
+        -->
+        where p.id = #{id}
+        <if test="delFlag !=null">
+            and p.del_flag = #{delFlag}
+        </if>
+    </select>
+
+    <!--mark on 2020-2-11
+    <update id="updatePriceByMap" parameterType="java.util.HashMap">
+        update md_customer_price
+        <set>
+            <if test="price != null" >
+                price = #{price},
+            </if>
+            <if test="discountPrice != null" >
+                discount_price = #{discountPrice},
+            </if>
+            <if test="blockedPrice != null" >
+                blocked_price = #{blockedPrice},
+            </if>
+            <if test="remarks != null" >
+                remarks = #{remarks},
+            </if>
+            <if test="delFlag != null" >
+                del_flag = #{delFlag},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy.id},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    -->
+
+    <!-- 更改价格 -->
+    <!--mark on 2020-2-11s
+    <update id="updatePrice">
+        update md_customer_price
+        set price = #{price},
+        discount_price = #{discountPrice},
+        blocked_price = #{blockedPrice},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate},
+        remarks = #{remarks},
+        del_flag = #{delFlag}
+        where id = #{id}
+    </update>
+    -->
+
+    <!--mark on 2020-2-11
+    <delete id="deletePricesByCustomerAndProducts">
+        DELETE FROM
+            md_customer_price
+        WHERE
+            customer_id = #{customerId}
+        AND product_id IN
+        <foreach collection="products" item="id" index="index"
+                 open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+    -->
+
+</mapper>

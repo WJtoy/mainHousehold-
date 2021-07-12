@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.B2BMsLogDao">
+<!--    <sql id="logColumns">-->
+<!--        id,-->
+<!--        quarter,-->
+<!--        title,-->
+<!--        method,-->
+<!--        retry_times,-->
+<!--        status,-->
+<!--        create_by,-->
+<!--        create_date-->
+<!--    </sql>-->
+
+<!--    <select id="findList" resultType="com.wolfking.jeesite.modules.sd.entity.B2BMsLog">-->
+<!--        SELECT-->
+<!--          <include refid="logColumns"/>,exception-->
+<!--        FROM sd_order_b2b_ms_log-->
+<!--        <where>-->
+<!--            <if test="status != null and status.value != null and status.value != ''.toString()">-->
+<!--                and status = convert(#{status.value},SIGNED)-->
+<!--            </if>-->
+<!--        </where>-->
+<!--        ORDER BY id-->
+<!--    </select>-->
+
+<!--    <select id="get"  resultType="com.wolfking.jeesite.modules.sd.entity.B2BMsLog">-->
+<!--        SELECT-->
+<!--          id,quarter,body-->
+<!--        FROM-->
+<!--          sd_order_b2b_ms_log-->
+<!--        <where>-->
+<!--        <if test="id != null">-->
+<!--            order_id = #{id}-->
+<!--        </if>-->
+<!--        </where>-->
+<!--        ORDER BY id-->
+<!--        limit 1-->
+<!--    </select>-->
+
+<!--    <update id="update">-->
+<!--        update sd_order_b2b_ms_log-->
+<!--        set-->
+<!--          status = convert(#{status.value},SIGNED),-->
+<!--          update_by = #{updateBy.id},-->
+<!--          update_date = #{updateDate}-->
+<!--          <if test="status.value == '0'.toString() ">-->
+<!--              ,retry_times =  retry_times +1-->
+<!--          </if>-->
+<!--        <where>-->
+<!--            <if test="quarter != null">-->
+<!--                and quarter = #{quarter}-->
+<!--            </if>-->
+<!--            and id = #{id}-->
+<!--        </where>-->
+<!--    </update>-->
+
+<!--    <insert id="insert">-->
+<!--        insert into sd_order_b2b_ms_log (-->
+<!--            quarter,-->
+<!--            title,-->
+<!--            method,-->
+<!--            retry_times,-->
+<!--            body,-->
+<!--            exception,-->
+<!--            status,-->
+<!--            create_by,-->
+<!--            create_date-->
+<!--        ) values(-->
+<!--            #{quarter},-->
+<!--            #{title},-->
+<!--            #{method},-->
+<!--            #{retryTimes},-->
+<!--            #{body},-->
+<!--            #{exception},-->
+<!--            #{status},-->
+<!--            #{createBy.id},-->
+<!--            #{createDate}-->
+<!--        )-->
+<!--    </insert>-->
+
+</mapper>

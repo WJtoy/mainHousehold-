@@ -1,0 +1,1129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.UserDao">
+	
+    <sql id="userColumns">
+    	a.id,
+    	a.company_id AS "company.id",
+    	a.office_id AS "office.id",
+    	a.login_name,
+    	a.password,
+    	a.qq,
+		a.name,
+		a.email,
+		a.phone,
+		a.mobile,
+		a.user_type,
+		a.login_ip,
+		a.login_date,
+		a.engineer_id,
+		a.customer_account_profile_id as "customerAccountProfile.id",
+		a.remarks,
+		a.sub_flag,
+		a.photo,
+		a.create_by AS "createBy.id",
+		a.create_date,
+		a.update_by AS "updateBy.id",
+		a.update_date,
+		a.del_flag,
+		a.app_loged,
+    	c.name AS "company.name",
+    	c.parent_id AS "company.parent.id",
+    	c.parent_ids AS "company.parentIds",
+		<!--// mark on 2020-8-4
+        ca.id AS "company.area.id",
+        ca.name AS "company.area.name",
+        ca.parent_id AS "company.area.parent.id",
+        ca.parent_ids AS "company.area.parentIds",
+        -->
+    	o.name AS "office.name",
+    	o.parent_id AS "office.parent.id",
+    	o.parent_ids AS "office.parentIds"
+		<!--//mark on 2020-8-4
+		,
+        oa.id AS "office.area.id"
+        oa.name AS "office.area.name",
+        oa.parent_id AS "office.area.parent.id",
+        oa.parent_ids AS "office.area.parentIds"
+        -->
+    </sql>
+
+	<sql id="userColumnsWithoutOffice">
+		a.id,
+		a.company_id AS "company.id",
+		a.office_id AS "office.id",
+		a.login_name,
+		a.password,
+		a.qq,
+		a.name,
+		a.email,
+		a.phone,
+		a.mobile,
+		a.user_type,
+		a.login_ip,
+		a.login_date,
+		a.engineer_id,
+		a.customer_account_profile_id as "customerAccountProfile.id",
+		a.remarks,
+		a.sub_flag,
+		a.photo,
+		a.create_by AS "createBy.id",
+		a.create_date,
+		a.update_by AS "updateBy.id",
+		a.update_date,
+		a.del_flag,
+		a.status_flag,
+		a.app_loged
+		<!--
+		c.name AS "company.name",
+		c.parent_id AS "company.parent.id",
+		c.parent_ids AS "company.parentIds",
+		-->
+		<!--// mark on 2020-8-4
+        ca.id AS "company.area.id",
+        ca.name AS "company.area.name",
+        ca.parent_id AS "company.area.parent.id",
+        ca.parent_ids AS "company.area.parentIds",
+        -->
+		<!--
+		o.name AS "office.name",
+		o.parent_id AS "office.parent.id",
+		o.parent_ids AS "office.parentIds"
+		-->
+		<!--//mark on 2020-8-4
+		,
+        oa.id AS "office.area.id"
+        oa.name AS "office.area.name",
+        oa.parent_id AS "office.area.parent.id",
+        oa.parent_ids AS "office.area.parentIds"
+        -->
+	</sql>
+    
+    <!-- mark on 2020-12-19
+    <sql id="userJoins">
+		LEFT JOIN sys_office c ON c.id = a.company_id
+		&lt;!&ndash;LEFT JOIN sys_area ca ON ca.id = c.area_id&ndash;&gt;
+		LEFT JOIN sys_office o ON o.id = a.office_id
+		&lt;!&ndash;LEFT JOIN sys_area oa ON oa.id = o.area_id&ndash;&gt;
+    </sql>
+    -->
+	
+	<!-- 根据编号获得用户 -->
+	<!-- mark on 2020-12-19
+	<select id="get" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			<include refid="userColumns"/>
+		FROM sys_user a
+		<include refid="userJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	-->
+
+	<select id="getNew" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+		<include refid="userColumnsWithoutOffice"/>
+		FROM sys_user a
+		WHERE a.id = #{id}
+	</select>
+
+
+	<select id="getBaseInfo" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			a.id,
+			a.company_id AS "company.id",
+			a.office_id AS "office.id",
+			a.login_name,
+			a.password,
+			a.qq,
+			a.name,
+			a.email,
+			a.phone,
+			a.mobile,
+			a.user_type,
+			a.engineer_id,
+			a.customer_account_profile_id as "customerAccountProfile.id",
+			a.remarks,
+			a.sub_flag,
+			a.del_flag,
+			a.app_loged,
+			a.status_flag
+		FROM
+			sys_user a
+		WHERE
+			a.id = #{id}
+	</select>
+
+	<!-- 根据登录名/手机号查询用户 -->
+	<!--mark on 2020-12-19
+	<select id="getByLoginName" resultType="com.wolfking.jeesite.modules.sys.entity.User" parameterType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			<include refid="userColumns"/>
+		FROM sys_user a
+		<include refid="userJoins"/>
+		WHERE (a.login_name = #{loginName} or a.mobile = #{loginName})
+			AND a.del_flag = #{DEL_FLAG_NORMAL}
+		LIMIT 1
+	</select>
+	-->
+
+	<select id="getByLoginNameNew" resultType="com.wolfking.jeesite.modules.sys.entity.User" parameterType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+		<include refid="userColumnsWithoutOffice"/>
+		FROM sys_user a
+		WHERE (a.login_name = #{loginName} or a.mobile = #{loginName})
+		AND a.del_flag = #{DEL_FLAG_NORMAL}
+		LIMIT 1
+	</select>
+
+	<!-- 根据登录名/手机号及用户类型查询用户 -->
+	<!--mark on 2020-2-11
+	<select id="getByLoginNameAndType" resultType="com.wolfking.jeesite.modules.sys.entity.User" >
+		SELECT
+		<include refid="userColumns"/>
+		FROM sys_user a
+		<include refid="userJoins"/>
+		WHERE (a.login_name = #{loginName} or a.mobile = #{loginName})
+		AND a.del_flag = 0
+		<if test="userTypes != null and userTypes.length>0">
+			<choose>
+				<when test="userTypes.length == 1">
+					and a.user_type = #{userTypes[0]}
+				</when>
+				<otherwise>
+					and a.user_type IN
+					<foreach item="userType" index="index" collection="userTypes" open="(" separator="," close=")">
+						#{userType}
+					</foreach>
+				</otherwise>
+			</choose>
+		</if>
+		<if test="customerId != null">
+			and exists(select 1 from md_customer_account_profile p
+						WHERE p.customer_id = #{customerId}
+							and a.customer_account_profile_id = p.id
+			)
+		</if>
+		LIMIT 1
+	</select>
+	-->
+
+	<!-- 根据登录名/手机号及用户类型查询用户 -->
+	<!-- mark on 2020-12-19
+	<select id="getByLoginNameAndTypeWithoutCustomerAccountProfile" resultType="com.wolfking.jeesite.modules.sys.entity.User" >
+		SELECT
+		<include refid="userColumns"/>
+		FROM sys_user a
+		<include refid="userJoins"/>
+		WHERE (a.login_name = #{loginName} or a.mobile = #{loginName})
+		AND a.del_flag = 0
+		<if test="userTypes != null and userTypes.length>0">
+			<choose>
+				<when test="userTypes.length == 1">
+					and a.user_type = #{userTypes[0]}
+				</when>
+				<otherwise>
+					and a.user_type IN
+					<foreach item="userType" index="index" collection="userTypes" open="(" separator="," close=")">
+						#{userType}
+					</foreach>
+				</otherwise>
+			</choose>
+		</if>
+		LIMIT 1
+	</select>
+	-->
+
+	<!-- 根据登录名/手机号及用户类型查询用户 -->
+	<select id="getByLoginNameAndTypeWithoutCustomerAccountProfileNew" resultType="com.wolfking.jeesite.modules.sys.entity.User" >
+		SELECT
+		<include refid="userColumnsWithoutOffice"/>
+		FROM sys_user a
+		WHERE (a.login_name = #{loginName} or a.mobile = #{loginName})
+		AND a.del_flag = 0
+		<if test="userTypes != null and userTypes.length>0">
+			<choose>
+				<when test="userTypes.length == 1">
+					and a.user_type = #{userTypes[0]}
+				</when>
+				<otherwise>
+					and a.user_type IN
+					<foreach item="userType" index="index" collection="userTypes" open="(" separator="," close=")">
+						#{userType}
+					</foreach>
+				</otherwise>
+			</choose>
+		</if>
+		LIMIT 1
+	</select>
+
+	<!-- 根据登录名/手机号查询APP用户 -->
+	<!-- mark on 2020-12-19
+	<select id="getAppUserByLoginName" resultType="com.wolfking.jeesite.modules.sys.entity.User" parameterType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			<include refid="userColumns"/>
+		FROM sys_user a
+		<include refid="userJoins"/>
+		WHERE a.user_type = 5 AND (a.login_name = #{loginName} or a.mobile = #{loginName}) AND a.del_flag = #{DEL_FLAG_NORMAL}
+		LIMIT 1
+	</select>
+	-->
+
+	<select id="getAppUserByLoginNameNew" resultType="com.wolfking.jeesite.modules.sys.entity.User" parameterType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+		<include refid="userColumnsWithoutOffice"/>
+		FROM sys_user a
+		WHERE a.user_type = 5 AND (a.login_name = #{loginName} or a.mobile = #{loginName}) AND a.del_flag = #{DEL_FLAG_NORMAL}
+				AND a.sub_flag in (0,1)
+		LIMIT 1
+	</select>
+
+	<!-- 读取登录信息 -->
+	<select id="getLoginInfo" resultType="Map" >
+		select
+			login_ip,
+			login_Date
+		from
+			sys_user
+		where
+			id = #{id}
+	</select>
+
+	<!-- 根据安维id查询帐号 -->
+	<select id="getByEngineerId" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			a.id,
+			a.company_id,
+			a.login_name,
+			a.password,
+			a.name,
+			a.phone,
+			a.mobile,
+			a.engineer_id,
+			a.customer_account_profile_id as "customerAccountProfile.id",
+			a.sub_flag,
+			a.del_flag,
+			a.app_loged
+		FROM sys_user a
+		WHERE a.engineer_id = #{engineerId}
+		limit 1
+	</select>
+	
+	<!-- 分页查询用户信息 -->
+	<!-- mark on 2020-12-19
+	<select id="findList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			<include refid="userColumns"/>
+		FROM sys_user a
+		<include refid="userJoins"/>
+		<if test="role != null and role.id != null and role.id != ''.toString()">
+			JOIN sys_user_role ur ON ur.user_id = a.id AND ur.role_id = #{role.id}
+		</if>
+		WHERE
+		<choose>
+			<when test="userType != null and userType == 1">
+				<![CDATA[ (a.user_type <=2 or a.user_type= 10 or a.user_type between 7 and 8 or a.user_type = 11)]]>
+			</when>
+			<otherwise>
+				a.user_type = 7
+			</otherwise>
+		</choose>
+		and a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="company != null and company.id != null and company.id != ''.toString()">
+			AND (c.id = #{company.id} OR c.parent_ids LIKE CONCAT('%,', #{company.id}, ',%'))
+		</if>
+		<if test="office != null and office.id != null and office.id != ''.toString()">
+			AND (o.id = #{office.id} OR o.parent_ids LIKE CONCAT('%,', #{office.id}, ',%'))
+		</if>
+		如果不是超级管理员，则不显示超级管理员用户
+		<if test="!currentUser.admin">
+			AND a.id != 1
+		</if>
+		<if test="loginName != null and loginName != ''.toString()">
+			AND a.login_name like CONCAT('%', #{loginName}, '%')
+		</if>
+		<if test="name != null and name != ''.toString()">
+			AND a.name like CONCAT('%', #{name}, '%')
+		</if>
+		数据范围过滤
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''.toString()">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY c.code, o.code, a.name
+			</otherwise>
+		</choose>
+	</select>
+	-->
+
+	<!-- 分页查询用户信息 -->
+	<select id="findListNew" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			<include refid="userColumnsWithoutOffice"/>
+		FROM sys_user a
+		<if test="role != null and role.id != null and role.id != ''.toString()">
+			JOIN sys_user_role ur ON ur.user_id = a.id AND ur.role_id = #{role.id}
+		</if>
+		WHERE
+		<choose>
+			<when test="userType != null and userType == 1">
+				<![CDATA[ (a.user_type <=2 or a.user_type= 10 or a.user_type between 7 and 8 or a.user_type = 11)]]>
+			</when>
+			<otherwise>
+				a.user_type = 7
+			</otherwise>
+		</choose>
+		and a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="company != null and company.id != null and company.id != ''.toString()">
+			and a.company_id in
+			<foreach collection="companyIds" item="cid" open="(" close=")" separator=",">
+				${cid}
+			</foreach>
+		</if>
+		<if test="office != null and office.id != null and office.id != ''.toString()">
+			and a.office_id in
+			<foreach collection="officeIds" item="oid" open="(" close=")" separator=",">
+				${oid}
+			</foreach>
+		</if>
+		<!-- 如果不是超级管理员，则不显示超级管理员用户 -->
+		<if test="!currentUser.admin">
+			AND a.id != 1
+		</if>
+		<if test="loginName != null and loginName != ''.toString()">
+			AND a.login_name like CONCAT('%', #{loginName}, '%')
+		</if>
+		<if test="name != null and name != ''.toString()">
+			AND a.name like CONCAT('%', #{name}, '%')
+		</if>
+		<if test="statusFlag != null and statusFlag != -1">
+			AND a.status_flag = #{statusFlag}
+		</if>
+		<!-- 数据范围过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''.toString()">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.name
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 根据OfficeId获取用户（树查询用户时用） -->
+	<select id="findUserByOfficeId" resultType="com.wolfking.jeesite.modules.sys.entity.User" useCache="true">
+		SELECT
+			a.id, a.name, a.login_name
+		FROM sys_user a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.office_id = #{office.id}
+		ORDER BY a.name
+	</select>
+	
+	<!-- 查询全部用户 -->
+	<!-- mark on 2020-12-19
+	<select id="findAllList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			<include refid="userColumns"/>
+		FROM sys_user a
+		<include refid="userJoins"/>
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		ORDER BY c.code, o.code, a.name
+	</select>
+	-->
+	<update id="userEnableDisable">
+		update sys_user
+		set status_flag = #{statusFlag}
+		where id = #{userId}
+	</update>
+	<!-- 查询全部用户数目 -->
+	<select id="findAllCount" resultType="java.lang.Long">
+		SELECT
+			COUNT(1)
+		FROM sys_user a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+	</select>
+
+	<!-- 获得客户下的所有帐号id -->
+	<select id="findCustomerAccountIdList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			a.id,
+			a.company_id AS "company.id",
+			a.office_id AS "office.id",
+			a.login_name,
+			a.password,
+			a.qq,
+			a.name,
+			a.email,
+			a.phone,
+			a.mobile,
+			a.user_type
+		FROM
+			sys_user a
+		WHERE
+			a.company_id = #{companyId}
+			and a.user_type in(3,4)
+			and a.del_flag = 0
+		ORDER BY
+			a.user_type
+	</select>
+
+	<!-- 获得所有客户下的所有帐号 -->
+	<!--<select id="findAllCustomerAccountList" resultType="User">-->
+		<!--SELECT-->
+			<!--a.id,-->
+			<!--a.company_id AS "company.id",-->
+			<!--a.office_id AS "office.id",-->
+			<!--a.login_name,-->
+			<!--a.password,-->
+			<!--a.qq,-->
+			<!--a.name,-->
+			<!--a.email,-->
+			<!--a.phone,-->
+			<!--a.mobile,-->
+			<!--a.user_type-->
+		<!--FROM-->
+			<!--sys_user a-->
+		<!--WHERE-->
+			<!--a.user_type in(3,4)-->
+			<!--and a.company_id is not null-->
+			<!--and a.del_flag = 0-->
+		<!--ORDER BY-->
+			<!--a.company_id,a.user_type-->
+	<!--</select>-->
+
+	<!-- 按组织获得所管理的人员帐号 -->
+	<select id="findOfficeAccountList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		select
+			a.id,
+			a.company_id AS "company.id",
+			a.office_id AS "office.id",
+			a.login_name,
+			a.password,
+			a.qq,
+			a.name,
+			a.email,
+			a.phone,
+			a.mobile,
+			a.user_type
+		from
+			sys_user a
+		WHERE
+			a.office_id = #{officeId}
+			<if test="userType != null and userType>0">
+			and a.user_type = #{userType}
+			</if>
+			and a.del_flag = 0
+	</select>
+
+	<!-- 按角色获得组织的管理人员帐号 -->
+	<select id="findOfficeLeaderList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		select
+			u.id,
+			u.company_id AS "company.id",
+			u.office_id AS "office.id",
+			u.login_name,
+			u.password,
+			u.qq,
+			u.name,
+			u.email,
+			u.phone,
+			u.mobile,
+			u.user_type
+		from
+			sys_user u
+		<if test="(roleName != null and roleName != '') or (enName != null and enName != '') ">
+		inner join sys_user_role ur
+			on u.id = ur.user_id
+		inner join sys_role r
+			on ur.role_id = r.id
+		</if>
+		WHERE
+			u.office_id = #{officeId}
+			<if test="userType != null and userType>0">
+				and u.user_type = #{userType}
+			</if>
+			and u.del_flag = 0
+			<if test="roleName != null and roleName != ''.toString() ">
+			and r.name = #{roleName}
+			</if>
+			<if test="enName != null and enName != ''.toString()">
+			and r.enname = #{enName}
+			</if>
+	</select>
+
+
+	<!-- 插入用户 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sys_user(
+			company_id, 
+			office_id, 
+			login_name, 
+			password, 
+			qq,
+			name, 
+			email, 
+			phone, 
+			mobile, 
+			user_type, 
+			create_by, 
+			create_date, 
+			update_by, 
+			update_date, 
+			remarks, 
+			sub_flag,
+			engineer_id,
+			customer_account_profile_id,
+			photo, 
+			del_flag
+		) VALUES (
+			#{company.id}, 
+			#{office.id}, 
+			#{loginName}, 
+			#{password}, 
+			#{qq},
+			#{name}, 
+			#{email}, 
+			#{phone}, 
+			#{mobile}, 
+			#{userType}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{remarks}, 
+			#{subFlag},
+			#{engineerId},
+			#{customerAccountProfile.id},
+			#{photo},
+			#{delFlag}
+		)
+	</insert>
+	
+	<!-- 更新用户 -->
+	<update id="update">
+		UPDATE sys_user SET
+			<if test="company != null and company.id != null">
+			company_id = #{company.id},
+			</if>
+			office_id = #{office.id},
+			login_name = #{loginName},
+			<if test="password != null and password != ''.toString()" >
+				password = #{password},
+			</if>
+			qq = #{qq},
+			name = #{name}, 
+			email = #{email}, 
+			phone = #{phone}, 
+			mobile = #{mobile}, 
+			user_type = #{userType}, 
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}, 
+			remarks = #{remarks},
+			sub_flag = #{subFlag},
+			photo = #{photo}
+		WHERE id = #{id}
+	</update>
+
+	<update id="updateUserByParms" parameterType="java.util.HashMap">
+		update
+			sys_user
+		<set >
+			<if test="name != null" >
+				name = #{name},
+			</if>
+			<if test="phone != null" >
+				phone = #{phone},
+			</if>
+			<if test="mobile != null" >
+				mobile = #{mobile},
+			</if>
+			<if test="updateBy != null and updateBy.id != null" >
+				update_by = #{updateBy.id},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<update id="updateUserByEngineerId" parameterType="java.util.HashMap">
+		update
+		sys_user
+		<set >
+			<if test="name != null" >
+				name = #{name},
+			</if>
+			<if test="phone != null" >
+				phone = #{phone},
+			</if>
+			<if test="mobile != null" >
+				mobile = #{mobile},
+			</if>
+			<if test="updateBy != null and updateBy.id != null" >
+				update_by = #{updateBy.id},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+		</set>
+		where engineer_id = #{engineerId}
+	</update>
+
+	<!-- -->
+	<select id="getUserRoleByUserId" resultType="long">
+		SELECT user_id
+		FROM sys_user_role
+		WHERE user_id = #{userId}
+		LIMIT 1;
+	</select>
+
+	<!-- 删除用户和角色关联表数据 -->
+	<delete id="deleteUserRole">
+		DELETE FROM sys_user_role WHERE user_id = #{id}
+	</delete>
+	
+	<!-- 插入用户和角色关联表数据 -->
+	<insert id="insertUserRole">
+		INSERT INTO sys_user_role(user_id, role_id)
+		<foreach collection="roleList" item="role" separator=" union all ">
+			SELECT #{id}, #{role.id}
+			<if test="dbName != 'mssql'.toString()">
+			FROM dual
+			</if>
+		</foreach>
+	</insert>
+
+	<insert id="insertSingleUserRole">
+		INSERT INTO sys_user_role(user_id, role_id)
+		values (#{id}, #{role.id})
+	</insert>
+
+	<!-- 删除用户和区域关联表数据 -->
+	<!--去掉sys_user_area表-->
+	<!--<delete id="deleteUserArea">
+		DELETE FROM sys_user_area WHERE user_id = #{id}
+	</delete>-->
+
+	<!-- 插入用户和区域关联表数据 -->
+	<!--去掉sys_user_area表-->
+	<!--<insert id="insertUserArea">
+		INSERT INTO sys_user_area(user_id, area_id,area_type)
+		<foreach collection="areaList" item="area" separator=" union all ">
+			SELECT #{id}, #{area.id},#{area.type}
+		</foreach>
+	</insert>-->
+
+	<!-- 删除用户和客户关联表数据 -->
+	<delete id="deleteUserCustomer">
+		DELETE FROM sys_user_customer WHERE user_id = #{id}
+	</delete>
+
+	<!-- 插入用户和客户关联表数据 -->
+	<insert id="insertUserCustomer">
+		INSERT INTO sys_user_customer(user_id, customer_id)
+		<foreach collection="customerList" item="customer" separator=" union all ">
+			SELECT #{id}, #{customer.id}
+		</foreach>
+	</insert>
+	
+	<!-- 更新用户信息  -->
+	<update id="updateUserInfo">
+		UPDATE sys_user SET 
+			email = #{email},
+			<if test="name !=null and name !=''.trim()">
+				name = #{name},
+			</if>
+			phone = #{phone}, 
+			mobile = #{mobile},
+			qq = #{qq},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}, 
+			remarks = #{remarks},
+			photo = #{photo}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 更新用户密码 -->
+	<update id="updatePasswordById">
+		UPDATE sys_user SET 
+			password = #{password} ,
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 更新登录信息，如登录IP、登录时间 -->
+	<update id="updateLoginInfo">
+		UPDATE sys_user SET 
+			login_ip = #{loginIp}, 
+			login_Date = #{loginDate}
+			<if test="appLoged != null and appLoged>1">
+				,app_loged = 1
+			</if>
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 停用/逻辑删除用户 -->
+	<update id="delete">
+		UPDATE sys_user SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 启用用户 -->
+	<update id="enableUser">
+		UPDATE
+			sys_user
+		SET
+			del_flag = 0
+		WHERE
+			id = #{id}
+	</update>
+
+	<!-- 根据业务员姓名获得qq -->
+	<select id="getSalesQq" resultType="String">
+		select qq
+		from sys_user
+		where name=#{name} and user_type = 1
+		limit 1
+	</select>
+
+	<select id="checkLoginName" resultType="java.lang.Long">
+		SELECT a.id
+		FROM sys_user a
+		WHERE (a.login_name = #{loginName} or a.mobile= #{loginName} or a.phone = #{loginName})
+		<if test="id!=null and id>0">
+			<![CDATA[ and a.id != #{id} ]]>
+		</if>
+		 and del_flag = 0
+		limit 1
+	</select>
+
+	<select id="checkLoginCustomerId" resultType="java.lang.Long">
+		SELECT id
+		FROM sys_user
+		WHERE (mobile= #{phone} or phone = #{phone})
+		and company_id = #{customerId}
+		and del_flag = 0
+		limit 1
+	</select>
+
+	<!-- 读取业务员列表 -->
+	<select id="getSaleList" resultType="User">
+		select
+		a.id,
+		a.name,
+		a.qq,
+		a.mobile
+		from sys_user a
+		where user_type = 7
+		and sub_flag = #{subFlag}
+		<if test="delFlag != null">
+			and del_flag = #{delFlag}
+		</if>
+	</select>
+
+	<select id="getAllSales" resultType="User">
+		select
+			a.id,
+			a.name
+		from sys_user a
+		where user_type = 7
+		and del_flag = 0
+	</select>
+
+	<!--按客户获得负责的客服列表-->
+	<select id="getKefuListByCustomer" resultType="User">
+		select
+			u.id,u.name,u.user_type
+		from
+			sys_user_customer uc
+		inner join sys_user u
+			on uc.user_id = u.id
+		where
+			uc.customer_id = #{customerId}
+			and u.user_type = 2
+			and u.del_flag=0
+	</select>
+
+	<!--按区域获得负责的客服列表-->
+	<!--去掉sys_user_area 表-->
+	<!--<select id="getKefuListByArea" resultType="User">
+		select
+			u.id,u.name,u.user_type
+		from
+			sys_user_area ua
+		inner join sys_user u
+			on ua.user_id = u.id
+		where
+			ua.area_id = #{areaId}
+			and u.user_type = 2
+			and u.del_flag=0
+	</select>-->
+
+	<!-- 按手机号返回帐号id -->
+	<select id="getByMobile" resultType="java.util.HashMap">
+		select id,name,mobile
+		from
+			sys_user
+		where
+			mobile = #{mobile}
+		<if test="expectType != null and expectType !=''.toString()">
+			<if test="expectId != null and expectId > 0">
+				<choose>
+					<when test="expectType == 'user'.toString()">
+						<![CDATA[
+							and id <> #{expectId}
+						  ]]>
+					</when>
+					<when test="expectType == 'engineer'.toString()">
+						<![CDATA[
+							and engineer_id <> #{expectId}
+						  ]]>
+					</when>
+					<otherwise>
+
+					</otherwise>
+				</choose>
+			</if>
+		</if>
+		and del_flag = 0
+		limit 10
+	</select>
+
+	<!-- 按手机号返回帐号delflag -->
+	<select id="getDelFlagByMobile" parameterType="String" resultType="Integer">
+		SELECT
+			del_flag
+		FROM
+			sys_user
+		WHERE
+			mobile = #{mobile}
+		AND
+			user_type = 5
+		AND sub_flag IN (0,1)
+		ORDER BY del_flag
+		LIMIT 1
+	</select>
+
+	<!-- 按手机号返回帐号Id -->
+	<select id="getIdByMobile" parameterType="String" resultType="Long">
+		SELECT
+			id
+		FROM
+			sys_user
+		WHERE
+			mobile = #{mobile}
+		AND	user_type = 5
+		AND sub_flag IN (0,1)
+		LIMIT 1
+	</select>
+
+	<!-- 按ID返回密码 -->
+	<select id="getPasswordById" parameterType="Long" resultType="String">
+		SELECT
+			password
+		FROM
+			sys_user
+		WHERE
+			id = #{id}
+		LIMIT 1
+	</select>
+
+	<select id="getListByUserType" parameterType="Integer" resultType="User">
+		SELECT
+				a.id,
+				a.name
+		FROM 	sys_user a
+		WHERE	a.user_type = #{userType}
+			  	AND del_flag = 0
+		LIMIT 	1000
+	</select>
+
+	<select id="getBaseInfoByEngineerId" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+			a.id,
+			a.company_id AS "company.id",
+			a.office_id AS "office.id",
+			a.login_name,
+			a.password,
+			a.qq,
+			a.name,
+			a.email,
+			a.phone,
+			a.mobile,
+			a.user_type,
+			a.engineer_id,
+			a.customer_account_profile_id as "customerAccountProfile.id",
+			a.remarks,
+			a.sub_flag,
+			a.del_flag,
+			a.app_loged
+		FROM
+			sys_user a
+		WHERE
+			a.engineer_id = #{engineerId}
+	</select>
+
+	<select id="findCustomerIdList" parameterType="java.util.Map" resultType="Long">
+		select customer_id
+		FROM sys_user_customer
+		<where>
+			<if test="userId != null">
+				and user_id = #{userId}
+			</if>
+			<if test="customerId != null">
+				and customer_id = #{customerId}
+			</if>
+		</where>
+	</select>
+
+	<select id="findVipCustomerIdListByKefu" parameterType="java.lang.Long" resultType="Long">
+		select customer_id
+		FROM sys_user_customer
+		where user_id = #{userId}
+	</select>
+
+	<select id="getAuthorizedProductCategoryIds" resultType="Long">
+        SELECT
+              product_category_id
+        FROM  md_productcategory_user
+        WHERE user_id = #{userId}
+    </select>
+
+	<!-- 查询所有的安维人员列表信息 -->
+	<select id="findEngineerAccountsList" resultType="User">
+		SELECT
+            u.id,
+            u.name,
+            u.mobile,
+            u.app_loged,
+			u.engineer_id
+        FROM  sys_user u
+        where u.user_type = 5
+			<choose>
+				<when test="subFlag != null">
+					and u.sub_flag = #{subFlag}
+				</when>
+				<otherwise>
+					and u.sub_flag  in (0,1)
+				</otherwise>
+			</choose>
+            and u.del_flag = 0
+            <if test="engineerIds != null and engineerIds.size>0">
+            and u.engineer_id in
+				<foreach collection="engineerIds" item="item" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+			</if>
+	</select>
+
+
+	<!-- 查询帐号 -->
+	<select id="findListWithOutCustomerAccountProfile" resultType="User">
+		select  u.id,
+				u.company_id AS "company.id",
+				u.login_name,
+				u.qq,
+				u.name,
+				u.email,
+				u.phone,
+				u.mobile,
+				u.user_type,
+				u.login_ip,
+				u.login_date,
+				u.engineer_id,
+				u.customer_account_profile_id as "customerAccountProfile.id",
+				u.remarks,
+				u.sub_flag,
+				u.photo,
+				u.create_by AS "createBy.id",
+				u.create_date,
+				u.update_by AS "updateBy.id",
+				u.update_date,
+				u.del_flag
+		from sys_user u
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<choose>
+				<when test="company != null and company.id != null">
+					company_id = #{company.id}
+				</when>
+				<otherwise>
+					customer_account_profile_id > 0 and  company_id > 0
+				</otherwise>
+			</choose>
+			<if test="loginName!= null and loginName!= '' ">
+				AND u.login_name = #{loginName}
+			</if>
+			<if test="name!= null and name!= '' ">
+				AND u.name = #{name}
+			</if>
+			<if test="phone!= null and phone !=''">
+				And (u.phone like concat('%',#{phone},'%') or u.mobile like concat('%',#{phone},'%'))
+			</if>
+			<choose>
+				<when test="userType!=null and userType!=0">
+					AND u.user_type = #{userType}
+				</when>
+				<otherwise>
+					AND u.user_type in (3,4,9)
+				</otherwise>
+			</choose>
+			<if test="delFlag != null">
+				AND u.del_flag = #{delFlag}
+			</if>
+			<if test="role != null and role.id != null">
+				and exists (
+				select 0
+				from sys_user_role sur
+				where u.id = sur.user_id
+				and sur.role_id = #{role.id})
+			</if>
+		</trim>
+		order by
+		<choose>
+			<when test="orderBy != null and orderBy != ''">
+				u.${orderBy}
+			</when>
+			<otherwise>
+				u.login_name
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findListUserRoleName" resultType="com.wolfking.jeesite.modules.sys.entity.Role">
+		SELECT
+		a.user_id as "user.id",
+		GROUP_CONCAT(b.name) as "name"
+		FROM sys_user_role a INNER JOIN sys_role b ON a.role_id = b.id
+		WHERE a.user_id in
+		<foreach item="userId" index="index" collection="userIds" open="(" separator="," close=")">
+			#{userId}
+		</foreach>
+		GROUP BY a.user_id
+	</select>
+
+	<!--检查用户的删除(del_flag)状态是否等于0(正常)-->
+	<select id="checkDelFlagOfUser" resultType="long">
+		SELECT id
+		FROM sys_user
+		WHERE del_flag =0 AND id in
+		<foreach item="userId" index="index" collection="userIds" open="(" separator="," close=")">
+			#{userId}
+		</foreach>
+	</select>
+
+	<!-- 重置客户帐号密码 -->
+	<update id="resetPassword">
+        update sys_user
+        SET
+        password = #{password},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate}
+        where id = #{id}
+    </update>
+
+</mapper>

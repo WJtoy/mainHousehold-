@@ -1,0 +1,50 @@
+package com.wolfking.jeesite.ms.tmall.rpt.fallback;
+
+import com.kkl.kklplus.common.exception.MSErrorCode;
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.b2bcenter.rpt.B2BOrderProcesslog;
+import com.kkl.kklplus.entity.b2bcenter.sd.B2BRetryOperationData;
+import com.kkl.kklplus.entity.common.MSPage;
+import com.wolfking.jeesite.ms.tmall.rpt.entity.B2BRptSearchModel;
+import com.wolfking.jeesite.ms.tmall.rpt.feign.MSCanboOrderRptFeign;
+import feign.hystrix.FallbackFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+public class MSCanboOrderRptFeignFallbackFactory implements FallbackFactory<MSCanboOrderRptFeign> {
+    private static String errorMsg = "操作超时";
+
+
+    @Override
+    public MSCanboOrderRptFeign create(Throwable throwable) {
+        if(throwable != null) {
+            log.error("MSCanboOrderRptFeignFallbackFactory:{}", throwable.getMessage());
+        }
+        return new MSCanboOrderRptFeign() {
+            @Override
+            public MSResponse<MSPage<B2BOrderProcesslog>> getList(B2BRptSearchModel processlogSearchModel) {
+                return new MSResponse<>(MSErrorCode.newInstance(MSErrorCode.FAILURE, errorMsg));
+            }
+
+            @Override
+            public MSResponse<B2BOrderProcesslog> getLogById(Long id) {
+                return new MSResponse<>(MSErrorCode.newInstance(MSErrorCode.FAILURE, errorMsg));
+            }
+
+            @Override
+            public MSResponse<String> closeLog(B2BRetryOperationData retryOperationData) {
+                return new MSResponse<>(MSErrorCode.newInstance(MSErrorCode.FAILURE, errorMsg));
+            }
+
+            @Override
+            public MSResponse<String> retryData(B2BRetryOperationData retryOperationData) {
+                return new MSResponse<>(MSErrorCode.newInstance(MSErrorCode.FAILURE, errorMsg));
+            }
+
+        };
+    }
+
+
+}

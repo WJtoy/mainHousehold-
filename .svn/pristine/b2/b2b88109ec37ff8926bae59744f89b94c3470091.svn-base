@@ -1,0 +1,250 @@
+package com.wolfking.jeesite.ms.b2bcenter.sd.service;
+
+import com.kkl.kklplus.entity.b2bcenter.md.B2BDataSourceEnum;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.CustomerFinance;
+import com.wolfking.jeesite.modules.md.service.CustomerService;
+import com.wolfking.jeesite.modules.md.service.ProductService;
+import com.wolfking.jeesite.modules.md.service.ServiceTypeService;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.service.OrderService;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.service.AreaService;
+import com.wolfking.jeesite.modules.sys.utils.AreaUtils;
+import com.wolfking.jeesite.ms.b2bcenter.exception.*;
+import com.wolfking.jeesite.ms.b2bcenter.sd.dao.B2BOrderDao;
+import com.wolfking.jeesite.ms.b2bcenter.sd.entity.B2BOrderConvertVModel;
+import com.wolfking.jeesite.ms.b2bcenter.sd.entity.B2BOrderVModel;
+import com.wolfking.jeesite.ms.utils.MSDictUtils;
+import ma.glasnost.orika.MapperFacade;
+import org.assertj.core.util.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class B2BOrderBaseService {
+
+    @Resource
+    private B2BOrderDao b2BOrderDao;
+
+    @Autowired
+    protected CustomerService customerService;
+
+    @Autowired
+    protected ServiceTypeService serviceTypeService;
+
+    @Autowired
+    protected ProductService productService;
+
+    @Autowired
+    protected OrderService orderService;
+
+    @Autowired
+    protected AreaService areaService;
+
+    @Autowired
+    protected MapperFacade mapperFacade;
+
+    /**
+     * 查询工单的id, order_no, quarter
+     */
+    public Order getOrderInfo(int dateSource, String b2bOrderNo, String quarter) {
+        Order order = null;
+        if (dateSource != 0 && StringUtils.isNotBlank(b2bOrderNo)) {
+            order = b2BOrderDao.getOrderInfo(dateSource, b2bOrderNo, quarter);
+        }
+        return order;
+    }
+
+
+    /**
+     * 检查B2B工单基本属性
+     */
+    protected void validateBasicProperties(B2BOrderVModel orderVModel) {
+        List<String> errorMsgList = Lists.newArrayList();
+        if (StringUtils.isBlank(orderVModel.getOrderNo())) {
+            errorMsgList.add("缺少B2B工单ID");
+        }
+        if (orderVModel.getDataSource() == null || !B2BDataSourceEnum.isB2BDataSource(orderVModel.getDataSource())) {
+            errorMsgList.add("数据源设置错误");
+        }
+        if (StringUtils.isBlank(orderVModel.getUserName())) {
+            errorMsgList.add("缺少用户姓名");
+        }
+        if (StringUtils.isBlank(orderVModel.getUserAddress())) {
+            errorMsgList.add("缺少用户地址");
+        }
+        if (StringUtils.isBlank(orderVModel.getUserMobile()) && StringUtils.isBlank(orderVModel.getUserPhone())) {
+            errorMsgList.add("缺少用户电话");
+        }
+        if (StringUtils.isBlank(orderVModel.getFirstProductCode())) {
+            errorMsgList.add("缺少产品编码");
+        }
+        if (orderVModel.getProductQty() == 0) {
+            errorMsgList.add("工单项的产品数量为0");
+        }
+        if (orderVModel.getOrderItemQty() > 10) {
+            errorMsgList.add("工单项数超过10项，不允许自动转单");
+        }
+        if (StringUtils.isNotBlank(orderVModel.getUserMobile())) {
+            String checkMobile = StringUtils.isPhone(StringUtils.trim(orderVModel.getUserMobile()));
+            if (!checkMobile.isEmpty()) {
+                errorMsgList.add(checkMobile);
+            }
+        }
+        if (errorMsgList.size() > 0) {
+            String errorMsg = String.join("；", errorMsgList);
+            throw new IncompleteB2BOrderException(errorMsg);
+        }
+    }
+
+    /**
+     * 检查B2B工单基本属性
+     */
+    protected void validateBasicPropertiesForManual(B2BOrderVModel orderVModel) {
+        List<String> errorMsgList = Lists.newArrayList();
+        if (StringUtils.isBlank(orderVModel.getOrderNo())) {
+            errorMsgList.add("缺少B2B工单ID");
+        }
+        if (orderVModel.getDataSource() == null || !B2BDataSourceEnum.isB2BDataSource(orderVModel.getDataSource())) {
+            errorMsgList.add("数据源设置错误");
+        }
+        if (StringUtils.isBlank(orderVModel.getUserName())) {
+            errorMsgList.add("缺少用户姓名");
+        }
+        if (StringUtils.isBlank(orderVModel.getUserAddress())) {
+            errorMsgList.add("缺少用户地址");
+        }
+        if (StringUtils.isBlank(orderVModel.getUserMobile()) && StringUtils.isBlank(orderVModel.getUserPhone())) {
+            errorMsgList.add("缺少用户电话");
+        }
+        if (StringUtils.isBlank(orderVModel.getFirstProductCode())) {
+            errorMsgList.add("缺少产品编码");
+        }
+        if (orderVModel.getProductQty() == 0) {
+            errorMsgList.add("工单项的产品数量为0");
+        }
+        if (errorMsgList.size() > 0) {
+            String errorMsg = String.join("；", errorMsgList);
+            throw new IncompleteB2BOrderException(errorMsg);
+        }
+    }
+
+    /**
+     * 解析地址
+     */
+    protected String[] parseAddress(String userAddress) {
+        String[] result;
+        try {
+            //result = AreaUtils.parseAddress(userAddress.replace(" ", ""));  //mark on 2020-8-5
+            result = AreaUtils.parseAddressFromMS(userAddress.replace(" ", ""));    //add on 2020-8-5
+        } catch (Exception e) {
+            throw new AddressParseFailureException("工单地址解析失败");
+        }
+        if (result == null || result.length == 0) {
+            throw new AddressParseFailureException("工单地址解析失败");
+        }
+        if (result.length > 2 && result[2].length() > B2BOrderConvertVModel.ADDRESS_MAX_LENGTH) {
+            throw new AddressParseFailureException("详细地址长度超过数据库设定:" + String.valueOf(B2BOrderConvertVModel.ADDRESS_MAX_LENGTH));
+        }
+        return result;
+    }
+
+    /**
+     * 解析地址
+     */
+    protected String[] parseAddressNew(String userAddress) {
+        String[] result;
+        try {
+            // result = AreaUtils.parseAddress(userAddress.replace(" ", ""));
+            //result = AreaUtils.decodeAddressGaode(userAddress.replace(" ", ""));  //mark on 2020-8-5
+            result = AreaUtils.decodeAddressGaodeFromMS(userAddress.replace(" ", ""));  //add on 2020-8-5
+        } catch (Exception e) {
+            throw new AddressParseFailureException("工单地址解析失败");
+        }
+        if (result == null || result.length == 0) {
+            throw new AddressParseFailureException("工单地址解析失败");
+        }
+        if (result.length > 3 && result[3].length() > B2BOrderConvertVModel.ADDRESS_MAX_LENGTH) {
+            throw new AddressParseFailureException("详细地址长度超过数据库设定:" + String.valueOf(B2BOrderConvertVModel.ADDRESS_MAX_LENGTH));
+        }
+        return result;
+    }
+
+
+    /**
+     * 检查B2B工单是否已经被转换
+     */
+    protected void validateB2BOrderIsExists(String b2bOrderNo, int dataSourceId) {
+        if (StringUtils.isNotBlank(b2bOrderNo) && B2BDataSourceEnum.isB2BDataSource(dataSourceId)) {
+            Order order = getOrderInfo(dataSourceId, b2bOrderNo, null);
+            if (order != null && StringUtils.isNotBlank(order.getOrderNo())) {
+                throw new B2BOrderExistsException("工单已被转换", order.getId(), order.getOrderNo(), dataSourceId, b2bOrderNo);
+            }
+        }
+    }
+
+    /**
+     * 检查客户余额
+     */
+    protected void validateCustomerBalance(B2BOrderVModel orderVModel, double totalCharge, double blockedCharge) {
+        CustomerFinance finance = orderVModel.getCustomer().getFinance();
+        if (finance.getBalance() + (finance.getCreditFlag() == 1 ? finance.getCredit() : 0) - finance.getBlockAmount() - totalCharge - blockedCharge < 0) {
+            throw new B2BOrderInsufficientBalanceException(orderVModel.getCustomer().getName() + " : 账户余额不足");
+        }
+    }
+
+    /**
+     * 获取随机客服
+     */
+    protected User getRandomKefu(Long customerId, Long areaId,Long productCategoryId,int canRushFlag,Long cityId,Long provinceId) {
+        User kefu = orderService.getRandomKefu(customerId, areaId,productCategoryId,canRushFlag,cityId,provinceId);
+        if (kefu == null) {
+            throw new B2BOrderTranserFailureException("此区域暂未分配跟进客服，暂时无法下单。请联系管理员：18772732342，QQ:572202493");
+        }
+        return kefu;
+    }
+
+    /**
+     * 生成快可立单号
+     */
+    protected String generateOrderNo() {
+        String orderNo = "";
+        try {
+            orderNo = orderService.getNewOrderNo();
+            if (StringUtils.isBlank(orderNo)) {
+                orderNo = orderService.getNewOrderNo();
+            }
+        } catch (Exception e) {
+            throw new B2BOrderTranserFailureException("生成订单号失败，请重试");
+        }
+        if (StringUtils.isBlank(orderNo)) {
+            throw new B2BOrderTranserFailureException("生成订单号失败，请重试");
+        }
+        return orderNo;
+    }
+
+    /**
+     * 获取工单状态
+     */
+    protected Dict getOrderStatus(User user) {
+        Dict status;
+        if (user.isSystemUser()) {
+            status = MSDictUtils.getDictByValue(String.valueOf(Order.ORDER_STATUS_APPROVED), "order_status");
+        } else if (user.isCustomer() && user.getCustomerAccountProfile().getOrderApproveFlag() == 0) {
+            status = MSDictUtils.getDictByValue(String.valueOf(Order.ORDER_STATUS_APPROVED), "order_status");
+        } else {
+            status = MSDictUtils.getDictByValue(String.valueOf(Order.ORDER_STATUS_NEW), "order_status");
+        }
+        return status;
+    }
+
+
+}

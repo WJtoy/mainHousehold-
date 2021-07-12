@@ -1,0 +1,686 @@
+
+$(document).ready(function () {
+    try {
+        $("a").bind("focus", function () {
+            if (this.blur) {
+                this.blur()
+            }
+        });
+        $("select").select2()
+    } catch (a) {
+    }
+    /**
+     * 设置未来(全局)的AJAX请求默认选项
+     * 主要设置了AJAX请求遇到Session过期的情况
+    $.ajaxSetup({
+        complete:function(xhr,status) {
+            if(xhr.status == 401 || xhr.status == 302) {
+                var top = getTopWinow();
+                top.location.href = '/login';
+                return false;
+            }
+        }
+    });
+    */
+});
+function include(c, m, e) {
+    if (document.getElementById(c) == null) {
+        var a = typeof e == "string" ? [e] : e;
+        for (var f = 0; f < a.length; f++) {
+            var b = a[f].replace(/^\s|\s$/g, "");
+            var h = b.split(".");
+            var d = h[h.length - 1].toLowerCase();
+            var k = d == "css";
+            var l = k ? "link" : "script";
+            var g = k ? " type='text/css' rel='stylesheet' " : " type='text/javascript' ";
+            var j = (k ? "href" : "src") + "='" + m + b + "'";
+            document.write("<" + l + (f == 0 ? " id=" + c : "") + g + j + "></" + l + ">")
+        }
+    }
+}
+function getQueryString(b, a) {
+    var c = new RegExp("(^|&)" + b + "=([^&]*)(&|$)", "i");
+    if (a == "") {
+        a = window.location.search
+    } else {
+        a = a.substring(a.indexOf("?"))
+    }
+    r = a.substr(1).match(c);
+    if (r != null) {
+        return unescape(r[2])
+    }
+    return null
+}
+function getDictLabel(d, c, a) {
+    for (var b = 0; b < d.length; b++) {
+        var e = d[b];
+        if (e.value == c) {
+            return e.label
+        }
+    }
+    return a
+}
+function windowOpen(d, c, e, a) {
+    var g = parseInt((window.screen.height - a) / 2, 10), f = parseInt((window.screen.width - e) / 2, 10), b = "location=no,menubar=no,toolbar=no,dependent=yes,minimizable=no,modal=yes,alwaysRaised=yes,resizable=yes,scrollbars=yes,width=" + e + ",height=" + a + ",top=" + g + ",left=" + f;
+    window.open(d, c, b)
+}
+function resetTip() {
+    top.$.jBox.tip.mess = null
+}
+function closeTip() {
+    top.$.jBox.closeTip()
+}
+function showTip(d, b, c, a) {
+    resetTip();
+    setTimeout(function () {
+        top.$.jBox.tip(d, (b == undefined || b == "" ? "info" : b), {opacity: 0, timeout: c == undefined ? 2000 : c})
+    }, a == undefined ? 500 : a)
+}
+function loading(a) {
+    if (a == undefined || a == "") {
+        a = "正在提交，请稍等..."
+    }
+    resetTip();
+    top.$.jBox.tip(a, "loading", {opacity: 0})
+}
+function alertx(b, a) {
+    top.$.jBox.info(b, "提示", {
+        closed: function () {
+            if (typeof a == "function") {
+                a()
+            }
+        }
+    });
+    top.$(".jbox-body .jbox-icon").css("top", "55px")
+}
+function confirmx(c, b, a) {
+    top.$.jBox.confirm(c, "系统提示", function (d, e, g) {
+        if (d == "ok") {
+            if (typeof b == "function") {
+                b()
+            } else {
+                resetTip();
+                location = b
+            }
+        }
+    }, {
+        buttonsFocus: 1, closed: function () {
+            if (typeof a == "function") {
+                a()
+            }
+        }
+    });
+    top.$(".jbox-body .jbox-icon").css("top", "55px");
+    return false
+}
+function promptx(d, c, b, a) {
+    top.$.jBox("<div class='form-search' style='padding:20px;text-align:center;'>" + c + "：<input type='text' id='txt' name='txt'/></div>", {
+        title: d,
+        submit: function (e, g, i) {
+            if (i.txt == "") {
+                top.$.jBox.tip("请输入" + c + "。", "error");
+                return false
+            }
+            if (typeof b == "function") {
+                b()
+            } else {
+                resetTip();
+                location = b + encodeURIComponent(i.txt)
+            }
+        },
+        closed: function () {
+            if (typeof a == "function") {
+                a()
+            }
+        }
+    });
+    return false
+}
+function addTabPage(e, a, d, c, b) {
+    top.$.fn.jerichoTab.addTab({
+        tabFirer: c,
+        title: e,
+        closeable: d == undefined,
+        data: {dataType: "iframe", dataLink: a}
+    }).loadData(b != undefined)
+}
+
+/*获得当前tab的frame*/
+function getActiveTabIframe() {
+    var tabmode = cookie("tabmode",undefined,undefined);
+    if(tabmode==null || (tabmode !=null && tabmode=='0')){
+        if(top && top.mainFrame){
+            return top.mainFrame;
+        }else{
+            return undefined;
+        }
+    }else {
+        var tabid = null;
+        if (top != null && top.$ && Utils.isObject(top.$)) {
+            tabid = top.$.fn.jerichoTab.tabpage.find(".tab_selected").attr("id");//jerichotab_3
+        } else {
+            tabid = $.fn.jerichoTab.tabpage.find(".tab_selected").attr("id");//jerichotab_3
+        }
+        /*
+         var tabid = top.$.fn.jerichoTab.tabpage.find(".tab_selected").attr("id");//jerichotab_3
+         */
+        if (tabid == undefined || tabid == null) {
+            return undefined;
+        }
+        var ipos = tabid.indexOf("_");
+        var iframdid = tabid.substring(0, ipos) + "iframe" + tabid.substring(ipos);//jerichotabiframe_3
+        return parent.window.frames[iframdid];
+    }
+}
+
+function cookie(b, j, m) {
+    if (typeof j != "undefined") {
+        m = m || {};
+        if (j === null) {
+            j = "";
+            m.expires = -1
+        }
+        var e = "";
+        if (m.expires && (typeof m.expires == "number" || m.expires.toUTCString)) {
+            var f;
+            if (typeof m.expires == "number") {
+                f = new Date();
+                f.setTime(f.getTime() + (m.expires * 24 * 60 * 60 * 1000))
+            } else {
+                f = m.expires
+            }
+            e = "; expires=" + f.toUTCString()
+        }
+        var l = m.path ? "; path=" + m.path : "";
+        var g = m.domain ? "; domain=" + m.domain : "";
+        var a = m.secure ? "; secure" : "";
+        document.cookie = [b, "=", encodeURIComponent(j), e, l, g, a].join("")
+    } else {
+        var d = null;
+        if (document.cookie && document.cookie != "") {
+            var k = document.cookie.split(";");
+            for (var h = 0; h < k.length; h++) {
+                var c = Utils.trim(k[h]);
+                if (c.substring(0, b.length + 1) == (b + "=")) {
+                    d = decodeURIComponent(c.substring(b.length + 1));
+                    break
+                }
+            }
+        }
+        return d
+    }
+}
+function pad(b, c) {
+    var a = b.toString().length;
+    while (a < c) {
+        b = "0" + b;
+        a++
+    }
+    return b
+}
+function strToDate(a) {
+    return new Date(a.replace(/-/g, "/"))
+}
+function addDate(a, b) {
+    a = a.valueOf();
+    a = a + b * 24 * 60 * 60 * 1000;
+    return new Date(a)
+};
+// 关闭提示框
+function closeLoading() {
+    // 恢复提示框显示
+    resetTip();
+    // 关闭提示框
+    closeTip();
+}
+
+ function getWindowSize() {
+    return ["Height", "Width"].map(function (a) {
+        return window["inner" + a] || document.compatMode === "CSS1Compat" && document.documentElement["client" + a] || document.body["client" + a]
+    })
+};
+
+// 判断ajax访问是否登录超时
+function isLogout(html,status){
+    if(status == 302){
+        return true;
+    }
+    if (typeof html == "string"){
+        if(html.indexOf('loginForm')>-1){
+            return true;
+        }else{return false;}
+    }
+    return false;
+}
+
+// ajax访问判断登录超时，自动跳转登录页面
+function ajaxLogout(data,status,message) {
+    if(isLogout(data,status)==true){
+        var mylayer = layer;
+        if (top.layer) {
+            mylayer = top.layer;
+        }
+        mylayer.alert("您的帐号登录已超时!<br/>点击[确认]按钮后，自动跳转到登录页面。", {
+            icon: 2
+            ,title: "出错了!"
+            ,closeBtn:0
+        }, function(index){
+            var topWindow = getTopWinow();
+            topWindow.location.href = '/login';
+            return true;
+            //window.top.location.reload();//登录
+            //top.layer.close(index);
+        });
+        return true;
+    }else{
+        if(message) {
+            layerError(message, "出错了!",true);
+            return true;
+        }else{
+            return false;
+        }
+    }
+}
+
+
+/**
+ * 在页面中任何嵌套层次的窗口中获取顶层窗口
+ * @return 当前页面的顶层窗口对象
+ */
+function getTopWinow(){
+    var p = window;
+    while(p != p.parent){
+        p = p.parent;
+    }
+    return p;
+}
+
+function setGlobalVar(key,value,type) {
+    var str = "";
+    if (type && type == "json") {
+        str = JSON.stringify(value);
+    } else {
+        //string
+        str = value;
+    }
+    setCookie(key,str,7,"/");
+    // $.cookie(key, str,{ expires: 7, path: '/' });//jquery.cookie
+    //top.window[key] = value;
+}
+
+function getGlobalVar(key,type){
+    //var v = $.cookie(key);//jquery.cookie
+    var v = getCookie(key);
+    if(type && type=="json"){
+        var o = JSON.parse(v);
+        return o;
+    }else{
+        return v;
+    }
+    /*
+    if(top.window[key]) {
+       return top.window[key];
+    }
+    else{
+        return null;
+    }*/
+}
+
+function delGloabalVar(key) {
+    delCookie(key);
+    // $.removeCookie(key);
+    /*
+    if($.cookie(key)) {
+        $.cookie(key) = null;
+    }*/
+    /*
+    if(top.window[key]) {
+        delete top.window[key];
+    }*/
+}
+
+/*信息提示，无标题*/
+function layerMsg(contnt,fromme){
+    var mylayer = layer;
+    if((fromme==undefined || fromme == null || !fromme) && top.layer) {
+        mylayer = top.layer;
+    }
+    mylayer.msg(contnt,{zIndex:29891014});
+}
+
+function layerError(content,tile,fromme) {
+    var mylayer = layer;
+    if ( (fromme==undefined || fromme == null || !fromme) && top.layer) {
+        mylayer = top.layer;
+    }
+    mylayer.alert(content, {zIndex:29891014,icon: 2, title: tile});
+}
+
+function layerError2(content,tile,fnClose,frome) {
+    var mylayer = layer;
+    if ( (fromme==undefined || fromme == null || !fromme) && top.layer) {
+        mylayer = top.layer;
+    }
+    mylayer.alert(content, {
+        zIndex:29891014,
+        icon: 2
+        ,title: tile
+        ,closeBtn:0
+    }, function(index){
+        fnClose();
+    });
+}
+
+function layerAlert(content,tile,fromme){
+    var mylayer = layer;
+    if( (fromme==undefined || fromme == null || !fromme) && top.layer){
+        mylayer = top.layer;
+    }
+    mylayer.alert(content, {zIndex:29891014,icon: 0, title: tile});
+}
+
+function layerInfo(content,tile,fromme){
+    var mylayer = layer;
+    if( (fromme==undefined || fromme == null || !fromme) && top.layer){
+        mylayer = top.layer;
+    }
+    mylayer.alert(content, {zIndex:29891014,icon: 1, title: tile});
+}
+
+function layerWindow(id,url,title,width,height,fromme) {
+    var mylayer = layer;
+    if( (fromme==undefined || fromme == null || !fromme) && top.layer){
+        mylayer = top.layer;
+    }
+    var index = mylayer.open({
+        type: 2,
+        id:id,
+        zIndex:19891015,
+        title:title,
+        content: url,
+        area: [width+'px', height+'px'],
+        shade: 0.3,
+        maxmin: false,
+        success: function(layero,index){
+        },
+        end:function(){
+
+        }
+    });
+    return index;
+}
+
+function layerLoading(msg,fromme){
+    msg = msg || '正在提交，请稍等...';
+    var mylayer = layer;
+    if( (fromme==undefined || fromme == null || !fromme) && top.layer){
+        mylayer = top.layer;
+    }
+    var loadingIndex = mylayer.msg(msg, {
+        zIndex:29891015,
+        icon: 16,
+        time: 0,
+        shade: 0.3
+    });
+    return loadingIndex;
+}
+
+function layerConfirmx(content, url,fromme) {
+    var mylayer = layer;
+    if( (fromme==undefined || fromme == null || !fromme) && top.layer){
+        mylayer = top.layer;
+    }
+    mylayer.confirm(content, {zIndex:29891014,icon: 3, title:'系统确认'}, function(index){
+        //do something
+        mylayer.close(index);
+        location = url;
+    });
+    return false
+}
+
+/*获得index所在的window*/
+function getWindow(){
+    var obj=window.self;
+    while(true)
+    {
+        if(obj.document.getElementById("myFlag"))
+        {
+            return obj;
+        }
+        obj=obj.window.parent;
+    }
+}
+
+/*读取WebSocket提醒*/
+function loadNotices(ctx,removeid){
+    var top = getWindow();
+    if(removeid){
+        $("li[data-referid='" + removeid + "']",top.document).remove();
+        //$("#"+removeid,top.document).remove();
+    }
+    var requrl = ctx + "/ws/mynotices";
+    var syncDate = $("#msg_syncDate",top.document).val();
+    if(syncDate != "") {
+        requrl = requrl + "?syncDate=" + syncDate;
+    }
+    $("#msg_syncDate",top.document).val(new Date().getTime());
+    $.ajax({
+        cache: false,
+        type: "GET",
+        url: requrl,
+        data: null,
+        success: function (data) {
+            if (data.success) {
+                // message list add
+                var tplId = "tpl-msg-list";
+                var tmpl = top.document.getElementById(tplId).innerHTML;
+                var doTtmpl = doT.template(tmpl);
+                var html = doTtmpl(data.data);
+                $(".msg_ul",top.document).append(html);
+                $("#msgbox_number",top.document).html($(".msg_ul a",top.document).length);
+                //$("#msgbox_number").html(data.data.length);
+            }
+        },
+        error: function (e) {
+            layerInfo('读取提醒错误','错误提示');
+        }
+    });
+}
+
+/*定时读取提醒*/
+function loadMyMessages(ctx,timeout){
+    var top = getWindow();
+    if(timeout && timeout>0){
+        setTimeout(function() {
+            loadMyMessages(ctx,timeout);
+        }, timeout);
+    }
+    var requrl = ctx + "/sd/message/mymessages?_" + new Date().getTime();
+    $.ajax({
+        cache: false,
+        type: "GET",
+        url: requrl,
+        data: null,
+        success: function (data) {
+            if (data.success) {
+                // message list add
+                var tplId = "tpl-msg-list";
+                var tmpl = top.document.getElementById(tplId).innerHTML;
+                var doTtmpl = doT.template(tmpl);
+                var html = doTtmpl(data.data.items);
+                $(".quick-chat-list",top.document).empty();
+                $(".quick-chat-list",top.document).append(html);
+                $("#msgbox_number",top.document).html(data.data.total);
+            }else{
+                layerMsg(data.message)
+            }
+        },
+        error: function (e) {
+            //layerMsg('读取提醒错误');
+        }
+    });
+}
+//标记已读，已处理
+function markedMessages(noticeType){
+    var json = {noticeType:noticeType};
+    var requrl = ctx + "/sd/message/marked?_" + new Date().getTime();
+    $.ajax({
+        cache: false,
+        type: "POST",
+        url: requrl,
+        data: json,
+        success: function (data) {
+            if (data.success) {
+                if(noticeType==1){
+                    $("#msgbox_number",top.document).html("0");
+                }
+                $("#" + noticeType,top.document).html("0");
+            }else{
+                layerMsg(data.message)
+            }
+        },
+        error: function (e) {
+            layerMsg('处理错误');
+        }
+    });
+}
+
+//生成从minNum到maxNum的随机数
+function randomNum(minNum,maxNum){
+    switch(arguments.length){
+        case 1:
+            return parseInt(Math.random()*minNum+1,10);
+            break;
+        case 2:
+            return parseInt(Math.random()*(maxNum-minNum+1)+minNum,10);
+            break;
+        default:
+            return 0;
+            break;
+    }
+}
+//显示器分辨率大小(width,height)
+function getScreenWidthAndHeight(){
+    var scrn = {};
+    scrn.width = screen.availWidth;
+    scrn.height = screen.availHeight;
+    return scrn;
+}
+
+function getHtmlWidthAndHeight() {
+    var scrn = {};
+    scrn.width = screen.availWidth;
+    scrn.height = screen.availHeight;
+    if(top.mainFrame){
+        if(top.mainFrame.innerWidth){
+            scrn.width = top.mainFrame.innerWidth;
+            scrn.height = top.mainFrame.innerHeight+100;
+        }else{
+            scrn.width = top.mainFrame.document.documentElement.clientWidth;
+            scrn.height = top.mainFrame.document.documentElement.clientHeight+100;
+        }
+
+        if($("#left").is(":visible")) {
+            scrn.width = scrn.width + 168;
+        }
+    }else{
+        scrn.width = scrn.width - 60;
+        scrn.height = scrn.height -100;//footer:40
+    }
+    return scrn;
+}
+
+function getOpenDialogWidthAndHeight(){
+    var width = 1280;
+    var height = 800;
+    var scrn = getHtmlWidthAndHeight();
+    // if(scrn.width <=1004 ){
+    //     width = scrn.width - 60;
+    // }
+    //alert(scrn.height);
+    width = scrn.width;
+    height = scrn.height-40;
+    /*
+    if(scrn.height <=668){
+        height = scrn-40;
+    }*/
+    var rtn = {};
+    rtn.width = width;
+    rtn.height = height;
+    return rtn;
+}
+
+/**
+ * 对数组分组
+ * 返回：
+ * [
+ *  {"group":"name","key":key,"data":[{...}]}
+ * ]
+ * 使用：
+ * const sorted = groupBy(list, function (item) {
+ *   return item.name;
+ * },function (item){
+ *    return item.id;
+ * });
+ */
+function groupBy(array, fgroup,fkey) {
+    // debugger;
+    const groups = {};
+    array.forEach(function (o) {
+        const group = fgroup(o);
+        groups[group] = groups[group] || [];
+        groups[group].push(o);
+    });
+    const grpList = [];
+    Object.keys(groups).map(function (group) {
+        grpList.push({"group":group,"key":fkey(groups[group][0]),"data":groups[group]})
+    });
+    return grpList;
+}
+
+/**
+ * 数组转类似HashMap
+ * 返回：
+ * {
+ *  key1:value1,
+ *  key2:value2
+ * ]
+ * 使用：
+ * const map = arrayToMap(list, function (item) {
+ *   return item.id;
+ * });
+ * map[key] 返回array中单个对象
+ */
+function arrayToMap(array,f){
+    var map = {};
+    array.forEach(function (o) {
+        const key = f(o);
+        map[key] = o;
+    });
+    return map;
+}
+
+/**
+ * 数组转类似HashMap
+ * 返回：
+ * {
+ *  id:id,
+ *  name:name,
+ *  items:[],
+ * ]
+ * 使用：
+ * const map = arrayToMap2(list, function (item) {
+ *   return item.id;
+ * },function (item){
+ *     return item.items
+ * });
+ * map[key] 返回array中的对象通过fItem函数处理后的对象，可以是数组
+ */
+function arrayToMap2(array,fKey,fItem){
+    var map = {};
+    array.forEach(function (o) {
+        const key = fKey(o);
+        map[key] = fItem(o);
+    });
+    return map;
+}

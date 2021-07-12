@@ -1,0 +1,30 @@
+package com.wolfking.jeesite.modules.mq.service;
+
+
+import com.kkl.kklplus.entity.rpt.mq.MQRPTOrderProcessMessage;
+import com.kkl.kklplus.entity.rpt.mq.MQRPTUpdateOrderComplainMessage;
+import com.wolfking.jeesite.modules.mq.entity.RPTOrderComplainModel;
+import com.wolfking.jeesite.modules.mq.entity.RPTOrderProcessModel;
+import com.wolfking.jeesite.modules.mq.sender.RPTOrderComplainSender;
+import com.wolfking.jeesite.modules.mq.sender.RPTOrderProcessSender;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+
+@Service
+public class RPTOrderComplainService {
+
+    @Autowired
+    private RPTOrderComplainSender orderComplainSender;
+
+    public void sendRPTOrderComplain(RPTOrderComplainModel orderComplainModel){
+        MQRPTUpdateOrderComplainMessage.MQOrderComplainMessage msg = null;
+        msg = MQRPTUpdateOrderComplainMessage.MQOrderComplainMessage.newBuilder()
+                .setId(orderComplainModel.getId())
+                .setQuarter(Optional.ofNullable(orderComplainModel.getQuarter()).orElse(""))
+                .build();
+        orderComplainSender.send(msg);
+    }
+}

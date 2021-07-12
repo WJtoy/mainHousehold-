@@ -1,0 +1,120 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <%@ include file="/WEB-INF/views/include/head.jsp" %>
+    <title>配件</title>
+    <meta name="decorator" content="default" />
+    <%@ include file="/WEB-INF/views/include/pageSearch.jsp" %>
+    <script type="text/javascript">
+        function editMaterial(type,id) {
+            var text = "添加配件";
+            var url = "${ctx}/md/material/form";
+            if(type == 2){
+                text = "修改配件"
+                url = "${ctx}/md/material/form?id=" + id;
+            }
+            top.layer.open({
+                type: 2,
+                id:"material",
+                zIndex:19891015,
+                title:text,
+                content: url,
+                area: ['700px', '450px'],
+                shade: 0.3,
+                maxmin: false,
+                success: function(layero,index){
+                },
+                end:function(){
+                }
+            });
+        }
+    </script>
+    <%--<style type="text/css">
+        th {text-align: center !important;}
+        td {text-align: center !important;}
+    </style>--%>
+</head>
+
+<body>
+<ul class="nav nav-tabs">
+    <li class="active"><a href="javascript:void(0);">&nbsp;&nbsp;&nbsp;&nbsp;配件&nbsp;&nbsp;&nbsp;&nbsp;</a></li>
+    <li><a href="${ctx}/md/materialCategory/list">配件分类</a></li>
+    <li><a href="${ctx}/md/material/requirement">照片要求</a></li>
+</ul>
+<form:form id="searchForm" modelAttribute="material" action="${ctx}/md/material/list" method="post" class="breadcrumb form-search">
+    <input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}" />
+    <input id="pageSize" name="pageSize" type="hidden"
+           value="${page.pageSize}" />
+    <label>配件分类：</label>
+    <form:select path="materialCategory.id" cssStyle="width: 200px;">
+        <form:option value="" label="所有"></form:option>
+        <form:options items="${materialCategoryList}" itemLabel="name" itemValue="id"></form:options>
+    </form:select>
+    &nbsp;
+    <label>配&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;件：</label>
+    <form:input path="name" htmlEscape="false" maxlength="30" value="${name}" class="input-small" />
+    &nbsp;<input id="btnSubmit" class="btn btn-primary" type="submit" onclick="top.$.jBox.tip('正在查询,请稍候...', 'loading');return setPage();" value="查询" />
+</form:form>
+<shiro:hasPermission name="md:material:edit">
+    <button style="margin-top: 15px;margin-bottom: 15px;border-radius: 4px;border:1px solid;border-color:#C0C0C0;background-color: rgb(238,238,238);width: 100px;height: 30px" onclick="editMaterial(1,null)"><i class="icon-plus-sign"></i>&nbsp;添加配件</button>
+</shiro:hasPermission>
+<sys:message content="${message}" />
+<table id="treeTable"
+       class="table table-bordered table-hover table-hover">
+    <thead>
+    <tr>
+        <th width="40px">序号</th>
+        <th width="150px">配件分类</th>
+        <th width="200px">配件</th>
+        <th>参考价格</th>
+        <th width="60px">是否返件</th>
+        <th>描述</th>
+        <shiro:hasPermission name="md:material:edit">
+            <th width="80px">操作</th>
+        </shiro:hasPermission>
+    </tr>
+    </thead>
+    <tbody>
+    <c:set var="index" value="0"></c:set>
+    <c:forEach items="${page.list}" var="material">
+        <tr>
+            <c:set var="index" value="${index+1}"></c:set>
+            <td>${index+(page.pageNo-1)*page.pageSize}</td>
+            <td>${material.materialCategory.name}</td>
+            <td>${material.name}</td>
+            <td><fmt:formatNumber value="${material.price}" pattern="0.00"></fmt:formatNumber></td>
+            <c:choose>
+                <c:when test="${material.isReturn==0}">
+                    <td><font color="red">否</font></td>
+                </c:when>
+                <c:when test="${material.isReturn==1}">
+                    <td><font color="#2fa4e7">是</font></td>
+                </c:when>
+                <c:otherwise>
+                    <td>未知</td>
+                </c:otherwise>
+            </c:choose>
+            <td>${material.remarks}</td>
+            <shiro:hasPermission name="md:material:edit">
+                <td>
+<%--                    <a href="${ctx}/md/material/form?id=${material.id}&materialCategory.name=${fns:urlEncode(material.materialCategory.name)}">修改</a>--%>
+                    <a href="javascript:void(0)" onclick="editMaterial(2,${material.id})">修改</a>
+                    <a href="${ctx}/md/material/delete?id=${material.id}"
+                       onclick="return confirmx('确认要删除该配件吗？', this.href)">删除</a>
+                </td>
+            </shiro:hasPermission>
+        </tr>
+    </c:forEach>
+    </tbody>
+</table>
+<div class="pagination">${page}</div>
+<script>
+    $("th").css({"text-align":"center","vertical-align":"middle"});
+    $("td").css({"text-align":"center","vertical-align":"middle"});
+    $("td").css({"vertical-align":"middle"});
+</script>
+</body>
+</html>

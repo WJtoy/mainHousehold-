@@ -1,0 +1,901 @@
+package com.wolfking.jeesite.modules.md.dao;
+
+import com.wolfking.jeesite.common.persistence.LongIDCrudDao;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.modules.fi.entity.ServicePointPayCondition;
+import com.wolfking.jeesite.modules.fi.entity.ServicePointPayableMonthly;
+import com.wolfking.jeesite.modules.fi.entity.ServicePointPayableMonthlyDetail;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.md.entity.ServicePointFinance;
+import com.wolfking.jeesite.modules.md.entity.ServicePrice;
+import com.wolfking.jeesite.modules.sd.entity.LongTwoTuple;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import org.apache.ibatis.annotations.MapKey;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 客户数据访问接口
+ * Created on 2017-04-12.
+ */
+@Mapper
+public interface ServicePointDao extends LongIDCrudDao<ServicePoint> {
+
+    //region 网点
+
+    /**
+     * 新增FI
+     */
+    int insertFI(ServicePointFinance fi);
+
+    /**
+     * 修改FI
+     */
+    int updateFI(ServicePointFinance fi);
+
+    /**
+     * 按需更新
+     * 如传递订单相关数量（派单数，违约数，完成数），则只做增减
+     * 客评：去平均值，四舍五入
+     */
+    //void updateServicePointByMap(HashMap<String,Object> maps);  //mark on 2020-1-15  md_servicepoint
+
+    /** 移到 updateServicePointByMap
+     * 更新订单相关数量（派单数，违约数，完成数）
+     * 增或减
+     void incrOrderQty(HashMap<String,Object> maps);
+     */
+
+    /**
+     * 逻辑删除网点
+     * 同时删除关联区域,逻辑删除安维人员,禁止app及web登录
+     * @param servicePoint
+     */
+    void logiceDelete(ServicePoint servicePoint);
+
+    /**
+     * 移除网点下所有区域
+     * @param id 网点id
+     */
+    //void removeAreas(Long id);  //mark on 2020-1-18 web端去md_servicepoint_area
+
+    /**
+     * 添加网点负责的区域
+     * @param id 网点id
+     * @Param areas 区域id列表
+     */
+    //void assignAreas(@Param("id") Long id,@Param("areas") List<Long> areas);  //mark on 2020-1-18 web端去md_servicepoint_area
+
+    /**
+     * 读取网点负责的区域ID列表
+     * @param id 网点id
+     * @return
+     */
+    //List<Integer> getAreaIds(Long id);  //mark on 2020-1-18 web端去md_servicepoint_area
+
+    /**
+     * 读取网点负责的区域列表
+     * @param id 网点id
+     * @return
+     */
+    //List<Area> getAreas(Long id);  //mark on 2020-1-18 web端去md_servicepoint_area
+
+    /**
+     * 读取网点负责的产品id列表
+     * @param id 网点id
+     * @return
+     */
+    //List<Integer> getProductIds(Long id);  //mark on 2020-1-20 web端md_servicepoint_product
+
+    /**
+     * 读取网点负责的产品列表
+     * @param id 网点id
+     * @return
+     */
+    //List<Product> getProducts(Long id);  //mark on 2020-1-20 web端md_servicepoint_product
+
+    /**
+     * 读取网点负责的产品ID列表
+     * @param id 网点id
+     * @return
+     */
+    //List<Long> getProductIdsById(Long id);   //mark on 2020-1-20 web端md_servicepoint_product
+
+    /**
+     * 读取网点产品列表
+     * @param servicePrice 网点价格
+     * @return
+     */
+    //List<ServicePointProduct> getServicePointProductsByIds(ServicePrice servicePrice);  //mark on 2020-1-20 web端md_servicepoint_product
+
+    /**
+     * 移除网点下所有产品
+     * @param id 网点id
+     */
+    //void removeProducts(Long id);  //mark on 2020-1-20 web端md_servicepoint_product
+
+    /**
+     * 添加网点负责的产品
+     * @param id    网点id
+     * @param products 产品id列表
+     */
+    //void assignProducts(@Param("id") Long id,@Param("products") List<Long> products);  //mark on 2020-1-20 web端md_servicepoint_product
+
+    /**
+     * 返回网点id列表,用于分页
+     * @param servicePoint
+     * @return
+     */
+    List<Long> findIdList(ServicePoint servicePoint);
+
+    /**
+     * 分页获取可派单的网点列表(以完成单数量倒序排序)
+     */
+    // TODO: 此方法已没有地方调用,将废弃 2019-12-30
+    List<Long> findServicePointIdsForPlan(ServicePoint servicePoint);
+
+    /**
+     * 按区县/街道/品类 分页查询可派单列表
+     */
+    List<Long> findServicePointIdsForPlanNew(ServicePoint servicePoint);
+
+    /**
+     * 按id列表查询
+     * @param ids
+     * @return
+     */
+    List<ServicePoint> findListByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 查询待审核数据列表，如果需要分页，请设置分页对象，如：entity.setPage(new Page<T>());
+     * @return
+     */
+    List<ServicePoint> findApproveList(ServicePoint servicePoint);
+
+    //void approve(@Param("ids") List<Long> ids,@Param("updateBy") Long updateBy);  //mark on 2020-2-12
+
+    Integer findServicePointNo(@Param("exceptId") Long exceptId,@Param("no") String no);
+
+    Integer findServicePointIdByContact(@Param("exceptId") Long exceptId,@Param("contact") String contact);
+
+    /**
+     * 按银行卡号获得网点id
+     * @param exceptId 排除的id
+     * @param bankNo
+     * @return
+     */
+    Integer findServicePointIdByBankNo(@Param("exceptId") Long exceptId,@Param("bankNo") String bankNo);
+
+    /**
+     * 更新网点主帐号信息
+     */
+    //void updatePrimaryAccount(ServicePoint servicePoint);  //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 获取网点下其余帐号
+     * @param servicePoint
+     * @return
+     */
+    //List<Long> getSubEngineerIds(ServicePoint servicePoint);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 将网点下其余帐号更改为子帐号
+     * primary为新的主帐号id
+     * @param engineerIds
+     */
+    //void resetEngineerMasterFlag(List<Long> engineerIds);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 将网点下其余帐号对应的用户信息改为子帐号
+     * @param engineerIds
+     */
+    void resetUserEngineerSubFlag(List<Long> engineerIds);
+
+    List<ServicePointFinance> findAllFinanceList(@Param("page") Page<ServicePointFinance> page);
+
+    /**
+     * 获取服务网点帐务信息
+     * @param id
+     * @return
+     */
+    ServicePointFinance getFinance(@Param("id") Long id);
+
+
+    /**
+     * 批量获取网点账务信息  // add on 2019-11-9
+     * @param ids
+     * @return
+     */
+    List<ServicePointFinance> findFinanceListByIds(@Param("ids") List<Long> ids);
+    /**
+     * 获取服务网点帐务信息
+     * @param id
+     * @return
+     */
+    ServicePointFinance getFinanceNew(@Param("id") Long id);
+
+    /**
+     * 获取网点账务的扣点数据
+     * @param id
+     * @return
+     */
+    ServicePointFinance getFinanceForDiscount(@Param("id") Long id);
+
+    /**
+     * 从主库中获取获取服务网点帐务信息
+     * @param id
+     * @return
+     */
+    ServicePointFinance getFinanceFromMaster(@Param("id") Long id);
+
+
+    /**
+     * 获取服务网点帐务信息 -- api获取网点余额信息
+     * @param id
+     * @return
+     */
+    ServicePointFinance getFinanceForRestBalance(@Param("id") Long id);
+
+    /**
+     * 获取网点所有金额
+     * @param id
+     * @return
+     */
+    ServicePointFinance getAmounts(@Param("id") Long id);
+
+    /**
+     * 获取网点当前余额
+     * @param servicePointId
+     * @return
+     */
+    ServicePointFinance getBalanceById(@Param("servicePointId") Long servicePointId);
+
+    /**
+     * 批量获取网点金额与扣点标识
+     * @param servicePointIds
+     * @return
+     */
+    @MapKey("id")
+    Map<Long, ServicePointFinance> getBalanceAndDiscount(@Param("servicePointIds") List<Long> servicePointIds);
+
+    /**
+     * 获取网点金额与扣点标识
+     * @param servicePointId
+     * @return
+     */
+    ServicePointFinance getBalanceAndDiscountById(@Param("servicePointId") Long servicePointId);
+
+    /**
+     * 获取网点扣点标识
+     * @param servicePointId
+     * @return
+     */
+    ServicePointFinance getDiscountFlagById(@Param("servicePointId") Long servicePointId);
+
+    /**
+     * 更新网点可提现余额
+     * @param servicePointFinance
+     */
+    void updateBalance(ServicePointFinance servicePointFinance);
+
+    /**
+     * 更新网点付款失败原因
+     * @param servicePointFinance
+     */
+    //void updateBankIssue(ServicePointFinance servicePointFinance); //mark on 2020-2-12
+
+    /**
+     * 更新网点付款失败原因
+     * @param servicePointFinance
+     */
+    void updateBankIssueFI(ServicePointFinance servicePointFinance);
+
+    /**
+     * 网点付款
+     * @param servicePointFinance
+     */
+    void payServicePoint(ServicePointFinance servicePointFinance);
+
+    /**
+     * 获取需要付款网点的支付方式
+     * @return
+     */
+    //List<Integer> getNeedPaymentType(); //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 获取需要付款网点的查询条件
+     * @return
+     */
+    //List<ServicePointFinance> getNeedPayCondition(); //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 获取需要付款网点列表
+     * @param servicePoint
+     * @return
+     */
+    //List<ServicePoint> getNeedPayList(ServicePoint servicePoint);  //mark on 2020-1-14  web端去servicePoint
+
+    //endregion 网点
+
+    //region 安维
+
+    //Integer findEngineerIdByMobile(@Param("mobile") String mobile,@Param("exceptId") Long exceptId);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 读取网点下安维信息(user.id,user.engineerId)
+     * 用于缓存操作
+     * @param id
+     * @return
+
+    List<User> getEngineers(Long id);
+     */
+
+    /**
+     * 按手机号返回安维帐号
+     * @param exceptId  排除的安维id
+     * @param mobile    手机号
+     * @return
+     */
+    User getEngineerByPhoneExpect(@Param("mobile") String mobile,@Param("exceptId") Long exceptId);
+
+    /**
+     * 新增
+     */
+    //Engineer getEngineer(Long id);  //
+
+    //Engineer getEngineerWithoutServicePoint(Long id);  //mark on 2020-1-13 去除md_engineer
+
+
+
+    /**
+     * 根据ID获取master安维
+     * @param servicePointId
+     * @return
+     */
+    //Engineer getMasterEngineer(Long servicePointId);   //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 根据安维帐号ID(sys_user.id)获取安维
+     * @param userId
+     * @return
+     */
+    //Engineer getEngineerByUserId(Long userId);   //mark on 2020-1-13 去除md_engineer
+
+    //Engineer getEngineerByPhone(@Param("phone") String phone);   //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 查询安维人员列表
+     * @return
+     */
+    //List<Engineer> findEngineerList(Engineer engineer);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 所有安维人员列表
+     * 用于在redis中按网点缓存其下属安维人员列表
+     * key: MD:SERVICEPOINT:ENGINEER:#id
+     */
+    //List<Engineer> findAllEngineers();   //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 返回所有安维人员姓名
+     * @return
+     */
+    //List<Engineer> findAllEngineersName(@Param("engineerIds") List<Long> engineerIds);   //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 重置安维人员密码（手机号后6位）
+     * @param engineer
+     */
+    void resetPassword(User engineer);
+    /**
+     * 新增
+     */
+    //int insertEngineer(Engineer entity);   //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 修改
+     */
+    //int updateEngineer(Engineer entity);  //mark on 2020-1-13 去除md_engineer
+
+    //void updateEngineerByParams(HashMap<String,Object> maps);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 按需来更新
+     * 如传递订单相关数量（派单数，违约数，完成数），则只做增减
+     * 客评：去平均值，四舍五入
+     */
+    //void updateEngineerByMap(HashMap<String,Object> maps);   //mark on 2020-1-13 去除md_engineer
+
+    int updateUser(Engineer entity);
+
+    /** 移到 updateEngineerByMap 中
+     * 更新安维订单相关数量（派单数，违约数，完成数）
+     * 增或减
+     void incrEngineerOrderQty(HashMap<String,Object> maps);
+     */
+    /**
+     * 升级网点
+     * @return
+     */
+    //int upgradeEngineer(Engineer engineer);  //mark on 2020-1-13 去除md_engineer
+
+    //int upgradeServicePoint(ServicePoint servicePoint); //mark on 2020-1-14  web端去servicePoint
+    /**
+     * 逻辑删除
+     */
+    //int deleteEngineer(Engineer entity);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 逻辑删除用户
+     */
+    int deleteUser(Engineer entity);
+
+    /**
+     * 检查网点下是否存在其他的主帐号
+     * @param id 网点id
+     * @param exceptId 排除安维人员id
+     * @return
+     */
+    //int checkMasterEngineer(@Param("servicePointId") Long id,@Param("exceptId") Long exceptId);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 添加安维负责的区域
+     * @param id 安维id
+     * @Param areas 区域id列表
+     */
+    //void assignEngineerAreas(@Param("id") Long id,@Param("areas") List<Long> areas); //mark on 2020-2-12 web端去除md_engineer_area
+
+    /**
+     * 移除安维下所有区域
+     * @param id 安维id
+     */
+    //void removeEngineerAreas(Long id);  //mark on 2020-2-12  web去除md_engineer_area
+
+    /**
+     * 读取安维负责的区域ID列表
+     * @param id 安维id
+     * @return
+     */
+    //List<Long> getEngineerAreaIds(Long id);  //TO DO: 此方法已微服务化 2019-11-7 //mark on 2020-2-12 web端去md_engineer_area
+
+    /**
+     * 读取安维负责的区域列表
+     * @param id 安维id
+     * @return
+     */
+    //List<Area> getEngineerAreas(Long id);  //TO DO: 此方法在EngineerArea微服务化后，改成调用AreaDao的findEngineerAreas方法了 2019-11-7 //mark on 2020-2-12  web端去md_engineer_area
+
+    /**
+     * 按区域读取可APP接单的安维列表
+     * @param areaId
+     * @return List<Engineer>
+     */
+    //List<Engineer> getEngieersListByAreaID(@Param("areaId") Long areaId);  //mark on 2020-1-13 去除md_engineer
+
+    /**
+     * 按区域读取可APP接单的安维帐号列表
+     * @param areaId
+     * @return List<User>
+
+    List<User> getEngineerAccountsListByAreaID(@Param("areaId") Long areaId);
+     */
+    /**
+     * 按区域读取可APP接单的安维帐号列表
+     * @param areaId
+     * @return List<User>
+     */
+    //List<User> getEngineerAccountsListByAreaAndProductCategory(@Param("areaId") Long areaId,@Param("categoryId") Long categoryId);  //mark on 2020-1-13  去除md_engineer
+    // 此方法在ServicePoint，Engineer，EngineerArea微服务化时被UserDao中的 findEngineerAccountsList方法取代 //2019-11-8
+
+    //endregion 安维人员
+
+    //region 价格管理
+
+    /**
+     * 停用价格
+     * @param id
+     * @return
+     */
+    //int stopPrice(@Param("id") Long id,@Param("stopBy") Long stopBy);  //mark on 2020-3-4
+
+    /**
+     * 启用价格
+     * @param id
+     * @return
+     */
+    //int activePrice(@Param("id") Long id,@Param("activeBy") Long activeBy);  //mark on 2020-3-4
+
+    /**
+     * 删除价格
+     * @param id
+     * @return
+     */
+    //int deletePrice(Long id);  //mark on 2020-3-4
+
+
+    /**
+     * 按网点和产品删除价格
+     * @param pointId   网点
+     * @param products 产品列表
+     * @return
+     */
+    //int deletePricesByPointAndProducts(@Param("pointId") Long pointId,@Param("products") List<Long> products);  //mark on 2020-3-4
+
+    /**
+     * 删除网点的所有价格
+     * @param pointId   网点
+     * @return
+     */
+    //int deletePrices(@Param("id") Long pointId);  //mark on 2020-3-4
+
+
+    /**
+     * 修改价格
+     */
+    //void updatePrice(ServicePrice price);   //mark on 2020-3-4
+
+    /**
+     * 获得网点id清单
+     * @param servicePrice 查询条件
+     * @return
+     */
+    List<ServicePoint> findServiceIdList(ServicePrice servicePrice);
+
+    /**
+     * 按id获得具体的价格
+     * @param id
+     * @return
+     */
+    //ServicePrice getPrice(@Param("id") Long id);   //mark on 2020-3-4
+
+    /**
+     * 获得某安维网点的所有价格清单
+     * @param id 安维网点
+     * @return
+     */
+    //List<ServicePrice> getPrices(@Param("servicePointId") Long id, @Param("productId") Long productId, @Param("delFlag") Integer delFlag); //mark on 2020-3-4 web端去md_servicepoint_price
+
+    /**
+     * 按多个id获得网点下价格
+     * @param ids 网点id列表
+     * @param productId 产品id列表
+     * @return
+     */
+    //List<ServicePrice> getPricesByPoints(@Param("ids") List<Long> ids, @Param("productId") Long productId, @Param("serviceTypeId") Long serviceTypeId);  //mark on 2020-3-4 web端去md_servicepoint_price
+
+//    /**
+//     * 添加网点价格
+//     * @param pointId
+//     * @param prices
+//     */
+//    void insertPrices(@Param("pointId") Long pointId,@Param("prices") List<ServicePrice> prices);
+
+    /**
+     * 批量添加网点价格
+     * 弃用,mycat不支持多语句
+
+     void insertPrices(ServicePrices servicePrices);
+     */
+
+    //void insertPrice(ServicePrice servicePrice);   //mark on 2020-3-4 web端去web_servicepoint_price
+
+    //endregion 价格管理
+
+    //region 报表
+
+//    /**
+//     *
+//     * @param i_queryCode
+//     * @param i_queryCity
+//     * @param i_queryProvince
+//     * @return
+//     */
+//    List<Map<String,Object>> rptServicePointBase(@Param("i_queryCode") String i_queryCode,
+//                                                        @Param("i_queryCity") String i_queryCity,
+//                                                        @Param("i_queryProvince") String i_queryProvince);
+
+    /**
+     * 网点客评排名统计表
+     * @param queryYear
+     * @param queryMonth
+     * @return
+     */
+    //mark on 2020-1-14  web端去servicePoint
+    //List<Map<String,Object>> rptServicePointappraise(@Param("queryYear") String queryYear,
+    //                                                    @Param("queryMonth") String queryMonth);
+
+//    /**
+//     * 网点时效性统计
+//     * @param queryMonth
+//     * @return
+//     */
+//    List<HashMap<String,Object>> rptServicePointTimely(String queryMonth);
+
+    //endregion 报表
+
+    /**
+     * 获取网点的基础资料
+     *
+     * @param servicePointNo
+     * @param provinceName
+     * @param cityName
+     * @param page
+     * @return
+     */
+    /*
+    // mark on 2020-1-15
+    List<ServicePointBaseInfoRptEntity> getServicePointBaseInfo(@Param("servicePointNo") String servicePointNo,
+                                                                @Param("provinceName") String provinceName,
+                                                                @Param("cityName") String cityName,
+                                                                @Param("page")Page<ServicePointBaseInfoRptEntity> page);*/
+
+    /**
+     * 查询网点的服务区域
+     *
+     * @param servicePointIds 该参数传null或空列表则查询所有网点的服务区域
+     * @return
+     */
+    //List<ServicePointServiceArea> getAllServicePointServiceAreas(@Param("servicePointIds") List<Long> servicePointIds);  //mark on 2020-1-18 web端去md_servicepoint_area
+
+    /**
+     *
+     * @param servicePointIds
+     * @return
+     */
+    List<ServicePoint> getServicePointServiceAreas(@Param("servicePointIds") List<Long> servicePointIds);
+
+    /**
+     * 读取网点余额,最后付款日期及最后付款金额
+     * @param servicePointIds
+     * @return
+     */
+    List<Map<String,Object>> getServicePointBalances(@Param("servicePointIds") List<Long> servicePointIds);
+
+    /**
+     * 查询安维的服务区域
+     * @param engineerIds
+     * @return
+     */
+    //List<Engineer> getEngineerServiceAreas(@Param("engineerIds") List<Long> engineerIds); //mark on 2020-2-12 web端去除md_engineer_area
+
+    /**
+     * 查询安维人员的客户评分
+     *
+     * @param beginDate
+     * @param endDate
+     * @param quarter
+     * @param page
+     * @return
+     */
+    /*
+    // mark on 2020-1-13  去除md_engineer
+    List<EngineerAppraiseRptEntity> getEngineerAppraiseList(@Param("beginDate") Date beginDate,
+                                                            @Param("endDate") Date endDate,
+                                                            @Param("quarter") String quarter,
+                                                            @Param("page") Page<EngineerAppraiseRptEntity> page);*/
+
+
+    /**
+     * 查询安维人员的客户评分（新）
+     *
+     * @param beginDate
+     * @param endDate
+     * @param quarter
+     * @param page
+     * @return
+
+    List<EngineerAppraiseRptEntity> getEngineerGradeList(@Param("beginDate") Date beginDate,
+                                                         @Param("endDate") Date endDate,
+                                                         @Param("quarter") String quarter,
+                                                         @Param("page") Page<EngineerAppraiseRptEntity> page);*/
+    /**
+     * 查询安维人员的时效数据
+     *
+     * @param beginDate
+     * @param endDate
+     * @param quarter
+     * @param page
+     * @return
+
+    List<EngineerTimelyRptEntity> getEngineerTimelyList(@Param("beginDate") Date beginDate,
+                                                        @Param("endDate") Date endDate,
+                                                        @Param("quarter") String quarter,
+                                                        @Param("page") Page<EngineerTimelyRptEntity> page); */
+
+    /**
+     * 获取即结未付款清单
+     * @return
+     */
+    //List<ServicePointPayCondition> getPayableDailyList(@Param("exceptBankIds") List<Integer> exceptBankIds);  //mark on 2020-1-15  md_servicepoint
+
+    /**
+     * 获取即结未付款清单(去ServicePoint关联) add on 2019-9-29
+     * @return
+     */
+    List<ServicePointPayCondition> getPayableDailyListWithoutServicePoint(@Param("exceptBankIds") List<Integer> exceptBankIds);
+
+    /**
+     * 获取月结未付款清单
+     * @return
+     */
+    //List<ServicePointPayCondition> getPayableMonthlyList(@Param("exceptBankIds") List<Integer> exceptBankIds);  //mark on 2020-1-15 md_servicepoint
+
+    /**
+     * 获取月结未付款清单(去ServicePoint关联) add on 2019-9-29
+     * @return
+     */
+    List<ServicePointPayCondition> getPayableMonthlyListWithoutServicePoint(@Param("exceptBankIds") List<Integer> exceptBankIds);
+
+    /**
+     * 获取即结未付款清单明细
+     * @param servicePointFinance
+     * @return
+     */
+    //List<ServicePoint> getPayableDailyDetailList(@Param("finance")ServicePointFinance servicePointFinance, @Param("exceptBankIds") List<Integer> exceptBankIds, @Param("areaId") Long areaId);  //mark on 2020-1-15
+
+    /**
+     * 获取即结未付款清单明细(去ServicePoint) //add on 2019-9-29
+     * @param servicePointFinance
+     * @return
+     */
+    List<ServicePoint> getPayableDailyDetailListWithoutServicePoint(@Param("finance")ServicePointFinance servicePointFinance, @Param("exceptBankIds") List<Integer> exceptBankIds, @Param("areaId") Long areaId);
+
+    /**
+     * 从网点财务表中获取网点id列表  //add on 2019-12-29
+     * @param servicePointFinance
+     * @return
+     */
+    List<Long>  findServicePointIdsFromFinance(ServicePointFinance servicePointFinance);
+
+    /**
+     * 获取月结未付款清单明细
+     * @param servicePointFinance
+     * @return
+     */
+    //List<ServicePoint> getPayableMonthlyDetailList(@Param("finance")ServicePointFinance servicePointFinance, @Param("exceptBankIds") List<Integer> exceptBankIds, @Param("areaId") Long areaId); //mark on 2020-1-15 md_servicepoint
+
+    /**
+     * 获取月结未付款清单明细(去ServicePoint) //add on 2019-9-29
+     * @param servicePointFinance
+     * @return
+     */
+    List<ServicePoint> getPayableMonthlyDetailListWithoutServicePoint(@Param("finance")ServicePointFinance servicePointFinance, @Param("exceptBankIds") List<Integer> exceptBankIds, @Param("areaId") Long areaId);
+
+    /**
+     * 获取应付为负月结列表
+     * @return
+     */
+    List<ServicePointPayableMonthly> getPayableMinusMonthlyList();
+
+    /**
+     * 获取应付为负月结列表--根据网点ID
+     * @return
+     */
+    List<ServicePointPayableMonthly> getPayableMinusMonthlyListByServicePointId(@Param("servicePointId")Long servicePointId);
+
+    /**
+     * 获取应付为负月结列表--根据网点ID,品类
+     * @return
+     */
+    List<ServicePointPayableMonthlyDetail> getPayableMinusMonthlyDetailList(@Param("details")List<ServicePointPayableMonthlyDetail> details);
+
+    /**
+     * 更新安维网店的派单备注新
+     * @param servicePointId
+     * @param planRemark
+     * @param planRemarks
+     */
+    //void savePlanRemark(@Param("servicePointId") Long servicePointId, @Param("planRemark") String planRemark,  @Param("planRemarks") String planRemarks); //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 更新网点的备注
+     * @param servicePointId
+     * @param remarks
+     * @param remarksJson
+     */
+    // mark on 2019-9-11
+    //void updateRemark(@Param("servicePointId") Long servicePointId, @Param("remarks") String remarks,  @Param("remarksJson") String remarksJson); //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 获取安维网店的历史派单备注JSON
+     * @param servicePointId
+     * @return
+     */
+    // mark on 2019-9-11
+    //String getPlanRemarks(@Param("servicePointId") Long servicePointId);
+
+    /**
+     * 获取网点的开发保存的历史备注JSON
+     * @param servicePointId
+     * @return
+     */
+    // mark on 2019-9-11
+    //String getRemarksJSON(@Param("servicePointId") Long servicePointId);
+
+    /**
+     *  B2B
+     * 启用/停用天猫服务
+     * @param servicePointId
+     * @param forTmall
+     * @return
+     */
+    //int enableOrDisableServicePointForTmall(@Param("servicePointId") Long servicePointId, @Param("forTmall") Integer forTmall); //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * B2B
+     * 启用/停用天猫服务
+     * @param engineerId
+     * @param forTmall
+     * @return
+     */
+    //int enableOrDisableEngineerForTmall(@Param("engineerId") Long engineerId, @Param("forTmall") Integer forTmall);   //mark on 2020-1-13  去除md_engineer
+
+    /**
+     * 获取网点的结算方式
+     */
+    Integer getServicePointPaymentType(@Param("servicePointId") Long servicePointId);
+
+    /**
+     * 根据用ID列表获取网点余额
+     * @param ids
+     * @return
+     */
+    List<ServicePointFinance> getBalanceByIds(@Param("ids")List<Long> ids);
+
+    /**
+     * 是否开启网点保险扣除
+     */
+    /*
+    //mark on 2020-1-14  web端去servicePoint
+    void appReadInsuranceClause(@Param("id") Long id,
+                                @Param("appInsuranceFlag") Integer appInsuranceFlag,
+                                @Param("updateBy") Long updateBy,
+                                @Param("updateDate") Date update);*/
+
+    /**
+     * 更新网点地址
+     * 参数：area.id、address、subAddress、longitude、latitude、updateBy、updateDate
+     */
+    //void updateServicePointAddress(ServicePoint servicePoint);  //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 更新网点银行账号信息
+     * 参数：bank.value、bankNo、bankOwner、updateBy、updateDate
+     */
+    //void updateServicePointBankAccountInfo(ServicePoint servicePoint);  //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 更新网点银行账号信息
+     * 参数：bank.value、branch、bankNo、bankOwner
+     */
+    void updateServicePointFIBankAccountInfo(ServicePointFinance servicePointFinance);
+
+    /**
+     * 更新自动派单标志
+     * @param servicePoint
+     */
+    //void updateAutoPlanFlag(ServicePoint servicePoint);//mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 更新网点等级
+     * @param servicePoint
+     */
+    //void updateLevel(ServicePoint servicePoint);  //mark on 2020-1-14  web端去servicePoint
+
+    /**
+     * 修改网点的关键字段
+     * @param servicePoint
+     * @date  2019-6-12
+     * @author TimXu
+     */
+    void updateServicePointForKeySetting(ServicePoint servicePoint);
+
+    /**
+     * 获取所有网点产品映射关系
+     */
+    List<LongTwoTuple> findAllServicePointProductCategoryMapping();
+}

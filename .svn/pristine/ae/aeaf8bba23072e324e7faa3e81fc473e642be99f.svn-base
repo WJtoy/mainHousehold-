@@ -1,0 +1,58 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <%@ include file="/WEB-INF/views/include/head.jsp" %>
+	<link href="${ctxStatic}/jquery-upload-file/css/uploadfile.min.css" rel="stylesheet">
+    <title>安装规范</title>
+	<meta name="decorator" content="default"/>
+	<script type="text/javascript">
+        $(document).ready(function () {
+            $('a[data-toggle=tooltip]').darkTooltip();
+            /*$('a[data-toggle=tooltipnorth]').darkTooltip({gravity : 'north'});
+            $('a[data-toggle=tooltipeast]').darkTooltip({gravity : 'east'});*/
+        });
+	</script>
+	  <style type="text/css">
+		  .form-horizontal .control-label{
+			  width: 130px;
+		  }
+		  .form-horizontal .controls{
+			  margin-left: 140px;
+		  }
+          .fromInput {
+              border:1px solid #ccc;padding:4px 6px;color:#555;border-radius:4px;
+          }
+	  </style>
+  </head>
+  
+  <body>
+    <sys:message content="${message}"/>
+    <c:if test="${canSave==true}">
+        <form:form id="inputForm" modelAttribute="customerProduct" action="" method="post" class="form-horizontal">
+            <div class="row-fluid" style="margin-top: 24px">
+                <div class="span12">
+                    <div class="control-group">
+                        <label class="control-label" style="width: 80px">安装规范：</label>
+                        <div class="controls" style="margin-left: 80px">
+                            <form:textarea path="fixSpec" htmlEscape="false" rows="10" maxlength="496" class="input-block-level" cssStyle="resize: vertical;max-height: 300px;" readonly="true"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row-fluid" style="margin-top: 8px">
+                <div class="span12">
+                    <div class="control-group">
+                        <label class="control-label" style="width: 80px;padding: 0px">视频链接：</label>
+                        <div class="controls" style="margin-left: 80px">
+                             <a href="${customerProduct.videoUrl}" target="_blank" data-toggle="tooltip" title="点击打开">${customerProduct.videoUrl}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form:form>
+     </c:if>
+  </body>
+</html>

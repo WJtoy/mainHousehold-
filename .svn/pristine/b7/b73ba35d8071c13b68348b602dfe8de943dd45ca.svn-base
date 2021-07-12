@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.UrgentCustomerlDao">
+    <!-- 2020-1-9
+    <sql id="columns">
+            a.id,
+            a.customer_id as "customer.id",
+            a.urgent_level_id as "urgentLevel.id",
+            a.area_id as "area.id",
+            a.charge_in,
+            a.charge_out,
+            a.create_date,
+            a.remarks
+    </sql>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_customer_urgent(
+			customer_id,
+			urgent_level_id,
+			area_id,
+			charge_in,
+			charge_out,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{customer.id},
+			#{urgentLevel.id},
+			#{area.id},
+			#{chargeIn},
+			#{chargeOut},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_customer_urgent
+        SET
+            charge_in = #{chargeIn},
+            charge_out = #{chargeOut},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_customer_urgent
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="get" resultType="UrgentCustomer">
+        SELECT
+               <include refid="columns"/>
+        FROM
+               md_customer_urgent a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="findListByCustomerId" resultType="UrgentChargeModel">
+        SELECT
+             a.urgent_level_id as "urgentLevel.id",
+             a.area_id,
+             a.charge_in,
+             a.charge_out
+        FROM
+            md_customer_urgent a
+        WHERE
+            a.customer_id = #{customerId}
+            <if test="areaId != null and areaId >= 1">
+                AND a.area_id = #{areaId}
+            </if>
+            AND a.del_flag = 0
+        <choose>
+            <when test="areaId != null and areaId >= 1">limit 20</when>
+            <otherwise>limit 300</otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="UrgentCustomer">
+        SELECT
+            <include refid="columns"/>
+        FROM
+             md_customer_urgent a
+        WHERE
+            a.del_flag = 0
+        ORDER BY a.create_date
+    </select>
+
+    <select id="findList" resultType="UrgentCustomer">
+        SELECT
+            customer_id as "customer.id"
+        FROM
+             md_customer_urgent a
+        <where>
+            a.del_flag = 0
+            <if test="customer != null and customer.id != null and customer.id > 0">
+                AND a.customer_id = #{customer.id}
+            </if>
+        </where>
+        group by a.customer_id
+        ORDER BY a.customer_id
+    </select>
+
+    <delete id="deleteByCustomerId">
+        delete from md_customer_urgent  where customer_id = #{customerId}
+    </delete>
+    -->
+</mapper>

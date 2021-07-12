@@ -1,0 +1,67 @@
+ul.thumbnail {border-radius:0px !important;position: relative;}
+ul.thumbnail>img {height: 100%;width: 100%;}
+ul.thumbnails.image_picker_selector {
+    overflow: auto;
+    list-style-image: none;
+    list-style-position: outside;
+    list-style-type: none;
+    padding: 0px;
+    margin: 0px; }
+ul.thumbnails.image_picker_selector ul {
+    overflow: auto;
+    list-style-image: none;
+    list-style-position: outside;
+    list-style-type: none;
+    padding: 0px;
+    margin: 0px; }
+ul.thumbnails.image_picker_selector li.group { width:100%;}
+ul.thumbnails.image_picker_selector li.group_title { float: none; }
+ul.thumbnails.image_picker_selector li {
+    /*margin: 0px 12px 12px 0px;*/
+    float: left;
+    width: 120px;
+    height: 120px;
+}
+ul.thumbnails.image_picker_selector li .thumbnail {
+    /*padding: 6px;*/
+    padding: 0px;
+    position: relative;
+    border: 1px solid #dddddd;
+    -webkit-border-radius: 0px !important;
+    border-radius: 0px !important;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none; }
+ul.thumbnails.image_picker_selector li .thumbnail img {-webkit-user-drag: none; height: 100%;width: 100%;}
+.thumbnail .check-input {
+    position: absolute;
+    margin: 2px !important;
+    width: 24px;
+    height: 24px;
+    right: 2px;
+    bottom: 2px;
+    background: url('gallery_unchecked.png') no-repeat;background-size: 24px 24px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    vertical-align: text-bottom;
+    border: none;
+    outline: none;
+    /*
+        background-clip: border-box;
+     -webkit-transition: background-color .25s;
+    transition: background-color .25s;
+    background-color: rgba(255, 255, 255, 0);
+    background-color: #5868D9;
+    border-color: #5868D9;
+    border-radius: 50%;
+    */
+}
+
+p.check-input.selected {
+    background: url('gallery_checked.png') no-repeat;background-size: 24px 24px;
+}
+
+/*ul.thumbnails.image_picker_selector li .thumbnail.selected { background: #0088cc; }*/
+
+.thumbnail label {display: block;width:120px;height:120px;}

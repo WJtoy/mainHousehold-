@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.md.dao.B2BServicePointDao">
+
+    <!-- 获取网点的基本资料，用于上传天猫 -->
+    <select id="getServicePoint" parameterType="Long" resultType="ServicePoint">
+        SELECT
+              ms.id AS 'id',
+              ms.name AS 'name',
+              ms.contact_info1  AS 'contactInfo1',
+              ms.address  AS 'address',
+              ms.area_id AS 'area.id',
+              sa1.code  AS 'area.code',
+              sa1.name  AS 'area.name',
+              sa2.id AS 'area.parent.id',
+              sa2.name AS 'area.parent.name',
+              sa3.id AS 'area.parent.parent.id',
+              sa3.name AS 'area.parent.parent.name'
+        FROM  md_servicepoint ms
+              INNER JOIN sys_area sa1 on sa1.id = ms.area_id
+              INNER JOIN sys_area sa2 on sa2.id = sa1.parent_id
+              INNER JOIN sys_area sa3 on sa3.id = sa2.parent_id
+        WHERE ms.id = #{servicePointId}
+    </select>
+
+    <!-- 获取网点产品与天猫叶子类目之前的对应关系 -->
+    <select id="getB2BProductCategoryMap" parameterType="Long" resultType="B2BProductCategory">
+        SELECT
+              msp.product_id  AS 'productId',
+              <!--
+              mp.product_category_id  AS 'productCategoryId',
+              -->
+              mbpm.customer_category_id AS 'customerCategoryId'
+        FROM  md_servicepoint_product msp
+              <!--
+	          INNER JOIN md_product mp ON mp.id = msp.product_id
+	          -->
+              INNER JOIN md_b2b_product_map mbpm ON mbpm.product_id = msp.product_id
+        WHERE msp.servicepoint_id = #{servicePointId}
+	          AND mbpm.data_source = ${@com.wolfking.jeesite.ms.tmall.md.entity.B2BProductCategory@DATA_SOURCE_TMALL}
+              <!--
+	          AND mp.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+	          -->
+	          AND mbpm.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+	    LIMIT 200000
+    </select>
+
+    <!-- 获取网点产品的类型与品牌的对应关系 -->
+    <!--
+    改成调用product微服务  2019-8-22
+    <select id="getCategoryBrandMap" parameterType="Long" resultType="B2BCategoryBrand">
+        SELECT
+              mpb.product_category_id AS 'productCategoryId',
+              mpb.brand_id  AS 'brandId',
+              mb.code AS 'brandCode'
+        FROM  md_servicepoint_product msp
+              INNER JOIN md_product mp ON mp.id = msp.product_id
+              INNER JOIN md_productcategory_brand mpb ON mpb.product_category_id = mp.product_category_id
+              INNER JOIN md_brand mb ON mb.id = mpb.brand_id
+        WHERE msp.servicepoint_id = #{servicePointId}
+	          AND mp.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+	          AND mpb.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+	          AND mb.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+	    LIMIT 200000
+    </select>
+    -->
+
+    <select id="getCategoryBrandMap" parameterType="String" resultType="B2BCategoryBrand">
+        SELECT
+              mpb.product_category_id AS 'productCategoryId',
+              mpb.brand_id  AS 'brandId',
+              mb.code AS 'brandCode'
+        FROM  md_productcategory_brand mpb
+              INNER JOIN md_brand mb ON mb.id = mpb.brand_id
+        WHERE mpb.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+              <if test="categoryIds != null and categoryIds !=''">
+                  AND mpb.product_category_id in
+                  <foreach collection="categoryIds.split(',')" item="item" index="index" open="(" close=")" separator=",">
+                      ${item}
+                  </foreach>
+              </if>
+	    LIMIT 200000
+    </select>
+
+
+    <!-- 获取网点的容量 -->
+    <select id="getServicePointCapacity" parameterType="Long" resultType="Long">
+        SELECT
+              capacity
+        FROM  md_servicepoint ms
+        WHERE ms.id = #{servicePointId}
+    </select>
+
+    <!-- 获取网点负责的区域 -->
+    <select id="getServicePointServiceAreas" parameterType="Long" resultType="Area">
+        SELECT
+              sa.id,
+              sa.code
+        FROM  md_servicepoint_area msa
+              INNER JOIN sys_area sa on sa.id = msa.area_id
+        WHERE msa.servicepoint_id = #{servicePointId}
+            AND sa.type = ${@com.wolfking.jeesite.modules.sys.entity.Area@TYPE_VALUE_COUNTY}
+            AND sa.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+        LIMIT 20000
+    </select>
+
+    <!-- 获取师傅的基本资料，用于上传天猫 -->
+    <select id="getEngineer" parameterType="Long" resultType="Engineer">
+        SELECT
+              me.id,
+              me.servicepoint_id  AS 'servicePoint.id',
+              me.name,
+              me.contact_info,
+              me.for_tmall
+        FROM  md_engineer me
+        WHERE me.id = #{engineerId}
+    </select>
+
+    <!-- 从数据库中获取在当前时间点的网点基本资料、负责产品、负责区域 -->
+    <select id="getOldServicePointInfo" parameterType="Long" resultType="ServicePoint">
+        SELECT
+              ms.id,
+              ms.name,
+              ms.contact_info1,
+              ms.address,
+              ms.area_id AS 'area.id',
+              ms.for_tmall,
+              group_concat(distinct msp.product_id) AS 'productIds',
+              group_concat(distinct msa.area_id) AS 'areaIds'
+        FROM  md_servicepoint ms
+              LEFT JOIN md_servicepoint_product msp on msp.servicepoint_id = ms.id
+              LEFT JOIN md_servicepoint_area msa on msa.servicepoint_id = ms.id
+        WHERE ms.id = #{servicePointId}
+        GROUP BY ms.id
+    </select>
+
+    <!-- 获取指定网点中所有启用天猫服务的安维师傅 -->
+    <!--mark on 2020-1-13
+    <select id="getEngineerlList" parameterType="Long" resultType="Engineer">
+        SELECT
+              me.id,
+              me.servicepoint_id AS 'servicePoint.id'
+        FROM  md_engineer me
+        WHERE me.servicepoint_id = #{servicePointId}
+              AND me.for_tmall = 1
+    </select>
+    -->
+
+    <!-- 获取系统中所有有效的网点ID -->
+    <select id="getServicePointIds" parameterType="Integer" resultType="Long">
+        SELECT
+              id
+        FROM  md_servicepoint ms
+        WHERE ms.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+            <if test="forTmall != null">
+              AND ms.for_tmall = #{forTmall}
+            </if>
+        LIMIT 200000
+    </select>
+
+    <!-- 获取系统中所有有效的师傅ID -->
+    <!-- mark on 2020-1-13
+    <select id="getEngineers" parameterType="Integer" resultType="Engineer">
+        SELECT
+              me.id,
+              me.servicepoint_id AS 'servicePoint.id'
+        FROM  md_engineer me
+        WHERE me.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+              AND me.master_flag = 1
+            <if test="forTmall != null">
+              AND me.for_tmall = #{forTmall}
+            </if>
+        LIMIT 200000
+    </select>
+    -->
+
+    <!-- 获取所有网点的产品所属的大类 -->
+    <select id="getServicePointProductCategoryIdsMap" resultType="ServicePointProductCategoryIdsMap">
+        SELECT
+              ms.id  AS 'servicePointId',
+              group_concat(distinct mp.product_category_id)  AS 'productCategoryIds'
+        FROM  md_servicepoint ms
+              INNER JOIN md_servicepoint_product msp on msp.servicepoint_id = ms.id
+              INNER JOIN md_product mp on mp.id = msp.product_id
+        WHERE ms.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+	          AND mp.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+        GROUP BY ms.id
+        ORDER BY ms.id
+	    LIMIT 200000
+    </select>
+
+
+    <!-- 根据被修改的品牌来获取涉及到的产品大类ID -->
+    <select id="getLastModifiedProductCategoryIds" parameterType="Map" resultType="Long">
+        SELECT
+              DISTINCT product_category_id
+        FROM  md_brand mb
+              INNER JOIN md_productcategory_brand mpb on mpb.brand_id = mb.id
+        WHERE mp.del_flag = ${@com.kkl.kklplus.entity.common.MSBase@DEL_FLAG_NORMAL}
+              AND mb.update_date >= #{startModifyDate}
+        LIMIT 20000
+    </select>
+
+    <!-- 查询每个市的网点数量 -->
+    <select id="getCityServicePointCount" parameterType="Long" resultType="ServicePointProvinceBatch">
+        SELECT
+              city.id AS 'city.id',
+              city.parent_id  AS 'province.id',
+              COUNT(ms.id)  AS 'servicePointCount'
+        FROM  md_servicepoint ms
+              INNER JOIN sys_area country ON country.id = ms.area_id
+              INNER JOIN sys_area city ON city.id = country.parent_id
+        WHERE ms.del_flag = 0
+              AND ms.order_count >= 30
+            <if test="provinceId != null">
+              AND city.parent_id = #{provinceId}
+            </if>
+        GROUP BY city.id
+        ORDER BY city.id
+        LIMIT 1000
+    </select>
+
+    <!-- 查询每个市的师傅数量 -->
+    <select id="getCityEngineerCount" parameterType="Long" resultType="ServicePointProvinceBatch">
+        SELECT
+              city.id AS 'city.id',
+              city.parent_id  AS 'province.id',
+              COUNT(me.id)  AS 'engineerCount'
+        FROM  md_engineer me
+              INNER JOIN md_servicepoint ms ON ms.id = me.servicepoint_id AND ms.order_count >= 30
+              INNER JOIN sys_area country ON country.id = ms.area_id
+              INNER JOIN sys_area city ON city.id = country.parent_id
+        WHERE me.del_flag = 0
+              AND me.master_flag = 1
+            <if test="provinceId != null">
+              AND city.parent_id = #{provinceId}
+            </if>
+        GROUP BY city.id
+        ORDER BY city.id
+        LIMIT 1000
+    </select>
+
+    <!-- 查询指定市的所有网点ID列表 -->
+    <select id="getServicePointIdsByCityId" parameterType="Long" resultType="Long">
+        SELECT
+              ms.id
+        FROM  md_servicepoint ms
+              INNER JOIN sys_area country ON country.id = ms.area_id
+        WHERE ms.del_flag = 0
+              AND ms.order_count >= 30
+              AND country.parent_id = #{cityId}
+        LIMIT 200000
+    </select>
+
+    <!-- 查询指定市的所有师傅ID列表 -->
+    <select id="getEngineerIdsByCityId" parameterType="Long" resultType="Engineer">
+        SELECT
+              me.id,
+              me.servicepoint_id AS 'servicePoint.id'
+        FROM  md_engineer me
+              INNER JOIN md_servicepoint ms ON ms.id = me.servicepoint_id  AND ms.order_count >= 30
+              INNER JOIN sys_area country ON country.id = ms.area_id
+        WHERE me.del_flag = 0
+              AND me.master_flag = 1
+              AND country.parent_id = #{cityId}
+        LIMIT 200000
+    </select>
+
+</mapper>

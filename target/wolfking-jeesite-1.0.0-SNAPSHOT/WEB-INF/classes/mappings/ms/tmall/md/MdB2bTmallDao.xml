@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.md.dao.MdB2bTmallDao">
+
+    <!--<sql id="MdB2bTmallColumns">-->
+        <!--a.id,-->
+        <!--a.servicepoint_id AS 'servicePoint.id',-->
+        <!--a.engineer_id AS 'engineer.id',-->
+        <!--a.batch_flag,-->
+        <!--a.action_type,-->
+        <!--a.interface_type,-->
+        <!--a.info_json,-->
+        <!--a.process_flag,-->
+        <!--a.process_time,-->
+        <!--a.process_comment,-->
+        <!--a.create_by AS 'createBy.id',-->
+        <!--a.create_date,-->
+        <!--a.update_by AS 'updateBy.id',-->
+        <!--a.update_date,-->
+        <!--a.quarter-->
+    <!--</sql>-->
+
+    <!--<select id="get" parameterType="Long" resultType="MdB2bTmall">-->
+        <!--SELECT-->
+              <!--<include refid="MdB2bTmallColumns"/>-->
+        <!--FROM  md_b2b_tmall a-->
+        <!--WHERE a.id = #{id}-->
+    <!--</select>-->
+
+    <!--<select id="getLastCompleted" parameterType="MdB2bTmall" resultType="MdB2bTmall">-->
+        <!--SELECT-->
+              <!--<include refid="MdB2bTmallColumns"/>-->
+        <!--FROM  md_b2b_tmall a-->
+        <!--WHERE a.batch_flag = 0-->
+              <!--AND a.process_flag = #{PROCESS_FLAG_SUCCESS}-->
+              <!--AND a.interface_type = #{interfaceType}-->
+              <!--AND a.batch_flag = 0-->
+            <!--<if test="servicePoint != null and servicePoint.id != null">-->
+              <!--AND a.servicepoint_id = #{servicePoint.id}-->
+            <!--</if>-->
+            <!--<if test="engineer != null and engineer.id != null">-->
+              <!--AND a.engineer_id = #{engineer.id}-->
+            <!--</if>-->
+        <!--ORDER BY a.update_date DESC-->
+        <!--LIMIT 1-->
+    <!--</select>-->
+
+    <!--<select id="getLastUncomplete" parameterType="MdB2bTmall" resultType="MdB2bTmall">-->
+        <!--SELECT-->
+              <!--<include refid="MdB2bTmallColumns"/>-->
+        <!--FROM  md_b2b_tmall a-->
+        <!--WHERE a.batch_flag = 0-->
+              <!--AND #{PROCESS_FLAG_SUCCESS} > a.process_flag-->
+              <!--AND a.interface_type = #{interfaceType}-->
+              <!--AND a.batch_flag = 0-->
+            <!--<if test="servicePoint != null and servicePoint.id != null">-->
+              <!--AND a.servicepoint_id = #{servicePoint.id}-->
+            <!--</if>-->
+            <!--<if test="engineer != null and engineer.id != null">-->
+              <!--AND a.engineer_id = #{engineer.id}-->
+            <!--</if>-->
+        <!--ORDER BY a.update_date DESC-->
+        <!--LIMIT 1-->
+    <!--</select>-->
+
+    <!--<select id="getNeedProcessServicePoints" parameterType="MdB2bTmall" resultType="MdB2bTmall">-->
+        <!--SELECT-->
+              <!--a.servicepoint_id,-->
+              <!--<include refid="MdB2bTmallColumns"/>-->
+        <!--FROM  md_b2b_tmall a-->
+              <!--INNER JOIN md_servicepoint ms on ms.id = a.servicepoint_id-->
+        <!--WHERE a.batch_flag = 0-->
+              <!--AND #{PROCESS_FLAG_SUCCESS} > a.process_flag-->
+              <!--AND a.action_type > #{ACTION_TYPE_NONE}-->
+              <!--AND a.engineer_id IS NULL-->
+              <!--AND a.interface_type = #{interfaceType}-->
+            <!--<if test="servicePoint !=null and servicePoint.servicePointNo != null and servicePoint.servicePointNo != ''.toString()">-->
+              <!--AND ms.servicepoint_no LIKE concat('%', #{servicePoint.servicePointNo}, '%')-->
+            <!--</if>-->
+            <!--<if test="servicePoint !=null and servicePoint.name != null and servicePoint.name != ''">-->
+              <!--AND ms.name LIKE concat('%', #{servicePoint.name}, '%')-->
+            <!--</if>-->
+            <!--<if test="servicePoint !=null and servicePoint.contactInfo1 != null and servicePoint.contactInfo1 != ''">-->
+              <!--AND ms.contact_info1 LIKE concat('%', #{servicePoint.contactInfo1}, '%')-->
+            <!--</if>-->
+        <!--ORDER BY a.servicepoint_id-->
+    <!--</select>-->
+
+    <!--<select id="getNeedProcessEngineers" parameterType="MdB2bTmall" resultType="MdB2bTmall">-->
+        <!--SELECT-->
+              <!--a.engineer_id,-->
+              <!--<include refid="MdB2bTmallColumns"/>-->
+        <!--FROM  md_b2b_tmall a-->
+              <!--INNER JOIN md_servicepoint ms on ms.id = a.servicepoint_id-->
+              <!--INNER JOIN md_engineer me on me.id = a.engineer_id-->
+        <!--WHERE a.batch_flag = 0-->
+              <!--AND #{PROCESS_FLAG_SUCCESS} > a.process_flag-->
+              <!--AND a.action_type > #{ACTION_TYPE_NONE}-->
+              <!--AND a.engineer_id IS NOT NULL-->
+              <!--AND a.interface_type = #{interfaceType}-->
+            <!--<if test="servicePoint !=null and servicePoint.servicePointNo != null and servicePoint.servicePointNo != ''.toString()">-->
+              <!--AND ms.servicepoint_no LIKE concat('%', #{servicePoint.servicePointNo}, '%')-->
+            <!--</if>-->
+            <!--<if test="servicePoint !=null and servicePoint.name != null and servicePoint.name != ''">-->
+              <!--AND ms.name LIKE concat('%', #{servicePoint.name}, '%')-->
+            <!--</if>-->
+            <!--<if test="servicePoint !=null and servicePoint.contactInfo1 != null and servicePoint.contactInfo1 != ''">-->
+                <!--AND ms.contact_info1 LIKE concat('%', #{servicePoint.contactInfo1}, '%')-->
+            <!--</if>-->
+            <!--<if test="engineer !=null and engineer.name != null and engineer.name != ''">-->
+                <!--AND me.name LIKE concat('%', #{engineer.name}, '%')-->
+            <!--</if>-->
+            <!--<if test="engineer !=null and engineer.contactInfo != null and engineer.contactInfo != ''">-->
+                <!--AND me.contact_info LIKE concat('%', #{engineer.contactInfo}, '%')-->
+            <!--</if>-->
+        <!--ORDER BY a.engineer_id-->
+    <!--</select>-->
+
+    <!--<insert id="insert" parameterType="MdB2bTmall" keyProperty="id" useGeneratedKeys="true">-->
+        <!--INSERT INTO md_b2b_tmall (-->
+            <!--servicepoint_id,-->
+            <!--engineer_id,-->
+            <!--batch_flag,-->
+            <!--action_type,-->
+            <!--interface_type,-->
+            <!--info_json,-->
+            <!--process_flag,-->
+            <!--process_time,-->
+            <!--process_comment,-->
+            <!--create_by,-->
+            <!--create_date,-->
+            <!--update_by,-->
+            <!--update_date,-->
+            <!--quarter-->
+        <!--) VALUES (-->
+            <!--#{servicePoint.id},-->
+            <!--#{engineer.id},-->
+            <!--#{batchFlag},-->
+            <!--#{actionType},-->
+            <!--#{interfaceType},-->
+            <!--#{infoJson},-->
+            <!--#{processFlag},-->
+            <!--#{processTime},-->
+            <!--#{processComment},-->
+            <!--#{createBy.id},-->
+            <!--#{createDate},-->
+            <!--#{updateBy.id},-->
+            <!--#{updateDate},-->
+            <!--#{quarter}-->
+        <!--)-->
+    <!--</insert>-->
+
+    <!--<update id="updateProcessStatus" parameterType="MdB2bTmall">-->
+        <!--UPDATE md_b2b_tmall-->
+        <!--<set>-->
+            <!--process_flag = #{processFlag},-->
+            <!--process_time = #{processTime},-->
+          <!--<if test="processComment != null and processComment != ''">-->
+            <!--process_comment = #{processComment},-->
+          <!--</if>-->
+            <!--update_by = #{updateBy.id},-->
+            <!--update_date = #{updateDate}-->
+        <!--</set>-->
+        <!--WHERE id = #{id}-->
+    <!--</update>-->
+
+    <!--<update id="updateActionType" parameterType="MdB2bTmall">-->
+        <!--UPDATE md_b2b_tmall-->
+        <!--<set>-->
+            <!--action_type = #{actionType},-->
+            <!--update_by = #{updateBy.id},-->
+            <!--update_date = #{updateDate}-->
+        <!--</set>-->
+        <!--WHERE id = #{id}-->
+    <!--</update>-->
+
+    <!--<update id="update" parameterType="MdB2bTmall">-->
+        <!--UPDATE md_b2b_tmall-->
+        <!--<set>-->
+            <!--servicepoint_id = #{servicePoint.id},-->
+            <!--action_type = #{actionType},-->
+            <!--interface_type = #{interfaceType},-->
+          <!--<if test="engineer != null and engineer.id != null">-->
+            <!--engineer_id = #{engineer.id},-->
+          <!--</if>-->
+          <!--<if test="infoJson != null and infoJson != ''">-->
+            <!--info_json = #{infoJson}-->
+          <!--</if>-->
+            <!--update_by = #{updateBy.id},-->
+            <!--update_date = #{updateDate}-->
+        <!--</set>-->
+        <!--WHERE id = #{id}-->
+    <!--</update>-->
+
+</mapper>

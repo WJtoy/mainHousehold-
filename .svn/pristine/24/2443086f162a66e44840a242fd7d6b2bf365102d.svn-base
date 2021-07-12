@@ -1,0 +1,368 @@
+package com.wolfking.jeesite.modules.mq.receiver;
+
+import com.googlecode.protobuf.format.JsonFormat;
+import com.kkl.kklplus.entity.push.AppMessageType;
+import com.kkl.kklplus.entity.sys.SysSMSTypeEnum;
+import com.kkl.kklplus.utils.StringUtils;
+import com.rabbitmq.client.Channel;
+import com.wolfking.jeesite.common.service.SequenceIdService;
+import com.wolfking.jeesite.common.utils.DateUtils;
+import com.wolfking.jeesite.modules.md.service.ServicePointService;
+import com.wolfking.jeesite.modules.mq.dto.MQCreateOrderPushMessage;
+import com.wolfking.jeesite.modules.mq.entity.OrderCreateBody;
+import com.wolfking.jeesite.modules.mq.sender.CreateOrderPushMessageSender;
+import com.wolfking.jeesite.modules.mq.sender.OrderReportSender;
+import com.wolfking.jeesite.modules.mq.sender.sms.SmsMQSender;
+import com.wolfking.jeesite.modules.mq.service.OrderCreateMessageService;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.entity.OrderFee;
+import com.wolfking.jeesite.modules.sd.entity.OrderProcessLog;
+import com.wolfking.jeesite.modules.sd.service.OrderService;
+import com.wolfking.jeesite.modules.sd.utils.OrderUtils;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.service.AreaService;
+import com.wolfking.jeesite.ms.entity.AppPushMessage;
+import com.wolfking.jeesite.ms.service.push.APPMessagePushService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
+import org.springframework.stereotype.Component;
+
+import java.util.Date;
+import java.util.List;
+
+/**
+ * 下单短信及消息消费者
+ * Created by Ryan on 2017/7/27
+ */
+@Component
+@Slf4j
+public class CreateOrderPushMessageReceiver implements ChannelAwareMessageListener {
+
+    @Autowired
+    private SequenceIdService sequenceIdService;
+    //private static final SequenceIdUtils sequenceIdUtils = new SequenceIdUtils(ThreadLocalRandom.current().nextInt(32),ThreadLocalRandom.current().nextInt(32));
+
+    @Autowired
+    private RabbitProperties rabbitProperties;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private ServicePointService servicePointService;
+
+    @Autowired
+    private OrderCreateMessageService orderCreateMessageService;
+
+    @Autowired
+    private AreaService areaService;
+
+    @Autowired
+    private OrderReportSender orderReportSender;
+
+    @Autowired
+    private CreateOrderPushMessageSender createOrderPushMessageSender;
+
+    @Autowired
+    private SmsMQSender smsMQSender;
+
+    @Autowired
+    private APPMessagePushService appMessagePushService;
+
+    @Override
+    public void onMessage(org.springframework.amqp.core.Message message, Channel channel) throws Exception {
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        MQCreateOrderPushMessage.CreateOrderPushMessage orderMessage = null;
+        Long oid = null;
+        Date date = null;
+        User user = null;
+        MQCreateOrderPushMessage.OrderFee mqFee = null;
+        //执行进度
+        int step = 0;
+        //region 订单信息
+        try {
+            orderMessage = MQCreateOrderPushMessage.CreateOrderPushMessage.parseFrom(message.getBody());
+            if (orderMessage == null) {
+                log.error("消息体信息错误:解析消息错误");
+                return;
+            }
+            if (orderMessage.getOrderId() <= 0) {
+                log.error("消息体信息错误,message:{}", new JsonFormat().printToString(orderMessage));
+                return;
+            }
+
+            user = new User(orderMessage.getTriggerBy().getId(), orderMessage.getTriggerBy().getName(), "");
+            date = DateUtils.longToDate(orderMessage.getTriggerDate());
+            oid = orderMessage.getOrderId();
+            if(oid == null || oid <= 0){
+                log.error("[CreateOrderPushMessageReceiver.onMessage]消息体信息错误:订单id null");
+                return;
+            }
+
+            //order fee
+            OrderFee fee = new OrderFee();
+            mqFee = orderMessage.getOrderFee();
+            fee.setOrderId(orderMessage.getOrderId());
+            fee.setQuarter(orderMessage.getQuarter());
+            fee.setExpectCharge(mqFee.getExpectCharge());
+            fee.setBlockedCharge(mqFee.getBlockedCharge());
+            fee.setCustomerUrgentCharge(mqFee.getCustomerUrgentCharge());
+            fee.setEngineerUrgentCharge(mqFee.getEngineerUrgentCharge());
+            fee.setOrderPaymentType(new Dict(mqFee.getOrderPaymentType(), ""));
+
+            //log
+            OrderProcessLog orderLog = new OrderProcessLog();
+            //orderLog.setId(oid);//与订单id相同,生产中出现过id与订单id相同的情况
+            orderLog.setId(sequenceIdService.nextId());
+            orderLog.setQuarter(orderMessage.getQuarter());
+            orderLog.setOrderId(oid);
+            orderLog.setStatus("下单");
+            orderLog.setStatusValue(Order.ORDER_STATUS_NEW);
+            orderLog.setStatusFlag(OrderProcessLog.OPL_SF_CHANGED_STATUS);
+            orderLog.setCloseFlag(0);
+            orderLog.setCreateBy(user);
+            orderLog.setCreateDate(date);
+            //是否自动审核 1-是
+            if (orderMessage.getOrderApproveFlag() == 1) {
+                orderLog.setAction("下单");
+                orderLog.setActionComment(String.format("客户下单并审核:%s,下单人:%s", orderMessage.getOrderNo(), user.getName()));
+
+            } else {
+                orderLog.setAction("下单");
+                orderLog.setActionComment(String.format("客户下单:%s,下单人:%s", orderMessage.getOrderNo(), user.getName()));
+            }
+
+            //save to db
+            orderService.insertCreateLogAndFee(fee, orderLog);
+            //补偿机制重发的队列
+            step = 1;
+            if (orderMessage.getId() > 0) {
+                OrderCreateBody body = new OrderCreateBody();
+                body.setId(orderMessage.getId());
+                body.setRemarks("ok");
+                body.setStatus(30);//ok
+                body.setUpdateDate(new Date());
+                orderCreateMessageService.update(body);
+            }
+
+            //region 制造异常
+            step = 2;
+            //该异常不会重试，因订单的事务已成功执行
+            //int i = 10 / 0;
+            //System.out.println(i);
+            //endregion
+
+        } catch (Exception e) {
+            if (step == 0) {
+                //订单事务失败，重试
+                createOrderPushMessageSender.sendDelay(orderMessage, getDelaySeconds(), 1);
+                //System.out.println("send Delay");
+            } else {
+                log.error("[CreateOrderPushMessageReceiver] order id:{}", orderMessage.getOrderId(), e);
+            }
+            //return;
+        }
+        //endregion 订单信息
+
+        // 重单检查缓存更新
+        syncOrderRepeatCheckCache(orderMessage.getCustomer().getId(), orderMessage.getOrderId(), orderMessage.getOrderNo(), orderMessage.getQuarter(), orderMessage.getUserPhone());
+//
+//        // 客户每日下单报表统计数据
+//        sendCustomerDialyReportMessage(oid, orderMessage.getQuarter(), orderMessage.getCustomer(), orderMessage.getKefu(), orderMessage.getAreaId(), mqFee.getExpectCharge(), user.getId(), date);
+//
+//        //客服每日接单报表统计数据
+//        sendKefuDialyReportMessage(oid, orderMessage.getQuarter(), orderMessage.getKefu(), mqFee.getExpectCharge(), user.getId(), date);
+
+        // 发送短信及APP推送消息
+        sendSmsAndPushMessage(oid, orderMessage.getCategoryId() ,orderMessage.getOrderApproveFlag(), orderMessage.getMsgContent(), orderMessage.getAreaId(), user.getId(), date.getTime());
+    }
+
+    private void syncOrderRepeatCheckCache(long customerId,long orderId,String orderNo,String quarter,String phone){
+        int step = 2;
+        String userPhone = phone;
+        try {
+            //因系统更新可能造成旧队列中无用户手机号，
+            //增加如下处理
+            if (StringUtils.isBlank(userPhone)) {
+                try {
+                    Order order = orderService.getOrderById(orderId, quarter, OrderUtils.OrderDataLevel.CONDITION, true);
+                    userPhone = order.getOrderCondition().getServicePhone().trim();
+                } catch (Exception e) {
+                }
+            }
+            if (StringUtils.isNotBlank(userPhone)) {
+                orderService.setNewRepeateOrderNo(customerId, userPhone, orderNo);
+            }
+        }catch (Exception e){
+            log.error("更新重单检查缓存错误",e);
+        }
+    }
+
+//    /**
+//     * 客户每日下单报表统计数据
+//     */
+//    private void sendCustomerDialyReportMessage(long orderId, String quarter, MQCustomer.Customer customer, MQCreateOrderPushMessage.TriggerBy kefu, long areaId, double amount, long sendBy, Date sendAt){
+//        MQOrderReport.OrderReport orderReportMessage = null;
+//        MQOrderReport.OrderReport.Builder builder;
+//
+//        try {
+//            builder = MQOrderReport.OrderReport.newBuilder()
+//                    .setOrderId(orderId)
+//                    .setQuarter(quarter)
+//                    .setOrderType(Order.ORDER_STATUS_APPROVED)
+//                    .setAmount(amount)
+//                    .setQty(1)
+//                    .setKefu(MQOrderReport.Kefu.newBuilder()
+//                            .setId(kefu.getId())
+//                            .setName(kefu.getName())
+//                            .build()
+//                    )
+//                    .setTriggerDate(sendAt.getTime())
+//                    .setTriggerBy(sendBy);
+//            //完整区域
+//            List<Area> areas = areaService.getSelfAndParents(areaId);
+//            if (areas == null || areas.size() < 3) {
+//                log.error("[CreateOrderPushMessageReceiver]检查区域错误,orderId:{},areaId:{}", orderId, areaId);
+//                //throw new RuntimeException("检查区域错误");
+//            }else {
+//                for (Area area : areas) {
+//                    if (area.getType() == 2) {
+//                        builder.setProvinceId(area.getId());
+//                        builder.setProvinceName(area.getName());
+//                    } else if (area.getType() == 3) {
+//                        builder.setCityId(area.getId());
+//                        builder.setCityName(area.getName());
+//                    } else if (area.getType() == 4) {
+//                        builder.setAreaId(area.getId());
+//                        builder.setAreaName(area.getName());
+//                    }
+//                }
+//                builder.setCustomer(customer);
+//                orderReportMessage = builder.build();
+//                orderReportSender.send(orderReportMessage);
+//            }
+//        } catch (Exception e) {
+//
+//            OrderReport report = new OrderReport();
+//            report.setOrderId(orderId);
+//            report.setDataQuarter(quarter);
+//            report.setRetryTimes(0);
+//            report.setStatus(40);
+//            report.setQty(1);
+//            report.setAmount(amount);
+//            report.setOrderType(Order.ORDER_STATUS_APPROVED);
+//            report.setTriggerBy(sendBy);
+//            report.setTriggerDate(sendAt);
+//            try {
+//                mqOrderReportService.insert(report);
+//            } catch (Exception e1) {
+//                if (orderReportMessage != null) {
+//                    log.error("发送客户每日下单报表消息失败,json:{}", new JsonFormat().printToString(orderReportMessage), e1);
+//                } else {
+//                    log.error("发送客户每日下单报表消息失败,orderId:{}", orderId, e1);
+//                }
+//            }
+//        }
+//    }
+
+//    /**
+//     * 客服每日接单报表统计数据
+//     */
+//    private void sendKefuDialyReportMessage(long orderId, String quarter,MQCreateOrderPushMessage.TriggerBy kefu,double amount, long sendBy, Date sendAt){
+//        int step = 4;
+//        MQOrderReport.OrderReport orderReportMessage = null;
+//        MQOrderReport.OrderReport.Builder builder;
+//        try {
+//            builder = MQOrderReport.OrderReport.newBuilder()
+//                    .setOrderId(orderId)
+//                    .setOrderType(Order.ORDER_STATUS_ACCEPTED)
+//                    .setQty(1)
+//                    .setAmount(amount)
+//                    .setTriggerDate(new Date().getTime())
+//                    .setTriggerBy(sendBy);
+//            MQOrderReport.Kefu mqkefu = MQOrderReport.Kefu.newBuilder()
+//                    .setId(kefu.getId())
+//                    .setName(kefu.getName()).build();
+//            builder.setKefu(mqkefu);
+//            orderReportMessage = builder.build();
+//            orderReportSender.send(orderReportMessage);
+//        } catch (Exception e) {
+//            OrderReport report = new OrderReport();
+//            report.setOrderId(orderId);
+//            report.setDataQuarter(quarter);
+//            report.setRetryTimes(0);
+//            report.setStatus(40);
+//            report.setQty(1);
+//            report.setAmount(amount);
+//            report.setOrderType(Order.ORDER_STATUS_ACCEPTED);
+//            report.setTriggerBy(kefu.getId());
+//            report.setTriggerDate(sendAt);
+//            try {
+//                mqOrderReportService.insert(report);
+//            } catch (Exception e1) {
+//                if (orderReportMessage != null) {
+//                    log.error("发送客服每日接单报表消息失败,json:{}", new JsonFormat().printToString(orderReportMessage), e1);
+//                } else {
+//                    log.error("发送客服每日接单报表消息失败,orderId:{}", orderId, e1);
+//                }
+//            }
+//        }
+//    }
+
+    /**
+     * 发送短信及APP推送消息
+     * todo:待优化，分离出单独消息队列来处理
+     */
+    private void sendSmsAndPushMessage(long orderId,long categoryId,int orderApproveFlag,String msgContent,long areaId,long sendBy,long sendAt){
+        int step = 5;
+        // 内容示例如下：
+        // 张三师傅，在您附近有一张上门安装百得油烟机的工单，请尽快登陆APP接单~
+        if (orderApproveFlag == 1 && StringUtils.isNotBlank(msgContent)) {//已审核
+            try {
+                List<User> engineers = servicePointService.getEngineerAccountsListByAreaAndProductCategory(areaId,categoryId);
+                if (engineers != null && engineers.size() > 0) {
+                    for (User engineer : engineers) {
+                        //手机接单权限
+                        if (engineer.getAppFlag() == 0) {
+                            continue;
+                        }
+                        // 短信
+                        if (engineer.getShortMessageFlag() == 1) {
+                            //TODO: 短信类型
+                            smsMQSender.sendNew(engineer.getMobile(),
+                                    engineer.getName().substring(0, 1).concat(msgContent),
+                                    "",
+                                    sendBy,
+                                    sendAt,
+                                    SysSMSTypeEnum.ORDER_CREATED
+                            );
+                        }
+
+                        // 发送APP消息
+                        // 张三师傅，在您附近有一张上门安装百得油烟机的工单，请尽快登陆APP接单~
+                        AppPushMessage pushMessage = new AppPushMessage();
+                        pushMessage.setPassThroughType(AppPushMessage.PassThroughType.NOTIFICATION);
+                        pushMessage.setMessageType(AppMessageType.ACCEPTORDER);
+                        pushMessage.setSubject("");
+                        pushMessage.setContent("");
+                        pushMessage.setTimestamp(System.currentTimeMillis());
+                        pushMessage.setUserId(engineer.getId());
+                        pushMessage.setDescription(engineer.getName().substring(0, 1).concat(msgContent));
+                        appMessagePushService.sendMessage(pushMessage);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("发送下单短信及APP推送错误,orderId:{}",orderId,e);
+            }
+        }
+
+    }
+
+    private int getDelaySeconds() {
+        return (int) (rabbitProperties.getTemplate().getRetry().getInitialInterval() * rabbitProperties.getTemplate().getRetry().getMultiplier());
+    }
+
+}

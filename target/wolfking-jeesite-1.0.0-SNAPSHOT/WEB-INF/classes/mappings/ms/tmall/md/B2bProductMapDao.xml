@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.md.dao.B2bProductMapDao">
+
+<!--    <sql id="SimpleSelectColumns">-->
+<!--        a.id,-->
+<!--        a.data_source,-->
+<!--        a.customer_id,-->
+<!--        a.shop_id,-->
+<!--        a.customer_category_id,-->
+<!--        a.product_id as "product.id"-->
+<!--    </sql>-->
+
+<!--    <sql id="AllSelectColumns">-->
+<!--        <include refid="SimpleSelectColumns" />,-->
+<!--        a.create_by as "createBy.id",-->
+<!--        a.create_date,-->
+<!--        a.update_by as "updateBy.id",-->
+<!--        a.update_date,-->
+<!--        a.remarks-->
+<!--    </sql>-->
+
+<!--    <select id="get" parameterType="java.lang.Long" resultType="B2bProductMap">-->
+<!--        SELECT-->
+<!--              <include refid="AllSelectColumns"/>-->
+<!--        FROM  md_b2b_product_map a-->
+<!--        WHERE a.id = #{id}-->
+<!--    </select>-->
+
+<!--    <select id="getProductIdByShopId" resultType="java.lang.Long">-->
+<!--        SELECT product_id-->
+<!--        FROM md_b2b_product_map-->
+<!--        where-->
+<!--            del_flag = 0-->
+<!--            AND data_source = #{dataSource}-->
+<!--            AND shop_id = #{shopId}-->
+<!--            AND customer_category_id = #{customerCategoryId}-->
+<!--        limit 1-->
+<!--    </select>-->
+
+<!--    <select id="getProductModelListByShop" resultType="com.wolfking.jeesite.ms.tmall.md.adapter.B2BProductModel">-->
+<!--        SELECT product_id,customer_category_id-->
+<!--        FROM md_b2b_product_map-->
+<!--        WHERE del_flag = 0-->
+<!--        AND data_source = #{dataSource}-->
+<!--        AND shop_id = #{shopId}-->
+<!--    </select>-->
+
+<!--    <insert id="insert" parameterType="B2bProductMap" keyProperty="id" useGeneratedKeys="true">-->
+<!--        INSERT INTO md_b2b_product_map (-->
+<!--            data_source,-->
+<!--            customer_id,-->
+<!--            shop_id,-->
+<!--            customer_category_id,-->
+<!--            product_id,-->
+<!--            remarks,-->
+<!--            create_by,-->
+<!--            create_date,-->
+<!--            update_by,-->
+<!--            update_date,-->
+<!--            del_flag-->
+<!--        ) VALUES (-->
+<!--            #{dataSource},-->
+<!--            #{customerId},-->
+<!--            #{shopId},-->
+<!--            #{customerCategoryId},-->
+<!--            #{product.id},-->
+<!--            #{remarks},-->
+<!--            #{createBy.id},-->
+<!--            #{createDate},-->
+<!--            #{updateBy.id},-->
+<!--            #{updateDate},-->
+<!--            #{delFlag}-->
+<!--        )-->
+<!--    </insert>-->
+
+<!--    <update id="delete" parameterType="B2bProductMap">-->
+<!--        UPDATE md_b2b_product_map-->
+<!--        <set>-->
+<!--            del_flag = 1,-->
+<!--            update_by = #{updateBy.id},-->
+<!--            update_date = #{updateDate}-->
+<!--        </set>-->
+<!--        WHERE id = #{id}-->
+<!--    </update>-->
+
+<!--    <update id="updateShopId">-->
+<!--        UPDATE md_b2b_product_map-->
+<!--        SET shop_id = #{newShopId}-->
+<!--        WHERE data_source = #{dataSource}-->
+<!--        AND shop_id = #{oldShopId}-->
+<!--    </update>-->
+
+<!--    <delete id="deleteByShop">-->
+<!--        DELETE FROM md_b2b_product_map-->
+<!--        WHERE data_source = #{dataSource}-->
+<!--        AND shop_id = #{shopId}-->
+<!--    </delete>-->
+
+<!--    <update id="update" parameterType="B2bProductMap">-->
+<!--        UPDATE md_b2b_product_map-->
+<!--        <set>-->
+<!--            product_id = #{product.id},-->
+<!--            customer_category_id = #{customerCategoryId},-->
+<!--            remarks = #{remarks},-->
+<!--            update_by = #{updateBy.id},-->
+<!--            update_date = #{updateDate}-->
+<!--        </set>-->
+<!--        WHERE id = #{id}-->
+<!--    </update>-->
+    
+<!--    <select id="findList" resultType="B2bProductMap" parameterType="B2bProductMap">-->
+<!--        select-->
+<!--        a.id,-->
+<!--        a.customer_id,-->
+<!--        a.data_source,-->
+<!--        a.shop_id,-->
+<!--        a.customer_category_id,-->
+<!--        a.remarks,-->
+<!--        a.product_id as "product.id"-->
+<!--        from md_b2b_product_map a-->
+<!--        <where>-->
+<!--            a.del_flag=0-->
+<!--            <if test="shopId != null and shopId !=''.toString()">-->
+<!--                and a.shop_id like CONCAT('%', #{shopId}, '%')-->
+<!--            </if>-->
+<!--            <if test="shopName != null and shopName !=''.toString()">-->
+<!--                and mc.shop_name like CONCAT('%', #{shopName}, '%')-->
+<!--            </if>-->
+<!--            <if test="customerId != null and customerId > 0">-->
+<!--                and a.customer_id = #{customerId}-->
+<!--            </if>-->
+<!--            <if test="customerCategoryId != null and customerCategoryId != ''.toString()">-->
+<!--                and a.customer_category_id like concat('%',#{customerCategoryId},'%')-->
+<!--            </if>-->
+<!--        </where>-->
+<!--        order by a.data_source,a.shop_id-->
+<!--    </select>-->
+
+</mapper>

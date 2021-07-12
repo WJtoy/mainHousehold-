@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.globalmapping.dao.ProductCategoryServicePointMapper">
+    <!--
+    2020-6-12
+    <select id="findListByProductCategoryId" resultType="Long">
+        SELECT service_point_id
+        FROM md_productcategory_servicepoint
+        WHERE product_category_id = #{productCategoryId}
+        LIMIT 100000
+    </select>
+    -->
+
+    <!-- 批量按网点id检查网点是否有指定品类权限 -->
+    <!--2020-6-12
+    <select id="findListByProductCategoryIdAndServicePointIds" resultType="Long">
+        SELECT service_point_id
+        FROM md_productcategory_servicepoint
+        WHERE
+            service_point_id in <foreach collection="servicePointIds" item="servicePointId" index="index" open="(" close=")" separator=",">${servicePointId}</foreach>
+            and product_category_id = #{productCategoryId}
+        LIMIT 100
+    </select>
+
+    <select id="getByServicePointId" resultType="Long">
+        SELECT
+              product_category_id
+        FROM  md_productcategory_servicepoint
+        WHERE service_point_id = #{servicePointId}
+    </select>
+
+    <insert id="insertProductCategoryIds">
+        INSERT INTO md_productcategory_servicepoint
+        (
+          product_category_id,
+          service_point_id
+        )
+        VALUES
+            <foreach collection="productCategoryIds" item="productCategoryId" index="index" open="" close="" separator=",">
+                (
+                  #{productCategoryId},
+                  #{servicePointId}
+                )
+            </foreach>
+    </insert>
+
+    <delete id="deleteByServicePointId">
+        DELETE FROM md_productcategory_servicepoint
+        WHERE service_point_id = #{servicePointId}
+    </delete>
+    -->
+
+</mapper>

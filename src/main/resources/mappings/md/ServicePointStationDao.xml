@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ServicePointStationDao">
+    <sql id="servicePointStationColumns">
+        a.id,
+        a.servicepoint_id as 'servicePoint.id',
+        a.area_id as 'area.parent.id',
+        a.sub_area_id as 'area.id',
+        a.name,
+        a.address,
+        a.longtitude,
+        a.latitude,
+        a.radius,
+        a.auto_plan_flag,
+        a.remarks,
+        a.create_by as 'createBy.id',
+        a.create_date,
+        a.update_by as 'updateBy.id',
+        a.update_date,
+        a.del_flag
+    </sql>
+
+    <sql id="servicepointColumns">
+        b.servicepoint_no as 'servicePoint.servicePointNo',
+        b.name as 'servicePoint.name',
+        b.auto_plan_flag as 'servicePoint.autoPlanFlag'
+    </sql>
+
+    <sql id="areaColumns">
+        c.name as 'area.name',
+        c.type as 'area.type',
+        c.full_name as 'area.fullName'
+    </sql>
+
+    <!--//mark on 2020-1-20 web端去md_servicepoint_station
+    <select id="get" resultType="ServicePointStation">
+        select <include refid="servicePointStationColumns"/>
+        from md_servicepoint_station a
+        where a.id = #{id}
+    </select>
+    -->
+
+    <!--//mark on 2020-1-20 web端去md_servicepoint_station
+    <select id="getByServicePointIdAndAreaId" resultType="ServicePointStation">
+        select <include refid="servicePointStationColumns"/>
+        from md_servicepoint_station a
+        where a.servicepoint_id = #{servicePoint.id}
+        and a.sub_area_id = #{area.id}
+        and a.del_flag = 0
+        limit 1
+    </select>
+    -->
+
+    <select id="findList_del20200120" resultType="ServicePointStation">
+        select <include refid="servicePointStationColumns"/>
+              <!--
+              ,<include refid="servicepointColumns"/>
+              -->
+              ,<include refid="areaColumns"/>
+        from md_servicepoint_station a
+            <!--
+             join md_servicepoint b
+              on a.servicepoint_id = b.id -->
+              join sys_area c
+                on a.sub_area_id = c.id
+        where <!--b.del_flag = 0
+              and -->
+              c.del_flag = 0
+              and a.del_flag = 0
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id !=''">
+                and a.servicepoint_id = #{servicePoint.id}
+            </if>
+        order by
+            <choose>
+                <when test="orderBy != null and orderBy != ''">
+                    ${orderBy}
+                </when>
+                <otherwise>
+                    a.servicepoint_id
+                </otherwise>
+            </choose>
+    </select>
+
+    <select id="findAutoPlanList_del20200120" resultType="ServicePointStation">
+        select <include refid="servicePointStationColumns"/>
+        <!--
+        ServicePoint微服务 2019-10-9
+        ,<include refid="servicepointColumns"/>
+        -->
+        ,<include refid="areaColumns"/>
+        from md_servicepoint_station a
+        <!--
+        join md_servicepoint b
+        on a.servicepoint_id = b.id
+        -->
+        join sys_area c
+        on a.sub_area_id = c.id
+        where a.del_flag = 0
+        <!--
+        and b.del_flag = 0
+        -->
+        and c.del_flag = 0
+        and a.auto_plan_flag = 1
+        <if test="servicePoint != null and servicePoint.id != null and servicePoint.id !=''">
+            and a.servicepoint_id = #{servicePoint.id}
+        </if>
+        <!--
+        <if test="servicePoint != null and servicePoint.autoPlanFlag != null and servicePoint.autoPlanFlag !=''">
+            and b.auto_plan_flag = #{servicePoint.autoPlanFlag}
+        </if>
+        <if test="servicePoint != null and servicePoint.servicePointNo != null and servicePoint.servicePointNo !=''">
+            and b.servicepoint_no = #{servicePoint.servicePointNo}
+        </if>
+        <if test="servicePoint != null and servicePoint.level != null and servicePoint.level.value != null and servicePoint.level.value !=0">
+            and b.level = #{servicePoint.level.value}
+        </if>
+        -->
+        <choose>
+            <when test="area != null and area.id != null and area.id !='' and area.parentIds != null and area.parentIds != ''">
+                and ( a.sub_area_id = #{area.id} or a.sub_area_id in (
+                select id
+                from sys_area
+                where parent_ids like concat(#{area.parentIds},#{area.id},',%')
+                ))
+            </when>
+            <otherwise>
+                and a.sub_area_id = #{area.id}
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--
+    //此方法已没有地方调用
+    <select id="autoPlanByServicePointId" resultType="java.lang.Long">
+       SELECT
+              id
+        FROM  md_servicepoint_station
+        WHERE auto_plan_flag=1
+        AND   del_flag = 0
+        AND   servicepoint_id = #{servicePointId}
+        LIMIT 1
+    </select>
+    -->
+
+    <!-- //mark on 2020-1-20 web端去md_servicepoint_station
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into md_servicepoint_station
+        (
+            servicepoint_id,
+            area_id,
+            sub_area_id,
+            name,
+            address,
+            longtitude,
+            latitude,
+            radius,
+            auto_plan_flag,
+            remarks,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            del_flag
+        )
+        values (
+            #{servicePoint.id},
+            #{area.parent.id},
+            #{area.id},
+            #{name},
+            #{address},
+            #{longtitude},
+            #{latitude},
+            #{radius},
+            #{autoPlanFlag},
+            #{remarks},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="update">
+        update md_servicepoint_station
+        set name = #{name},
+            address = #{address},
+            longtitude = #{longtitude},
+            latitude = #{latitude},
+            area_id = #{area.parent.id},
+            sub_area_id = #{area.id},
+            radius = #{radius},
+            auto_plan_flag = #{autoPlanFlag},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        where id =#{id}
+    </update>
+
+    <update id="delete">
+        update md_servicepoint_station
+        set  del_flag = #{delFlag},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        where id =#{id}
+    </update>
+    -->
+</mapper>

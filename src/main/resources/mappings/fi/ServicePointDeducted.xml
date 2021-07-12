@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.ServicePointDeductedDao">
+
+	<select id="getDeductedAmountList" resultType="com.kkl.kklplus.entity.fi.servicepoint.ServicePointDeducted">
+		SELECT
+			servicepoint_id,
+			SUM(amount)	AS 'amount'
+		FROM
+			fi_servicepoint_deducted
+		WHERE
+			status = 40
+		<if test="servicePointId != null">
+			AND servicepoint_id = #{servicePointId}
+		</if>
+		  AND deduction_year_month = #{deductionYearMonth}
+		GROUP BY
+			servicepoint_id
+	</select>
+
+</mapper>

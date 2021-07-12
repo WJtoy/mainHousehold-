@@ -1,0 +1,1401 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.ServicePointOrderListDao">
+
+    <!-- 催单 -->
+    <select id="findReminderOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            so.orderitem_json     AS "orderItemJson",
+            sos.plan_date,
+            soc.order_id,
+            soc.urgent_level_id,
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 催单关键条件 -->
+                      AND soc.status between 20 AND 50
+                      AND sos.reminder_status = 1
+                </when>
+                <otherwise>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 催单关键条件 -->
+                      AND soc.status between 20 AND 50
+                      AND sos.reminder_status = 1
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, sos.plan_date, soc.order_id
+    </select>
+
+    <!-- 未预约 -->
+    <select id="findServicePointNoAppointmentOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            so.orderitem_json     AS "orderItemJson",
+            sos.plan_date,
+            soc.order_id,
+            soc.urgent_level_id,
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 未预约关键条件 -->
+                    <![CDATA[
+                      AND soc.status between 20 AND 70
+                      AND soc.sub_status between 10 AND 40
+                      AND soc.pending_type = 0
+                    ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 未预约关键条件 -->
+                    <![CDATA[
+                      AND soc.status between 20 AND 70
+                      AND soc.sub_status between 10 AND 40
+                      AND soc.pending_type = 0
+                    ]]>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, sos.plan_date, soc.order_id
+    </select>
+
+    <!-- 预约到期 -->
+    <select id="findServicePointArriveAppointmentOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.sub_status        AS "orderCondition.subStatus",
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            soc.appointment_date  AS "orderCondition.appointmentDate",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            sos.reminder_status   AS "orderStatus.reminderStatus",
+            so.orderitem_json     AS "orderItemJson",
+            soc.reservation_date,
+            sos.plan_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 预约到期的关键条件 -->
+                    <![CDATA[
+                        AND soc.reservation_date between #{startOfToday} AND #{endOfToday}
+                        AND soc.status between 20 AND 70
+                        AND soc.sub_status between 10 AND 40
+                        AND soc.pending_type > 0
+                    ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <!-- 预约到期的关键条件 -->
+                    <![CDATA[
+                        AND soc.reservation_date between #{startOfToday} AND #{endOfToday}
+                        AND soc.status between 20 AND 70
+                        AND soc.sub_status between 10 AND 40
+                        AND soc.pending_type > 0
+                    ]]>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, soc.reservation_date, sos.plan_date, soc.order_id
+    </select>
+
+    <!-- 预约超期 -->
+    <select id="findServicePointPassAppointmentOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.sub_status        AS "orderCondition.subStatus",
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            soc.appointment_date  AS "orderCondition.appointmentDate",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            sos.reminder_status   AS "orderStatus.reminderStatus",
+            so.orderitem_json     AS "orderItemJson",
+            soc.reservation_date,
+            sos.plan_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 预约超期的关键条件 -->
+                    <![CDATA[
+                        AND soc.status between 20 AND 70
+                        AND soc.sub_status between 10 AND 40
+                        AND soc.pending_type > 0
+                        and soc.reservation_date < #{startOfToday}
+                    ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 预约超期的关键条件 -->
+                    <![CDATA[
+                        AND soc.status between 20 AND 70
+                        AND soc.sub_status between 10 AND 40
+                        AND soc.pending_type > 0
+                        and soc.reservation_date < #{startOfToday}
+                    ]]>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, soc.reservation_date, sos.plan_date, soc.order_id
+    </select>
+
+    <!-- 停滞 -->
+    <select id="findServicePointPendingOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.sub_status        AS "orderCondition.subStatus",
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            soc.appointment_date  AS "orderCondition.appointmentDate",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            so.orderitem_json     AS "orderItemJson",
+            soc.reservation_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 停滞关键条件 -->
+                    <![CDATA[
+                        AND soc.reservation_date > #{endOfToday}
+                        AND soc.status between 20 AND 70
+                        AND soc.sub_status between 10 AND 40
+                        AND soc.pending_type > 0
+                    ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 停滞关键条件 -->
+                    <![CDATA[
+                        AND soc.reservation_date > #{endOfToday}
+                        AND soc.status between 20 AND 70
+                        AND soc.sub_status between 10 AND 40
+                        AND soc.pending_type > 0
+                    ]]>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, soc.reservation_date, soc.order_id
+    </select>
+
+    <!-- 待完成 -->
+    <select id="findServicePointServicedOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.sub_status        AS "orderCondition.subStatus",
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            soc.appointment_date  AS "orderCondition.appointmentDate",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag	  AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            sos.reminder_status   AS "orderStatus.reminderStatus",
+            so.orderitem_json     AS "orderItemJson",
+            soc.reservation_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 待回访关键条件 （不包括60、70）, 不包含APP完成的工单-->
+                    <![CDATA[
+                          AND soc.status between 20 AND 50
+                          AND soc.sub_status between 50 and 60
+                    ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 待回访关键条件 （不包括60、70）, 不包含APP完成的工单-->
+                    <![CDATA[
+                          AND soc.status between 20 AND 50
+                          AND soc.sub_status between 50 and 60
+                    ]]>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, soc.reservation_date, soc.order_id
+    </select>
+
+    <!-- 待回访 -->
+    <select id="findServicePointAppCompletedOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.sub_status        AS "orderCondition.subStatus",
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            soc.appointment_date  AS "orderCondition.appointmentDate",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            so.orderitem_json     AS "orderItemJson",
+            soc.reservation_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 待回访包含APP完成的工单-->
+                    <![CDATA[
+                          AND soc.status between 20 AND 50
+                          AND soc.sub_status = 70
+                    ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 待回访包含APP完成的工单-->
+                    <![CDATA[
+                          AND soc.status between 20 AND 50
+                          AND soc.sub_status = 70
+                    ]]>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, soc.reservation_date, soc.order_id
+    </select>
+
+    <!-- 未完成 -->
+    <select id="findServicePointUncompletedOrderList" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.sub_status        AS "orderCondition.subStatus",
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            soc.appointment_date  AS "orderCondition.appointmentDate",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            so.orderitem_json     AS "orderItemJson",
+            sos.plan_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 未完成关键条件 （不包括60、70）-->
+                    <![CDATA[
+                          AND soc.status between 20 and 50
+                    ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 未完成关键条件 （不包括60、70）-->
+                    <![CDATA[
+                          AND soc.status between 20 and 50
+                    ]]>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, sos.plan_date, soc.order_id
+    </select>
+
+    <!-- 所有 -->
+    <select id="findServicePointAllOrderList" parameterType="Map" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+            soc.status            AS "orderCondition.status.value",
+            soc.sub_status        AS "orderCondition.subStatus",
+            soc.reservation_times AS "orderCondition.reservationTimes",
+            soc.appointment_date  AS "orderCondition.appointmentDate",
+            soc.pending_type      AS "orderCondition.pendingType.value",
+            soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+            sos.plan_date         AS "orderStatus.planDate",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.address           AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id   AS "orderCondition.servicePoint.id",
+            soc.engineer_id       AS "orderCondition.engineer.id",
+            soc.tracking_flag		AS "orderCondition.trackingFlag",
+            soc.tracking_date     AS "orderCondition.trackingDate",
+            soc.tracking_message  AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            so.orderitem_json     AS "orderItemJson",
+            sos.plan_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND (
+                            soc.servicepoint_id = #{servicePointId}
+                            OR <!-- 完成的订单允许参与的网点查看 --> (
+                            EXISTS (
+                                SELECT 1
+                                FROM sd_orderdetail sod
+                                WHERE sod.order_id = soc.order_id
+                                AND sod.servicepoint_id = #{servicePointId}
+                                and sod.del_flag = 0
+                            )
+                            AND soc.status >= 80
+                            )
+                        )
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND (
+                            soc.servicepoint_id = #{servicePointId}
+                            OR <!-- 完成的订单允许参与的网点查看 --> (
+                                EXISTS (
+                                    SELECT 1
+                                    FROM sd_orderdetail sod
+                                    WHERE sod.order_id = soc.order_id
+                                        AND sod.servicepoint_id = #{servicePointId}
+                                        and sod.del_flag = 0
+                                )
+                                AND soc.status >= 80
+                            )
+                        )
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, sos.plan_date, soc.order_id
+    </select>
+
+    <!-- 获取网点的完成工单列表 -->
+    <select id="findServicePointCompletedOrderList" resultType="Order">
+        SELECT
+            soc.order_id                  AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu           AS "orderCondition.replyFlagKefu",
+            soc.status                    AS "orderCondition.status.value",
+            soc.pending_type              AS "orderCondition.pendingType.value",
+            soc.urgent_level_id           AS "orderCondition.urgentLevel.id",
+            sos.plan_date                 AS "orderStatus.planDate",
+            soc.user_name                 AS "orderCondition.userName",
+            soc.service_phone             AS "orderCondition.servicePhone",
+            soc.area_id                   AS "orderCondition.area.id",
+            soc.area_name                 AS "orderCondition.area.name",
+            soc.address                   AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id           AS "orderCondition.servicePoint.id",
+            soc.engineer_id               AS "orderCondition.engineer.id",
+            soc.tracking_flag		      AS "orderCondition.trackingFlag",
+            soc.tracking_date             AS "orderCondition.trackingDate",
+            soc.tracking_message          AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty          AS "orderCondition.finishPhotoQty",
+            soc.kefu_id                   AS "orderCondition.kefu.id",
+            soc.charge_flag               AS "orderCondition.chargeFlag",
+            soc.close_date                AS "orderCondition.closeDate",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            sof.engineer_total_charge     AS "orderFee.engineerTotalCharge",
+            sof.engineer_service_charge   AS "orderFee.engineerServiceCharge",
+            sof.engineer_material_charge  AS "orderFee.engineerMaterialCharge",
+            sof.engineer_travel_charge    AS "orderFee.engineerTravelCharge",
+            sof.engineer_other_charge     AS "orderFee.engineerOtherCharge",
+            sos.charge_date               AS "orderStatus.chargeDate",
+            sos.charge_date,
+            soc.charge_flag,
+            soc.urgent_level_id,
+            soc.close_date
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- and soc.status = 80 -->
+                    and soc.grade_flag > 0
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- and soc.status = 80 -->
+                    and soc.grade_flag > 0
+                    <choose>
+                        <when test="beginCompleteDate != null and endCompleteDate != null">
+                            AND soc.close_date between #{beginCompleteDate} and #{endCompleteDate}
+                        </when>
+                        <when test="beginCompleteDate != null ">
+                            <![CDATA[ AND soc.close_date >= #{beginCompleteDate} ]]>
+                        </when>
+                        <when test="endCompleteDate != null ">
+                            <![CDATA[ AND soc.close_date <= #{endCompleteDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="engineerChargeStatus != null and engineerChargeStatus.value != null">
+                        <if test="engineerChargeStatus.value == 10">
+                            AND soc.charge_flag = 0
+                        </if>
+                        <if test="engineerChargeStatus.value == 20">
+                            AND soc.charge_flag = 1
+                        </if>
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, soc.close_date
+    </select>
+
+    <!-- 获取工单的实际服务明细 -->
+    <select id="getOrderDetailListByOrderIds" parameterType="Map" resultType="OrderDetail">
+        SELECT
+        sod.id,
+        sod.order_id,
+        sod.service_type_id AS "serviceType.id",
+        sod.product_id      AS "product.id",
+        sod.product_spec,
+        sod.brand,
+        sod.qty,
+        sod.servicepoint_id,
+        sod.engineer_id
+        FROM  sd_orderdetail sod
+        <where>
+            sod.del_flag = 0
+            <choose>
+                <when test="orderIds != null and orderIds.size > 0">
+                    AND sod.order_id IN
+                    <foreach collection="orderIds" open="(" separator="," close=")" item="orderId">
+                        #{orderId}
+                    </foreach>
+                </when>
+                <otherwise>
+                    AND FALSE
+                </otherwise>
+            </choose>
+            <if test="servicePointId != null and servicePointId != 0">
+                AND sod.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="engineerId != null and engineerId != 0">
+                AND sod.engineer_id = #{engineerId}
+            </if>
+        </where>
+        ORDER BY sod.order_id, sod.id
+        LIMIT 2000
+    </select>
+
+    <!-- 获取网点等配件工单列表 -->
+    <select id="findServicePointWaitingAccessoryList" resultType="Order">
+        SELECT
+            soc.order_id                  AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu           AS "orderCondition.replyFlagKefu",
+            soc.status                    AS "orderCondition.status.value",
+            soc.sub_status                AS "orderCondition.subStatus",
+            soc.reservation_times         AS "orderCondition.reservationTimes",
+            soc.appointment_date          AS "orderCondition.appointmentDate",
+            soc.pending_type              AS "orderCondition.pendingType.value",
+            soc.urgent_level_id           AS "orderCondition.urgentLevel.id",
+            sos.plan_date                 AS "orderStatus.planDate",
+            soc.user_name                 AS "orderCondition.userName",
+            soc.service_phone             AS "orderCondition.servicePhone",
+            soc.area_id                   AS "orderCondition.area.id",
+            soc.area_name                 AS "orderCondition.area.name",
+            soc.address                   AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id           AS "orderCondition.servicePoint.id",
+            soc.engineer_id               AS "orderCondition.engineer.id",
+            soc.tracking_flag		      AS "orderCondition.trackingFlag",
+            soc.tracking_date             AS "orderCondition.trackingDate",
+            soc.tracking_message          AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty          AS "orderCondition.finishPhotoQty",
+            soc.kefu_id                   AS "orderCondition.kefu.id",
+            soc.charge_flag               AS "orderCondition.chargeFlag",
+            soc.close_date                AS "orderCondition.closeDate",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            sof.engineer_total_charge     AS "orderFee.engineerTotalCharge",
+            sof.engineer_service_charge   AS "orderFee.engineerServiceCharge",
+            sof.engineer_material_charge  AS "orderFee.engineerMaterialCharge",
+            sof.engineer_travel_charge    AS "orderFee.engineerTravelCharge",
+            sof.engineer_other_charge     AS "orderFee.engineerOtherCharge",
+            sos.charge_date               AS "orderStatus.chargeDate",
+            soc.charge_flag,
+            soc.close_date,
+            sos.plan_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <![CDATA[
+                     AND soc.reservation_date > #{appointmentDate}
+                     AND soc.status < 80
+                     AND soc.sub_status > 10
+                     AND soc.pending_type = 2
+                     ]]>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 等配件 -->
+                    <![CDATA[
+                     AND soc.reservation_date > #{appointmentDate}
+                     AND soc.status < 80
+                     AND soc.sub_status > 10
+                     AND soc.pending_type = 2
+                     ]]>
+                    <choose>
+                        <when test="beginCompleteDate != null and endCompleteDate != null">
+                            AND soc.close_date between #{beginCompleteDate} and #{endCompleteDate}
+                        </when>
+                        <when test="beginCompleteDate != null ">
+                            <![CDATA[ AND soc.close_date >= #{beginCompleteDate} ]]>
+                        </when>
+                        <when test="endCompleteDate != null ">
+                            <![CDATA[ AND soc.close_date <= #{endCompleteDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="engineerChargeStatus != null and engineerChargeStatus.value != null">
+                        <if test="engineerChargeStatus.value == 10">
+                            AND soc.charge_flag = 0
+                        </if>
+                        <if test="engineerChargeStatus.value == 20">
+                            AND soc.charge_flag = 1
+                        </if>
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.urgent_level_id DESC, sos.plan_date, soc.order_id
+    </select>
+
+    <!-- 获取网点退单工单列表 -->
+    <select id="findServicePointReturnedList" resultType="Order">
+        SELECT
+            soc.order_id                  AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.reply_flag_kefu           AS "orderCondition.replyFlagKefu",
+            soc.status                    AS "orderCondition.status.value",
+            soc.pending_type              AS "orderCondition.pendingType.value",
+            soc.urgent_level_id           AS "orderCondition.urgentLevel.id",
+            sos.plan_date                 AS "orderStatus.planDate",
+            soc.user_name                 AS "orderCondition.userName",
+            soc.service_phone             AS "orderCondition.servicePhone",
+            soc.area_id                   AS "orderCondition.area.id",
+            soc.area_name                 AS "orderCondition.area.name",
+            soc.address                   AS "orderCondition.serviceAddress",
+            so.description,
+            soc.servicepoint_id           AS "orderCondition.servicePoint.id",
+            soc.engineer_id               AS "orderCondition.engineer.id",
+            soc.tracking_flag		      AS "orderCondition.trackingFlag",
+            soc.tracking_date             AS "orderCondition.trackingDate",
+            soc.tracking_message          AS "orderCondition.trackingMessage",
+            soc.finish_photo_qty          AS "orderCondition.finishPhotoQty",
+            soc.kefu_id                   AS "orderCondition.kefu.id",
+            soc.charge_flag               AS "orderCondition.chargeFlag",
+            soc.close_date                AS "orderCondition.closeDate",
+            sos.reminder_status     AS "orderStatus.reminderStatus",
+            sof.engineer_total_charge     AS "orderFee.engineerTotalCharge",
+            sof.engineer_service_charge   AS "orderFee.engineerServiceCharge",
+            sof.engineer_material_charge  AS "orderFee.engineerMaterialCharge",
+            sof.engineer_travel_charge    AS "orderFee.engineerTravelCharge",
+            sof.engineer_other_charge     AS "orderFee.engineerOtherCharge",
+            sos.charge_date               AS "orderStatus.chargeDate",
+            sos.charge_date,
+            soc.charge_flag,
+            soc.close_date,
+            soc.urgent_level_id,
+            soc.order_id
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <!-- 退单 -->
+                    AND soc.status = 90
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="servicePointId != null">
+                        AND soc.servicepoint_id = #{servicePointId}
+                    </if>
+                    <if test="engineerId != null">
+                        AND soc.engineer_id = #{engineerId}
+                    </if>
+                    <if test="searchEngineerId != null and searchEngineerId > 0">
+                        and soc.engineer_id = #{searchEngineerId}
+                    </if>
+                    <if test="userName != null and userName != ''.toString()">
+                        AND soc.user_name = #{userName}
+                    </if>
+                    <!-- 退单 -->
+                    AND soc.status = 90
+                    <choose>
+                        <when test="beginCompleteDate != null and endCompleteDate != null">
+                            AND soc.close_date between #{beginCompleteDate} and #{endCompleteDate}
+                        </when>
+                        <when test="beginCompleteDate != null ">
+                            <![CDATA[ AND soc.close_date >= #{beginCompleteDate} ]]>
+                        </when>
+                        <when test="endCompleteDate != null ">
+                            <![CDATA[ AND soc.close_date <= #{endCompleteDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <choose>
+                        <when test="beginAcceptDate != null and endAcceptDate != null">
+                            AND sos.plan_date between #{beginAcceptDate} and #{endAcceptDate}
+                        </when>
+                        <when test="beginAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date >= #{beginAcceptDate} ]]>
+                        </when>
+                        <when test="endAcceptDate != null">
+                            <![CDATA[ AND sos.plan_date <= #{endAcceptDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="engineerChargeStatus != null and engineerChargeStatus.value != null">
+                        <if test="engineerChargeStatus.value == 10">
+                            AND soc.charge_flag = 0
+                        </if>
+                        <if test="engineerChargeStatus.value == 20">
+                            AND soc.charge_flag = 1
+                        </if>
+                    </if>
+                </otherwise>
+            </choose>
+
+
+        </where>
+        ORDER BY soc.urgent_level_id DESC, soc.close_date,soc.order_id
+    </select>
+
+</mapper>

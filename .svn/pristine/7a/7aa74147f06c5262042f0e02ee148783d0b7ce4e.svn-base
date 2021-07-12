@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.GradeItemDao">
+    <!-- 2020-1-7
+    <sql id="gradeItemColumns">
+        a.id,
+        a.md_grade_id as "grade.id",
+        a.point,
+        a.dict_value,
+        a.create_by as "createBy.id",
+        a.create_date,
+        a.update_by as "updateBy.id",
+        a.update_date,
+        a.remarks,
+        a.del_flag,
+        b.name  as "grade.name"
+    </sql>
+
+    <sql id="gradeItemJoins">
+        inner join md_grade b on a.md_grade_id = b.id
+    </sql>
+
+    <select id="get" resultType="GradeItem">
+        select <include refid="gradeItemColumns"/>
+        from md_grade_item a
+          <include refid="gradeItemJoins"/>
+        where a.id = #{id}
+        and a.del_flag = 0
+    </select>
+
+    <select id="findAllList" resultType="GradeItem">
+        select <include refid="gradeItemColumns"/>
+        from md_grade_item a
+          <include refid="gradeItemJoins"/>
+        where a.del_flag = 0
+        order by a.sort
+    </select>
+
+    <select id="findList" resultType="GradeItem">
+        select <include refid="gradeItemColumns"/>
+        from md_grade_item a
+          <include refid="gradeItemJoins"/>
+        where a.del_flag = 0
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.point DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findListByGradeID" resultType="GradeItem">
+        select <include refid="gradeItemColumns"/>
+        from md_grade_item a
+          <include refid="gradeItemJoins"/>
+        where a.del_flag = 0
+              and a.md_grade_id = #{grade.id}
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.point DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_grade_item(
+        md_grade_id,
+        point,
+        dict_value,
+        create_by,
+        create_date,
+        update_by,
+        update_date,
+        remarks,
+        del_flag
+        )
+        VALUES (
+        #{grade.id},
+        #{point},
+        #{dictValue},
+        #{createBy.id},
+        now(),
+        #{updateBy.id},
+        now(),
+        #{remarks},
+        #{delFlag}
+        )
+    </insert>
+
+
+    <update id="update">
+        UPDATE md_grade_item
+        SET
+            point = #{point},
+            dict_value = #{dictValue},
+            update_by = #{updateBy.id},
+            update_date = now(),
+            remarks = #{remarks},
+            del_flag = #{delFlag}
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="delete">
+        UPDATE md_grade_item SET
+        del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+    -->
+</mapper>

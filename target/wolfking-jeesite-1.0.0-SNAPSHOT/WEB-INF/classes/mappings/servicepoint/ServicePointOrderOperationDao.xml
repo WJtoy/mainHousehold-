@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.servicepoint.sd.dao.ServicePointOrderOperationDao">
+    <select id="getInsurancesByServicePointId" resultType="OrderInsurance">
+        select
+        id,order_id,order_no,insurance_no,servicepoint_id,assured,phone,address,insure_date,insurance_duration,amount,del_flag
+        from sd_order_insurance
+        where
+        quarter = #{quarter}
+        and order_id = #{orderId}
+        and servicepoint_id = #{servicePointId}
+        and del_flag = 0
+    </select>
+</mapper>

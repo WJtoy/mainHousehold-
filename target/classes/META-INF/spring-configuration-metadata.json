@@ -1,0 +1,230 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.wolfking.jeesite.modules.sd.config.CreateOrderConfig",
+      "name": "createOrder",
+      "type": "com.wolfking.jeesite.modules.sd.config.CreateOrderConfig"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.modules.sd.config.CreateOrderConfig",
+      "name": "createOrder.first-type",
+      "sourceMethod": "getFirstType()",
+      "type": "com.wolfking.jeesite.modules.sd.config.CreateOrderConfig$FirstType"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.modules.sd.config.CreateOrderConfig",
+      "name": "createOrder.second-type",
+      "sourceMethod": "getSecondType()",
+      "type": "com.wolfking.jeesite.modules.sd.config.CreateOrderConfig$SecondType"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.b2b-create-order-no",
+      "sourceMethod": "getB2bCreateOrderNo()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$WebProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.b2bcenter",
+      "sourceMethod": "getB2bcenter()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$B2BCenterProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.canbo",
+      "sourceMethod": "getCanbo()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$CanboProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.inse",
+      "sourceMethod": "getInse()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$InseProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jd",
+      "sourceMethod": "getJd()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JdProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jdue",
+      "sourceMethod": "getJdue()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JDUEProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jdue-plus",
+      "sourceMethod": "getJduePlus()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JDUEPlusProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jinjing",
+      "sourceMethod": "getJinjing()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JinJingProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.joyoung",
+      "sourceMethod": "getJoyoung()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JoyoungProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.keg",
+      "sourceMethod": "getKeg()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$KegProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.konka",
+      "sourceMethod": "getKonka()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$KonkaProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.lb",
+      "sourceMethod": "getLb()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$LbProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.mbo",
+      "sourceMethod": "getMbo()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$MBOProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.mqi",
+      "sourceMethod": "getMqi()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$MqiProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.otlan",
+      "sourceMethod": "getOtlan()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$OtlanProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.pdd",
+      "sourceMethod": "getPdd()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$PddProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.philips",
+      "sourceMethod": "getPhilips()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$PhilipsProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.report",
+      "sourceMethod": "getReport()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$MSReportProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.sf",
+      "sourceMethod": "getSf()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$SFProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.suning",
+      "sourceMethod": "getSuning()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$SuningProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.tmall",
+      "sourceMethod": "getTmall()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$TmallProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.um",
+      "sourceMethod": "getUm()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$UMProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.usaton-ga",
+      "sourceMethod": "getUsatonGa()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$UsatonGaProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.vatti",
+      "sourceMethod": "getVatti()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$VattiProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.vio-mi",
+      "sourceMethod": "getVioMi()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$VioMiProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.voice-service",
+      "sourceMethod": "getVoiceService()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$VoiceServiceProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.weber",
+      "sourceMethod": "getWeber()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$WeberProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.x-ying-yan",
+      "sourceMethod": "getXYingYan()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$XYingYanProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.xyy",
+      "sourceMethod": "getXyy()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$XYYProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.xyy-plus",
+      "sourceMethod": "getXyyPlus()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$XYYPlusProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.redis.RedisClusterProperties",
+      "name": "spring.redis.cluster",
+      "type": "com.wolfking.jeesite.common.config.redis.RedisClusterProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web",
+      "type": "com.wolfking.jeesite.common.config.WebProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.service-point",
+      "sourceMethod": "getServicePoint()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$ServicePointProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.redis.RedisClusterProperties",
+      "name": "spring.redis.cluster.nodes",
+      "type": "java.util.List<java.lang.String>"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+package com.wolfking.jeesite.modules.mq.entity;
+
+import lombok.Data;
+
+
+/**
+ * 省市区投诉单消息队列实体类
+ */
+@Data
+public class RPTOrderComplainModel {
+
+    /**
+     * 投诉单id
+     */
+    private Long Id = 0L;
+
+    /**
+     * 所在分片
+     */
+    private String quarter = "";
+
+
+}

@@ -1,0 +1,111 @@
+<%@ tag language="java" pageEncoding="UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<%@ include file="/WEB-INF/views/include/dialog.jsp"%>
+
+<%@ attribute name="id" type="java.lang.String" required="true" description="编号"%>
+<%@ attribute name="name" type="java.lang.String" required="true" description="隐藏域名称（ID）"%>
+<%@ attribute name="value" type="java.lang.String" required="true" description="隐藏域值（ID）"%>
+<%@ attribute name="labelName" type="java.lang.String" required="true" description="输入框名称（Name）"%>
+<%@ attribute name="labelValue" type="java.lang.String" required="true" description="输入框值（Name）"%>
+<%@ attribute name="title" type="java.lang.String" required="true" description="选择框标题"%>
+<%@ attribute name="areaId" type="java.lang.String" required="true" description="區域ID"%>
+<%@ attribute name="cssClass" type="java.lang.String" required="false" description="css样式"%>
+<%@ attribute name="width" type="java.lang.String" required="false" description="字段列表"%>
+<%@ attribute name="height" type="java.lang.String" required="false" description="字段表头"%>
+<%@ attribute name="formid" type="java.lang.String" required="false" description="form的id,已#开头,页面有多个form且有相同属性时使用"%>
+<%@ attribute name="callbackmethod" type="java.lang.String" required="true" description="回调方法"%>
+<%@ attribute name="cssStyle" type="java.lang.String" required="false" description="style样式"%>
+<%@ attribute name="showArea" type="java.lang.Boolean" required="false" description="是否显示区域"%>
+<%@ attribute name="noSubEnginner" type="java.lang.Boolean" required="false" description="是否显示子账号"%>
+<%@ attribute name="noblackList" type="java.lang.Boolean" required="false" description="是否不显示黑名单"%>
+<%@ attribute name="allowClear" type="java.lang.Boolean" required="false" description="是否允许清除"%>
+<%@ attribute name="address" type="java.lang.String" required="true" description="网点地址"%>
+<%@ attribute name="addressValue" type="java.lang.String" required="true" description="网点地址值"%>
+<%@ attribute name="primaryAddress" type="java.lang.String" required="true" description="主账号地址"%>
+<%@ attribute name="primaryAddressValue" type="java.lang.String" required="true" description="主账号地址值"%>
+
+
+<div class="input-append">
+	<input id="${id}Id" name="${name}" class="${cssClass}" type="hidden" value="${value}"${disabled eq 'true' ? ' disabled=\'disabled\'' : ''}/>
+	<input id="${id}Name" name="${labelName}" readonly="readonly" type="text" value="${labelValue}" maxlength="50"${disabled eq 'true' ? ' disabled=\'disabled\'' : ''}
+		   class="${cssClass}" style="${cssStyle}"/><a id="${id}Button" href="javascript:" class="btn${disabled eq 'true' ? ' disabled' : ''}"><i class="icon-search"></i></a>&nbsp;&nbsp;
+	<input id="${id}Address" name="${address}" class="${cssClass}" type="hidden" value="${addressValue}"${disabled eq 'true' ? ' disabled=\'disabled\'' : ''}/>
+	<input id="${id}PrimaryAddress" name="${primaryAddress}" class="${cssClass}" type="hidden" value="${primaryAddressValue}"${disabled eq 'true' ? ' disabled=\'disabled\'' : ''}/>
+</div>
+<script type="text/javascript">
+    $("#${id}Button").click(function(){
+        // 是否限制选择，如果限制，设置为disabled
+        if ($("#${id}Id").attr("disabled")){
+            return true;
+        }
+
+		var btnlist = ['确定', '关闭'${allowClear?",'清除'":""}];
+        var replyIdex = top.layer.open({
+            type: 2,
+            id:'layer_pointlist',
+            zIndex:19891015,
+            title:'选择${title}',
+            content: "${ctx}/md/servicepoint/mdservicePointSelector?noSubEnginner=${noSubEnginner}&noblackList=${noblackList}",
+            shade: 0.3,
+            area: ['${width}px', '${height}px'],
+            maxmin: true,
+            btn: btnlist,
+			yes: function(index, layero){
+                var iframeWin = parent.window['layui-layer-iframe' + index];
+				var data = iframeWin.data;
+				<%--var data = h.find("iframe")[0].contentWindow.data;--%>
+                // receiptInformation(data);
+                // “使用主账号”单选后设置后台传的主账号地址
+                // $("#primary_address").attr("value", "【" + data.primary.address + "】");
+                // 设置主账号详细地址隐藏供使用
+                // $("#fullAddress").attr("value", data.primary.address);
+                // 如果主账号区域id等于网点区域id
+                // if (data.primary.area == data.area.id) {
+                //     // 主账号设置区域全称例：xx省xx市xx区
+                //     $("#primary_address_fullName").attr("value", data.area.fullName);
+                // }
+                // 主账号设置区域id
+                // $("#primary_address_id").attr("value", data.primary.area);
+                // // 显示主账号单选框后面的input
+                // $("#primary_address").show();
+
+                // “使用网点”单选后设置后台传的网点地址
+                $("#servicePoint_address").attr("value", "【" + data.address + "】");
+                // 设置网点的详细地址
+                $("#serviceFullAddress").attr("value", data.address);
+                // 设置网点的区域id
+                $("#servicePoint_address_id").attr("value", data.area.id);
+                // 设置网点区域全称
+                $("#servicePoint_address_fullName").attr("value", data.area.fullName);
+                $("#subAddress").attr("value", data.subAddress);
+                // 显示网点单选框后的input
+                $("#servicePoint_address").show();
+
+				$("${formid} #${id}Id").val(data.id);
+				$("${formid} #${id}Name").val(data.name);
+                // 取消主账号单选框禁选
+                $("input[type='radio'][name='masterFlag']").attr("disabled", false);
+                // 取消收货信息单选框禁选
+                $("input[type='radio'][name='engineerAddress.addressFlag']").attr("disabled", false);
+				if("${callbackmethod}" != ""){
+					${callbackmethod}(data);
+				}
+                top.layer.close(index);
+			},
+			btn2: function(index, layero){
+				top.layer.close(index);
+			},
+			btn3: function(index, layero){
+                $("${formid} #${id}Id").val("").trigger('change');
+                $("${formid} #${id}Name").val("");
+			},
+            success: function(layero,index){
+//				top.layer.full(index);
+//                top.layer.style(index, {
+//                    'margin-top': '10px'
+//                });
+
+            }
+        });
+    });
+</script>

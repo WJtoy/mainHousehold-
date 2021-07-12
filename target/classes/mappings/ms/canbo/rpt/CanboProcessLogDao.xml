@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.ms.canbo.rpt.dao.CanboProcessLogDao">
+
+
+
+    <select id="getOrderInfoByCanbo"  resultType="java.util.HashMap">
+        SELECT a.id AS "orderId",a.order_no AS "kklOrderNo",a.quarter AS "quarter"
+        FROM sd_order_head a
+        WHERE
+            a.data_source = #{dataSource}
+            AND a.workcard_id = #{workcardId}
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -1,0 +1,70 @@
+package com.wolfking.jeesite.modules.sys.service;
+
+import com.wolfking.jeesite.common.service.BaseService;
+import com.wolfking.jeesite.common.service.ServiceException;
+import com.wolfking.jeesite.modules.sys.dao.RoleDao;
+import com.wolfking.jeesite.modules.sys.dao.UserDao;
+import com.wolfking.jeesite.modules.sys.dao.UserKeFuDao;
+import com.wolfking.jeesite.modules.sys.entity.Role;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.UserUtils;
+import com.wolfking.jeesite.ms.service.sys.MSUserService;
+import com.wolfking.jeesite.ms.utils.MSUserUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service
+@Slf4j
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class UserSalesAccountService extends BaseService {
+
+    @Resource
+    private RoleDao roleDao;
+
+    @Resource
+    private UserDao userDao;
+
+    @Resource
+    private UserKeFuDao userKeFuDao;
+
+    @Autowired
+    private MSUserService msUserService;
+
+    /**
+     * 根据部门查询角色权限
+     *
+     * @param officeId
+     * @return
+     */
+    public List<Role> getUserRolesByOfficeId(Long officeId) {
+        return roleDao.getUserRolesByOfficeId(officeId);
+    }
+
+
+    public void saveUser(User user) {
+        if (user.getId() == null || user.getId() <= 0) {
+            user.preInsert();
+            userKeFuDao.insert(user);
+            MSUserUtils.addUserToRedis(user);//user微服务
+        } else {
+            user.preUpdate();
+            userKeFuDao.update(user);
+            msUserService.refreshUserCacheByUserId(user.getId());//user微服务
+            // 更新用户与角色关联
+            userDao.deleteUserRole(user);
+        }
+        if (user.getRoleList() != null && user.getRoleList().size() > 0) {
+            userDao.insertUserRole(user);
+        } else {
+            throw new ServiceException(user.getLoginName() + "没有设置角色！");
+        }
+        // 清除用户缓存
+        UserUtils.clearCache(user);
+    }
+}

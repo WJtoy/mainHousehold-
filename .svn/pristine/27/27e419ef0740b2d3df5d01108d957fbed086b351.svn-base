@@ -1,0 +1,79 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="css/weixin.css">
+	<script type="text/javascript" src="../jquery/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="../scroll/jquery.slimscroll.min.js"></script>
+</head>
+<body>
+<div style="height: 621px;width:650px;" class="chatContainer">
+  <div style="left: 0px; top: 0px;" class="chatMainPanel" id="chatMainPanel">
+	 <div class="chatTitle">
+	 	<div class="chatNameWrap"><p style="opacity: 1;" class="chatName" id="messagePanelTitle">道军 daodao</p></div>
+	 </div>
+	 <!--<div style="height: 522px; overflow-y: hidden; position: relative;" class="chatScorll"> -->
+	     <div style="top: 0px; position: relative;" id="chat_chatmsglist" class="chatContent">
+	        <!--right-->
+			<div class="chatItem me">  
+			   <div class="chatItemContent"> 
+			     <div class="sign">
+					<img class="avatar phone">
+	  				<div class="title">秋叶</div>
+			     </div>
+			     <div class="cloud cloudText">
+					<div class="cloudPannel" style="">
+					   <div class="cloudBody"> 
+						<div class="cloudContent">
+						   <pre style="white-space:pre-wrap">道兄，你以前用来开发网站使用的是那套cms</pre>
+						   <pre class="time"> 22:28</pre>
+						</div>
+					   </div> 
+					   <div class="cloudArrow "></div>  
+					</div>
+					
+			     </div>  
+			   </div>   
+			</div>
+	     <!-- right end -->
+	     <!--left-->
+	     <div class="chatItem you">  
+			<div class="chatItemContent"> 
+				<div class="sign">
+				     <img class="avatar phone">  
+				     <div class="title">道兄</div>
+				</div>
+				<div class="cloud cloudText"> 
+				   <div class="cloudPannel" style=""> 
+					<div class="cloudBody"> 
+					    <div class="cloudContent">
+						<pre style="white-space:pre-wrap">织梦</pre>
+						<pre class="time"> 22:33</pre>
+					    </div>
+	                 </div> 
+					<div class="cloudArrow "></div>  
+				   </div>
+				</div>  
+			 </div>
+	      </div>
+	     <!--left end -->
+	</div>
+	<!--</div> scroll -->
+	<div style="height: 54.6667px;" id="chat_editor" class="chatOperator">
+		<div style="" class="inputArea">
+			<textarea style="height: 30px; overflow: hidden;" type="text" id="textInput" class="chatInput lightBorder"></textarea>
+			<a href="javascript:;" class="chatSend" click="sendMsg@.inputArea"><b>发送</b></a>
+		</div>
+	</div>
+
+</div>
+<script type="text/javascript">
+$(function(){
+
+      $('#chat_chatmsglist').slimscroll({
+        height: '522px'
+      });
+
+    });
+
+</script>
+</body>
+</html>

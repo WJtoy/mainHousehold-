@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.MaterialDao">
+    <!--2020-1-7
+    <sql id="materialColumns">
+            a.id,
+            a.category_id AS 'materialCategory.id',
+            a.name,
+            a.model,
+            a.price,
+            a.is_return,
+            a.remarks
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_material(
+			name,
+			category_id,
+			model,
+			price,
+			is_return,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{name},
+			#{materialCategory.id},
+			#{model},
+			#{price},
+			#{isReturn},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_material
+        SET
+            name = #{name},
+            category_id = #{materialCategory.id},
+            model = #{model},
+            price = #{price},
+            is_return = #{isReturn},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_material
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="get" resultType="Material">
+        SELECT
+                <include refid="materialColumns"/>
+        FROM
+                md_material a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="getIdByName" resultType="java.lang.Long">
+        SELECT
+                id
+        FROM
+                md_material
+        WHERE
+                name = #{name}
+                <if test="id != null">
+                    AND   id != #{id}
+                </if>
+          AND   del_flag = 0
+        LIMIT 1
+    </select>
+
+    <select id="getMaterialListByProductId" resultType="Material">
+        SELECT
+                a.id,
+                a.name,
+                a.price,
+                a.is_return,
+                mpm.product_id as 'product.id'
+        FROM
+                md_material a
+        INNER JOIN
+                md_product_material mpm
+          ON    mpm.product_id = #{value}
+          AND   a.id = mpm.material_id
+    </select>
+
+    <select id="getMaterialIdListByProductId" resultType="java.lang.Long">
+        SELECT
+                a.id
+        FROM
+                md_material a
+        INNER JOIN
+                md_product_material mpm
+          ON    mpm.product_id = #{value}
+          AND   a.id = mpm.material_id
+    </select>
+
+    <select id="getMaterialIdListByProductIdList" resultType="java.lang.Long">
+        SELECT
+                a.id
+        FROM
+                md_material a
+        INNER JOIN
+                md_product_material mpm
+          ON    a.id = mpm.material_id
+        <where>
+            <if test="list != null and list.size > 0">
+                AND mpm.product_id IN
+                <foreach item="productId" index="index" collection="list" open="("
+                         separator="," close=")">
+                    #{productId}
+                </foreach>
+            </if>
+            AND   a.del_flag = 0
+        </where>
+    </select>
+
+    <select id="getMaterialListByProductIdList" resultType="Material">
+        SELECT
+              a.id,a.name,a.price,mpm.product_id as 'product.id'
+        FROM
+          md_material a
+        INNER JOIN
+          md_product_material mpm
+        ON a.id = mpm.material_id
+        <where>
+            <if test="list != null and list.size > 0">
+                AND mpm.product_id IN
+                <foreach item="productId" index="index" collection="list" open="("
+                         separator="," close=")">
+                    #{productId}
+                </foreach>
+            </if>
+            AND  a.del_flag = 0
+        </where>
+    </select>
+
+    <select id="findAllList" resultType="Material">
+        SELECT
+                <include refid="materialColumns"/>
+        FROM
+                md_material a
+        WHERE
+                a.del_flag = 0
+        ORDER BY
+                a.id
+        LIMIT   1000
+    </select>
+
+    <select id="findList" resultType="Material">
+        SELECT
+                <include refid="materialColumns"/>
+        FROM
+                md_material a
+        <where>
+            <if test="name != null and name !=''">
+              AND   a.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="remarks != null and remarks !=''">
+              AND   a.remarks LIKE CONCAT('%', #{remarks}, '%')
+            </if>
+            <if test="materialCategory !=null and materialCategory.id!=null and materialCategory.id>0">
+              AND  a.category_id = #{materialCategory.id}
+            </if>
+              AND   a.del_flag = 0
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.name
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getByMaterialCategoryId" resultType="java.lang.Long">
+        SELECT
+               id
+        FROM
+               md_material
+        WHERE
+              category_id = #{materialCategoryId}
+         AND  del_flag = 0
+         LIMIT 1
+    </select>
+    -->
+
+    <!--根据产品id获取配件列表(待product_material转到微服务后删除)-->
+    <!--2020-1-7
+    <select id="getMaterialIdByProductId" resultType="java.lang.Long">
+        SELECT
+            a.material_id
+        FROM
+            md_product_material a
+        WHERE
+            a.product_id = #{productId}
+    </select>
+    -->
+</mapper>

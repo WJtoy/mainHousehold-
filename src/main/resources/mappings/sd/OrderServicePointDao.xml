@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 网点订单表 -->
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderServicePointDao">
+
+    <sql id="orderServicePoint-base-columns">
+        a.id,
+        a.order_id,
+        a.quarter,
+        a.servicepoint_id,
+        a.engineer_id as "engineer.id",
+        a.is_current,
+        a.status as "status.value",
+        a.sub_status,
+        a.service_flag,
+        a.del_flag
+    </sql>
+
+    <select id="findByOrder"  resultType="OrderServicePoint">
+        SELECT
+        <include refid="orderServicePoint-base-columns"/>
+        FROM sd_order_servicepoint a
+        WHERE
+            order_id = #{orderId}
+            <if test="delFlag != null">
+                and a.del_flag = #{delFlag}
+            </if>
+            and quarter = #{quarter}
+            ORDER BY a.create_date
+        limit 30
+    </select>
+
+    <select id="findByOrderAndServicePoint"  resultType="OrderServicePoint">
+        SELECT
+        <include refid="orderServicePoint-base-columns"/>
+        FROM sd_order_servicepoint a
+        WHERE
+            order_id = #{orderId}
+            and a.servicepoint_id = #{servicePointId}
+            and quarter = #{quarter}
+        limit 1
+    </select>
+
+    <!-- 获得下个派单次序 -->
+    <select id="getNextPlanOrder" resultType="java.lang.Integer">
+        select ifnull(max(plan_order),0) + 1 as planOrder
+            from sd_order_servicepoint
+            where
+                order_id = #{orderId}
+                and quarter = #{quarter}
+    </select>
+
+    <!-- 新建 -->
+    <insert id="insert" parameterType="OrderServicePoint">
+        INSERT INTO sd_order_servicepoint(
+            id,
+            order_channel,
+            data_source,
+            order_service_type,
+            order_id,
+            quarter,
+            order_no,
+            status,
+            sub_status,
+            user_name,
+            service_phone,
+            area_id,
+            area_name,
+            service_address,
+            servicepoint_id,
+            engineer_id,
+            plan_date,
+            plan_at,
+            reservation_date,
+            reservation_at,
+            create_by,
+            create_date,
+            is_current,
+            plan_order,
+            plan_type,
+            reminder_flag,
+            reminder_sort,
+            master_flag,
+            abnormaly_flag,
+            complain_flag,
+            urgent_level_id
+        ) VALUES (
+            #{id},
+            #{orderChannel},
+            #{dataSource},
+            #{orderServiceType},
+            #{orderId},
+            #{quarter},
+            #{orderNo},
+            #{status.intValue},
+            #{subStatus},
+            #{userName},
+            #{servicePhone},
+            #{area.id},
+            #{area.name},
+            #{serviceAddress},
+            #{servicePointId},
+            #{engineer.id},
+            #{planDate},
+            #{planAt},
+            #{reservationDate},
+            #{reservationAt},
+            #{createBy.id},
+            #{createDate},
+            1,
+            #{planOrder},
+            #{planType},
+            #{reminderFlag},
+            #{reminderSort},
+            #{masterFlag},
+            #{abnormalyFlag},
+            #{complainFlag},
+            #{urgentLevelId}
+        )
+    </insert>
+
+    <!-- 更新 -->
+    <update id="updateData" parameterType="java.util.Map">
+        UPDATE sd_order_servicepoint
+        <set >
+            <if test="serviceFlag != null">
+                service_flag = #{serviceFlag},
+            </if>
+            <if test="delFlag != null">
+                del_flag = #{delFlag},
+            </if>
+            <if test="status != null and status > 0" >
+                status = #{status},
+            </if>
+            <if test="subStatus != null and subStatus > 0" >
+                sub_status = #{subStatus},
+            </if>
+            <if test="engineerId != null and engineerId > 0" >
+                engineer_id = #{engineerId},
+            </if>
+            <if test="resetAppointmentDate != null and resetAppointmentDate == 1" >
+                appointment_date = null,
+                appointment_at = 0,
+            </if>
+            <if test="resetAppointmentDate == null and appointmentAt != null" >
+                appointment_at = #{appointmentAt},
+            </if>
+            <if test="resetAppointmentDate == null and appointmentDate != null" >
+                appointment_date = #{appointmentDate},
+            </if>
+            <if test="reservationDate != null" >
+                reservation_date = #{reservationDate},
+            </if>
+            <if test="reservationAt != null" >
+                reservation_at = #{reservationAt},
+            </if>
+            <if test="masterFlag != null" >
+                master_flag = #{masterFlag},
+            </if>
+            <if test="abnormalyFlag != null" >
+                abnormaly_flag = #{abnormalyFlag},
+            </if>
+            <if test="complainFlag != null" >
+                complain_flag = #{complainFlag},
+            </if>
+            <if test="reminderFlag != null" >
+                reminder_flag = #{reminderFlag},
+            </if>
+            <if test="reminderSort != null" >
+                reminder_sort = #{reminderSort},
+            </if>
+            <if test="urgentLevelId != null" >
+                urgent_level_id = #{urgentLevelId},
+            </if>
+            <if test="appCompleteType != null" >
+                app_complete_type = #{appCompleteType},
+            </if>
+            <if test="pendingType != null" >
+                pending_type = #{pendingType},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+            <if test="isCurrent != null" >
+                is_current = #{isCurrent},
+            </if>
+        </set>
+        WHERE
+            order_id = #{orderId}
+            <if test="servicePointId != null and servicePointId > 0" >
+                and servicepoint_id = #{servicePointId}
+            </if>
+            and quarter = #{quarter}
+    </update>
+
+    <!-- 更新非当前网点 -->
+    <update id="updateNotActiveServiePoint" parameterType="java.util.Map">
+        UPDATE sd_order_servicepoint
+        <set >
+            <if test="serviceFlag != null">
+                service_flag = #{serviceFlag},
+            </if>
+            <if test="delFlag != null">
+                del_flag = #{delFlag},
+            </if>
+            <if test="status != null and status > 0" >
+                status = #{status},
+            </if>
+            <if test="subStatus != null and subStatus > 0" >
+                sub_status = #{subStatus},
+            </if>
+            <if test="abnormalyFlag != null" >
+                abnormaly_flag = #{abnormalyFlag},
+            </if>
+            <if test="complainFlag != null" >
+                complain_flag = #{complainFlag},
+            </if>
+            <if test="reminderFlag != null" >
+                reminder_flag = #{reminderFlag},
+            </if>
+            <if test="reminderSort != null" >
+                reminder_sort = #{reminderSort},
+            </if>
+            <if test="urgentLevelId != null" >
+                urgent_level_id = #{urgentLevelId},
+            </if>
+            <if test="appCompleteType != null" >
+                app_complete_type = #{appCompleteType},
+            </if>
+            <if test="pendingType != null" >
+                pending_type = #{pendingType},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+            <if test="praiseStatus != null" >
+                praise_status = #{praiseStatus},
+            </if>
+        </set>
+        WHERE
+            order_id = #{orderId}
+            <choose>
+            <when test="exceptServicePointId != null and exceptServicePointId > 0">
+                <![CDATA[ and servicepoint_id <> #{exceptServicePointId} ]]>
+            </when>
+            <otherwise>
+                and is_current = 0
+            </otherwise>
+            </choose>
+            and quarter = #{quarter}
+    </update>
+
+    <!-- by订单更新 -->
+    <update id="updateByOrder" parameterType="java.util.Map">
+        UPDATE sd_order_servicepoint
+        <set>
+            <if test="status != null and status > 0" >
+                status = #{status},
+            </if>
+            <if test="subStatus != null and subStatus > 0" >
+                sub_status = #{subStatus},
+            </if>
+            <if test="servicePhone != null and servicePhone != ''.toString()" >
+                service_phone = #{servicePhone},
+            </if>
+            <if test="serviceAddress != null and serviceAddress != ''.toString()" >
+                service_address = #{serviceAddress},
+            </if>
+            <if test="closeDate != null" >
+                close_date = #{closeDate},
+            </if>
+            <if test="closeAt != null" >
+                close_at = #{closeAt},
+            </if>
+            <if test="chargeDate != null" >
+                charge_date = #{chargeDate},
+            </if>
+            <if test="chargeAt != null" >
+                charge_at = #{chargeAt},
+            </if>
+            <if test="urgentLevelId != null" >
+                urgent_level_id = #{urgentLevelId},
+            </if>
+            <if test="complainFlag != null" >
+                complain_flag = #{complainFlag},
+            </if>
+            <if test="reminderFlag != null" >
+                reminder_flag = #{reminderFlag},
+            </if>
+            <if test="reminderSort != null" >
+                reminder_sort = #{reminderSort},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+        </set>
+        WHERE
+            order_id = #{orderId}
+            <if test="_parameter.containsKey('delFlag')" >
+                and del_flag = #{delFlag}
+            </if>
+            and quarter = #{quarter}
+    </update>
+
+    <!-- 更新指定网点 -->
+    <update id="updateByServiePoint" parameterType="java.util.Map">
+        UPDATE sd_order_servicepoint
+        <set >
+            <if test="praiseStatus != null" >
+                praise_status = #{praiseStatus},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+        </set>
+        WHERE
+            order_id = #{orderId}
+            and servicepoint_id = #{servicePointId}
+            and quarter = #{quarter}
+    </update>
+
+    <!-- 标记为当前网点 -->
+    <update id="activeServicePoint" parameterType="OrderServicePoint">
+        UPDATE sd_order_servicepoint
+        set
+            del_flag = 0,
+            is_current = 1,
+            status = #{status.intValue},
+            sub_status = #{subStatus},
+            reservation_date = #{reservationDate},
+            reservation_at = #{reservationAt},
+            appointment_date = #{appointmentDate},
+            appointment_at = #{appointmentAt},
+            reminder_flag = #{reminderFlag},
+            reminder_sort = #{reminderSort},
+            abnormaly_flag = #{abnormalyFlag},
+            complain_flag = #{complainFlag},
+            urgent_level_id = #{urgentLevelId},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            order_id = #{orderId}
+            and servicepoint_id = #{servicePointId}
+            and quarter = #{quarter}
+    </update>
+
+    <!-- 标记为非当前网点 -->
+    <update id="unActiveServicePointByOrder">
+        UPDATE sd_order_servicepoint
+        <set>
+            is_current = 0,
+            del_flag = case when service_flag = 0 and del_flag = 0 then 1 else 0 end,
+            <if test="status != null and status > 0" >
+                status = #{status},
+            </if>
+            <if test="subStatus != null and subStatus > 0" >
+                sub_status = #{subStatus},
+            </if>
+            <if test="urgentLevelId != null" >
+                urgent_level_id = #{urgentLevelId},
+            </if>
+            <if test="complainFlag != null" >
+                complain_flag = #{complainFlag},
+            </if>
+            <if test="reminderFlag != null" >
+                reminder_flag = #{reminderFlag},
+            </if>
+            <if test="reminderSort != null" >
+                reminder_sort = #{reminderSort},
+            </if>
+            <if test="updator != null" >
+                update_by = #{updator},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+        </set>
+        WHERE
+            order_id = #{orderId}
+            and quarter = #{quarter}
+            and del_flag = 0
+            <![CDATA[ and servicepoint_id <> #{exceptId} ]]>
+    </update>
+
+    <!-- 回到派单区，删除记录 -->
+    <delete id="goBackToAccept" parameterType="OrderServicePoint">
+        delete from sd_order_servicepoint
+        where
+            order_id = #{orderId}
+            and quarter = #{quarter}
+    </delete>
+
+    <!-- 好评单 -->
+    <!-- 更新指定网点 -->
+    <update id="updatePraiseStatusByServiePoint" parameterType="java.util.Map">
+        UPDATE sd_order_servicepoint
+        <set >
+            <if test="praiseStatus != null" >
+                praise_status = #{praiseStatus},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+        </set>
+        WHERE
+            order_id = #{orderId}
+            <if test="servicePointId != null" >
+                and servicepoint_id = #{servicePointId}
+            </if>
+            <!-- 取消 -->
+            <if test="praiseStatus > 10">
+                <![CDATA[ and praise_status > 0 ]]>
+            </if>
+            and quarter = #{quarter}
+    </update>
+
+    <!-- 更新非指定网点 -->
+    <update id="updatePraiseStatusByExceptServiePoint" parameterType="java.util.Map">
+        UPDATE sd_order_servicepoint
+        <set >
+            <if test="praiseStatus != null" >
+                praise_status = #{praiseStatus},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+        </set>
+        WHERE
+            order_id = #{orderId}
+            <![CDATA[ and servicepoint_id <> #{exceptId} ]]>
+            <!-- 取消 -->
+            <if test="praiseStatus == 50">
+                <![CDATA[ and praise_status > 0 ]]>
+            </if>
+            and quarter = #{quarter}
+    </update>
+</mapper>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp" %>
+<html>
+<head>
+    <%@ include file="/WEB-INF/views/include/head.jsp" %>
+    <title>客戶管理</title>
+    <meta name="decorator" content="default" />
+    <style type="text/css">
+        .table thead th,.table tbody td {
+            text-align: center;
+            vertical-align: middle;
+            BackColor: Transparent;
+        }
+    </style>
+    <%@ include file="/WEB-INF/views/include/pageSearch.jsp" %>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var w = $(window).width();
+
+            var pagestyle = function() {
+                var width = $(window).width() -0;
+                $("#treeTable_tableLayout").css("width",width);
+            }
+
+            //注册窗体改变大小事件
+            $(window).resize(pagestyle);
+            $("th").css({"text-align":"center","vertical-align":"middle"});
+            $("td").css({"vertical-align":"middle"});
+        });
+        function editCustomer(type,id) {
+            var text = "添加客户";
+            var url = "${ctx}/md/customerNew/form?sort=" + type;
+            var area = ['1000px', '888px'];
+            if(type == 20){
+                text = "修改客户";
+                url = "${ctx}/md/customerNew/form?id=" + id;
+            }
+            top.layer.open({
+                type: 2,
+                id:"customer",
+                zIndex:19,
+                title:text,
+                content: url,
+                area: area,
+                shade: 0.3,
+                maxmin: false,
+                success: function(layero,index){
+                },
+                end:function(){
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<ul class="nav nav-tabs">
+    <li class="active"><a href="javascript:;">客戶</a></li>
+</ul>
+<sys:message content="${message}" />
+<shiro:hasPermission name="md:customer:view">
+<form:form id="searchForm" modelAttribute="mdCustomer" action="${ctx}/md/customerNew/list" method="post" class="breadcrumb form-search">
+    <input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}" />
+    <input id="pageSize" name="pageSize" type="hidden" value="${page.pageSize}" />
+    <label>编号：</label>
+    <input id="code" name="code" type="text" htmlEscape="false" maxlength="30" value="${mdCustomer.code}"/>
+    <label>客户：</label>
+    <form:select path="id" class="input-large">
+        <form:option value="" label="所有"/>
+        <form:options items="${fns:getMyCustomerListFromMS()}" itemLabel="name" itemValue="id" htmlEscape="false" />
+    </form:select>
+    <label>负责人电话：</label>
+    <form:input path="phone" htmlEscape="false" type="number" maxlength="20" class="input-small" />
+    <input id="btnSubmit" class="btn btn-primary" type="submit" onclick="return setPage();" value="查询" />
+</form:form>
+    <button style="margin-top: 15px;margin-bottom: 15px;border-radius: 4px;border:1px solid;border-color:#C0C0C0;background-color: rgb(238,238,238);width: 90px;height: 30px" onclick="editCustomer(10,null)">
+        <i class="icon-plus-sign"></i>&nbsp;添加客户
+    </button>
+<table id="contentTable"
+       class="table table-striped table-bordered table-condensed table-hover">
+    <thead>
+    <tr>
+        <th width="50">序号</th>
+        <th width="60">编号</th>
+        <th width="300">客户</th>
+        <th width="80">负责人</th>
+        <th width="150">负责人电话</th>
+        <th width="80">业务</th>
+        <th width="80">跟单</th>
+        <th width="180">默认品牌</th>
+        <th width="80">客户下单</th>
+        <th width="80">短信发送</th>
+        <th width="80">时效奖励</th>
+        <th width="80">催单</th>
+        <th width="80">加急</th>
+        <th width="80">远程费用</th>
+        <th width="80">VIP客户</th>
+        <th style="width:15%">描述</th>
+        <shiro:hasPermission name="md:customer:edit">
+            <th width="100">操作</th>
+        </shiro:hasPermission>
+    </tr>
+    </thead>
+    <tbody>
+    <c:forEach items="${page.list}" var="mdCustomer">
+        <c:set var="index" value="${index+1}" />
+        <tr>
+            <td>${index+(page.pageNo-1)*page.pageSize}</td>
+            <td>${mdCustomer.code}</td>
+            <td>${mdCustomer.name}</td>
+            <td>${mdCustomer.master}</td>
+            <td>${mdCustomer.phone}</td>
+            <td>${mdCustomer.salesName}</td>
+            <td>${mdCustomer.merchandiserName}</td>
+            <td>${mdCustomer.defaultBrand}</td>
+            <td>${mdCustomer.effectFlag==0?'关闭':'开启'}</td>
+            <td>${mdCustomer.shortMessageFlag==1?'开启':'关闭'}</td>
+            <td>${mdCustomer.timeLinessFlag==0?'关闭':'开启'}</td>
+            <td>${mdCustomer.reminderFlag==0?'关闭':'开启'}</td>
+            <td>${mdCustomer.urgentFlag==0?'关闭':'开启'}</td>
+            <td>${mdCustomer.remoteFeeFlag==0?'关闭':'开启'}</td>
+            <td>${mdCustomer.vipFlag==0?'关闭':'开启'}</td>
+            <td><a href="javascript:void(0);" title="${mdCustomer.remarks}">${fns:abbr(mdCustomer.remarks,30)}</a></td>
+            <shiro:hasPermission name="md:customer:edit">
+                <td>
+                    <a href="javascript:editCustomer(20,'${mdCustomer.id}')">修改</a>
+                    <a href="${ctx}/md/customerNew/delete?id=${mdCustomer.id}"
+                       onclick="return confirmx('确认要删除该客戶吗？', this.href)">删除</a>
+                </td>
+            </shiro:hasPermission>
+        </tr>
+    </c:forEach>
+    </tbody>
+</table>
+<div class="pagination">${page}</div>
+</shiro:hasPermission>
+</body>
+</html>

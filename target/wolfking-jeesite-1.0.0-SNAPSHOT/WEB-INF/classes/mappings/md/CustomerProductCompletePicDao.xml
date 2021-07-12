@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.CustomerProductCompletePicDao">
+    <!--
+    <sql id="columns">
+            a.id,
+            a.customer_id as "customer.id",
+            a.product_id as "product.id",
+            a.barcode_must_flag,
+            a.json_info
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_customer_product_pic_mapping(
+			product_id,
+			customer_id,
+			json_info,
+			barcode_must_flag,
+			create_by,
+			create_date
+		) VALUES (
+			#{product.id},
+			#{customer.id},
+			#{jsonInfo},
+			#{barcodeMustFlag},
+			#{createBy.id},
+			#{createDate}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_customer_product_pic_mapping
+        SET
+            json_info = #{jsonInfo},
+            barcode_must_flag = #{barcodeMustFlag},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_customer_product_pic_mapping
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="getAllList" resultType="ProductCompletePic">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_customer_product_pic_mapping a
+        WHERE
+                a.customer_id = #{customerId}
+            AND a.del_flag = 0
+            LIMIT 50000
+    </select>
+
+    <select id="findAllList" resultType="ProductCompletePic">
+        SELECT
+        <include refid="columns"/>
+        FROM
+        md_customer_product_pic_mapping a
+        WHERE
+            a.del_flag = 0
+        LIMIT 50000
+    </select>
+
+    <select id="findList" resultType="ProductCompletePic">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_customer_product_pic_mapping a
+        <where>
+            <if test="product != null and product.id != null and product.id>0">
+              AND a.product_id = #{product.id}
+            </if>
+            <if test="customer !=null and customer.id !=null and customer.id>0">
+               and a.customer_id = #{customer.id}
+            </if>
+              AND a.del_flag = 0
+        </where>
+        ORDER BY a.product_id
+    </select>
+
+    <select id="get" resultType="ProductCompletePic">
+        SELECT
+          <include refid="columns"/>
+        FROM
+           md_customer_product_pic_mapping a
+        WHERE
+            id = #{id}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM
+                md_customer_product_pic_mapping
+                WHERE
+                 id = ${id}
+    </delete>
+    -->
+</mapper>

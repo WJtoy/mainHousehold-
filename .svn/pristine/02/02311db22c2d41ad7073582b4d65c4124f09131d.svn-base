@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderItemDao">
+
+    <!-- todo:去掉sd_orderitem读写 by ryan at 2018-09-03
+        <sql id="orderItemColumns">
+            a.id,
+            a.order_id,
+            a.item_no,
+            a.product_id  AS 'product.id',
+            a.brand,
+            a.product_spec,
+            a.service_type_id AS 'serviceType.id',
+            a.stand_price,
+            a.discount_price,
+            a.qty,
+            a.charge,
+            a.blocked_charge,
+            a.remarks,
+            a.express_company AS 'expressCompany.value',
+            a.express_no,
+            a.quarter
+        </sql>
+
+
+        <select id="getOrderItemsByCreateDate" parameterType="Map" resultType="OrderItem">
+            SELECT
+                <include refid="orderItemColumns"/>
+            FROM  sd_orderitem a
+                  INNER JOIN sd_order_condition soc on soc.order_id = a.order_id
+            <where>
+                <if test="quarter != null and quarter != ''.toString()">
+                  a.quarter = #{quarter}
+                </if>
+                AND soc.create_date > #{beginDate} AND <![CDATA[ soc.create_date < #{endDate} ]]>
+            </where>
+            LIMIT 200000
+        </select>
+
+        <select id="getOrderItemsByOrderIds" parameterType="Map" resultType="OrderItem">
+            SELECT
+            <include refid="orderItemColumns"/>
+            FROM  sd_orderitem a
+                  INNER JOIN sd_order_condition soc on soc.order_id = a.order_id
+            <where>
+                <if test="quarter != null and quarter != ''.toString()">
+                    a.quarter = #{quarter}
+                </if>
+                <if test="orderIds != null and orderIds.size > 0">
+                    AND a.order_id IN
+                        <foreach collection="orderIds" item="orderId" index="index" open="(" close=")" separator=",">
+                            #{orderId}
+                        </foreach>
+                </if>
+            </where>
+            LIMIT 200000
+        </select>
+        -->
+
+    <select id="getOrderItems" parameterType="java.util.Map" resultType="Order">
+        SELECT
+              a.id,
+              a.orderitem_json AS 'orderItemJson'
+        FROM  sd_order a
+        <where>
+            <if test="quarter != null and quarter != ''.toString()">
+              a.quarter = #{quarter}
+            </if>
+              AND a.id = #{orderId}
+        </where>
+    </select>
+
+    <update id="updateOrderItemJson" parameterType="java.util.Map">
+        UPDATE sd_order
+        SET   orderitem_json = #{orderItemsJson}
+        WHERE id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+              AND quarter = #{quarter}
+            </if>
+    </update>
+
+</mapper>

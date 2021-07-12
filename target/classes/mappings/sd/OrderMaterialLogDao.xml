@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 配件日志 -->
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderMaterialLogDao">
+
+    <!-- log -->
+    <select id="getLogs" resultType="MaterialLog">
+        select
+            id,
+            content,
+            create_by,
+            create_date
+        from
+            sd_material_log
+        where
+            <if test="quarter != null and quarter != ''.trim() ">quarter = #{quarter} and </if>
+            materialmaster_id = #{materialMasterId}
+        order by
+            id <if test="sortBy != null">${sortBy}</if>
+    </select>
+
+    <insert id="insertLog" parameterType="MaterialLog">
+        insert into sd_material_log (
+            quarter
+            ,materialmaster_id
+            ,content
+            ,create_by
+            ,create_date
+        )
+        values(
+            #{quarter}
+            ,#{materialMasterId}
+            ,#{content}
+            ,#{createBy}
+            ,#{createDate}
+        )
+    </insert>
+
+</mapper>

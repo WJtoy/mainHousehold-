@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerChargeMasterDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_engineercharge_master(
+			id,
+			order_id,
+			order_no,
+			customer_id,
+			service_point_id,
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			insurance_charge,
+			customer_time_liness_charge,
+			time_liness_charge,
+			urgent_charge,
+			praise_fee,
+			tax_fee,
+			info_fee,
+			other_charge,
+			insurance_no,
+			payment_type,
+			charge_order_type,
+			tax_fee_rate,
+			info_fee_rate,
+			invoice_date,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{orderNo},
+			#{customerId},
+			#{servicePoint.id},
+			#{serviceCharge},
+			#{expressCharge},
+			#{travelCharge},
+			#{materialCharge},
+			#{insuranceCharge},
+			#{customerTimeLinessCharge},
+			#{timeLinessCharge},
+			#{urgentCharge},
+			#{praiseFee},
+			#{taxFee},
+			#{infoFee},
+			#{otherCharge},
+			#{insuranceNo},
+			#{paymentType},
+			#{chargeOrderType},
+			#{taxFeeRate},
+			#{infoFeeRate},
+			#{invoiceDate},
+			#{createBy.id},
+			#{createDate},
+			#{remarks},
+			#{quarter}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_engineerinvoice SET
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}, 
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE fi_engineerinvoice SET
+			del_flag = #{DEL_FLAG_DELETE},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+
+	<select id="get" resultType="EngineerChargeMaster">
+		SELECT
+			id,
+			order_id,
+			order_no,
+			service_point_id as 'servicePoint.id',
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			insurance_charge,
+			customer_time_liness_charge,
+			time_liness_charge,
+			urgent_charge,
+			other_charge,
+			insurance_no,
+			payment_type,
+			status,
+			invoice_date,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_engineerinvoice
+		WHERE
+			id = #{id}
+		AND del_flag = 0
+	</select>
+
+	<select id="findList" parameterType="EngineerChargeMaster" resultType="EngineerChargeMaster">
+		SELECT
+			id,
+			order_id,
+			order_no,
+			service_point_id as 'servicePoint.id',
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			insurance_charge,
+			customer_time_liness_charge,
+			time_liness_charge,
+			urgent_charge,
+			other_charge,
+			insurance_no,
+			payment_type,
+			status,
+			invoice_date,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_engineerinvoice
+		<where>
+			<if test="orderId !=null">
+				AND order_id=#{orderId}
+			</if>
+			AND del_flag = 0
+		</where>
+	</select>
+
+	<select id="findOrderLevelFee" parameterType="Long" resultType="EngineerChargeMaster">
+		SELECT
+			id,
+			order_id,
+			insurance_charge,
+			customer_time_liness_charge,
+			time_liness_charge,
+			urgent_charge,
+			praise_fee,
+			tax_fee,
+			info_fee
+		FROM
+			fi_engineercharge_master
+		WHERE
+			order_id=#{orderId}
+			AND service_point_id = #{servicePointId}
+			AND del_flag = 0
+		LIMIT 1
+	</select>
+	
+</mapper>

@@ -1,0 +1,1774 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.ServiceLeaderOrderDao">
+
+
+    <!-- 选择的区域 -->
+    <sql id="selectedAreaFilter">
+        <if test="area != null and area.id != null and area.id > 0">
+            <choose>
+                <when test="areaLevel == 0">
+                    AND soc.province_id = #{area.id}
+                </when>
+                <when test="areaLevel == 1">
+                    AND soc.city_id = #{area.id}
+                </when>
+                <when test="areaLevel == 2">
+                    AND soc.area_id = #{area.id}
+                </when>
+                <when test="areaLevel == 3">
+                    <if test="area.parent != null and area.parent.id != null and area.parent.id > 0">
+                        and soc.area_id = #{area.parent.id}
+                    </if>
+                    AND soc.sub_area_id = #{area.id}
+                </when>
+                <otherwise>
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+    <!-- 用户负责区域 -->
+    <sql id="RegionFilter">
+        <choose>
+            <when test="regionFilterType == 'province'.toString() and provinceList != null and provinceList.size > 0">
+                <choose>
+                    <when test="provinceList.size == 1">
+                        and soc.province_id = #{provinceList[0]}
+                    </when>
+                    <otherwise>
+                        AND soc.province_id IN <foreach collection="provinceList" item="provinceId" index="index" open="(" close=")" separator=",">${provinceId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'city'.toString() and cityList != null and cityList.size > 0">
+                <choose>
+                    <when test="cityList.size == 1">
+                        and soc.city_id = #{cityList[0]}
+                    </when>
+                    <otherwise>
+                        AND soc.city_id IN <foreach collection="cityList" item="cityId" index="index" open="(" close=")" separator=",">${cityId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'area'.toString() and areaList != null and areaList.size > 0">
+                <choose>
+                    <when test="areaList.size == 1">
+                        and soc.area_id = #{areaList[0]}
+                    </when>
+                    <otherwise>
+                        AND soc.area_id IN <foreach collection="areaList" item="areaId" index="index" open="(" close=")" separator=",">${areaId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+        </choose>
+
+    </sql>
+    <!-- 用户负责所有区域 -->
+    <sql id="allUserRegion">
+        <if test="regionFilterCount > 1">
+            <trim prefix="AND" prefixOverrides="AND|OR">
+                AND (
+                <if test="areaList != null">
+                    <choose>
+                        <when test="areaList.size == 1">
+                            soc.area_id = #{areaList[0]}
+                        </when>
+                        <otherwise>
+                            soc.area_id IN
+                            <foreach collection="areaList" item="areaItem" index="index" open="(" close=")"
+                                     separator=",">${areaItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="cityList != null">
+                    <choose>
+                        <when test="cityList.size == 1">
+                            or soc.city_id = #{cityList[0]}
+                        </when>
+                        <otherwise>
+                            or soc.city_id IN
+                            <foreach collection="cityList" item="cityItem" index="index" open="(" close=")"
+                                     separator=",">${cityItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="provinceList != null">
+                    <choose>
+                        <when test="provinceList.size == 1">
+                            or soc.province_id = #{provinceList[0]}
+                        </when>
+                        <otherwise>
+                            or soc.province_id IN
+                            <foreach collection="provinceList" item="provinceItem" index="index" open="(" close=")"
+                                     separator=",">${provinceItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                )
+            </trim>
+        </if>
+    </sql>
+    <!-- 客户类型 -->
+    <sql id="customerTypeFilter">
+        <if test="customerType != null">
+            inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = soc.customer_id
+        </if>
+    </sql>
+    <!-- 可突击订单 -->
+    <sql id="rushFilter">
+        <if test="rushType != null">
+            and soc.can_rush = #{rushType}
+        </if>
+    </sql>
+
+    <!-- 获取延时工单列表 -->
+    <select id="getDelayedOrderlist" resultType="Order">
+        SELECT
+            soc.order_id          AS "id",
+            soc.order_no,
+            soc.quarter,
+            soc.status            AS "orderCondition.status.value",
+            so.data_source        AS "dataSource.value",
+            so.repeate_no,
+            so.orderitem_json     AS "orderItemJson",
+            soc.kefu_id           AS "orderCondition.kefu.id",
+            soc.user_name         AS "orderCondition.userName",
+            soc.service_phone     AS "orderCondition.servicePhone",
+            soc.phone2            AS "orderCondition.phone2",
+            soc.area_id           AS "orderCondition.area.id",
+            soc.area_name         AS "orderCondition.area.name",
+            soc.service_address   AS "orderCondition.serviceAddress",
+            soc.order_id,
+            sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <![CDATA[AND soc.status = 20 AND soc.create_date < #{beginDate}]]>
+            <if test="dataSource != null and dataSource > 0">
+                AND so.data_source = #{dataSource}
+            </if>
+            <!--
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <when test="orderNoSearchType==2">
+                        AND soc.order_no LIKE concat(#{orderNo}, '%')
+                    </when>
+                    <otherwise>
+                        AND soc.order_no LIKE concat('%',#{orderNo}, '%')
+                    </otherwise>
+                </choose>
+            </if>
+            -->
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <choose>
+                <when test="area != null and area.id != null ">
+                    <choose>
+                        <when test="areaLevel == 2">
+                            AND soc.area_id = #{area.id}
+                        </when>
+                        <otherwise>
+                            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                                AND EXISTS(
+                                    SELECT 1
+                                    FROM sys_user_area ua
+                                        INNER JOIN sys_area a ON ua.user_id = #{createBy.id} AND ua.area_type=4 AND ua.area_id = a.id
+                                              AND a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4
+                                    WHERE ua.area_id = soc.area_id
+                                )
+                            </if>
+                            <if test="subQueryUserArea == null or subQueryUserArea == 0">
+                                AND EXISTS(
+                                    SELECT 1
+                                    FROM sys_area a
+                                    WHERE a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4 AND a.id = soc.area_id
+                                )
+                            </if>
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                        AND EXISTS(
+                            SELECT 1
+                            FROM sys_user_area ua
+                            WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                        )
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+    <select id="getDelayedOrderlistNew" resultType="Order">
+        SELECT
+        soc.order_id          AS "id",
+        soc.order_no,
+        soc.quarter,
+        soc.status            AS "orderCondition.status.value",
+        so.data_source        AS "dataSource.value",
+        so.repeate_no,
+        so.orderitem_json     AS "orderItemJson",
+        soc.kefu_id           AS "orderCondition.kefu.id",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.order_id,
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <if test="orderNoSearchType == 1">
+                <if test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </if>
+                <if test="orderNoSearchType == 1">
+                    AND soc.order_no = #{orderNo}
+                </if>
+            </if>
+            <![CDATA[AND soc.status = 20 AND soc.create_date < #{beginDate}]]>
+            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                AND EXISTS(
+                SELECT 1
+                FROM sys_user_area ua
+                WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                )
+            </if>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+    <!-- 获取爽约工单列表 -->
+    <select id="getBrokeAppointmentOrderlist_old" resultType="Order">
+        SELECT
+              soc.order_id              AS "id",
+              soc.order_no,
+              soc.quarter,
+              soc.status                AS "orderCondition.status.value",
+              soc.sub_status            AS "orderCondition.subStatus",
+              so.data_source            AS "dataSource.value",
+              so.repeate_no,
+              so.orderitem_json         AS "orderItemJson",
+              soc.kefu_id               AS "orderCondition.kefu.id",
+              soc.user_name             AS "orderCondition.userName",
+              soc.service_phone         AS "orderCondition.servicePhone",
+              soc.phone2                AS "orderCondition.phone2",
+              soc.area_id               AS "orderCondition.area.id",
+              soc.area_name             AS "orderCondition.area.name",
+              soc.service_address       AS "orderCondition.serviceAddress",
+              sos.plan_date             AS "orderStatus.planDate",
+              soc.appointment_date      AS "orderCondition.appointmentDate",
+              soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+              sos.accept_date           AS "orderStatus.acceptDate",
+              soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+              soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+              soc.grade_flag            AS "orderCondition.gradeFlag",
+              soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+              soc.engineer_id           AS "orderCondition.engineer.id",
+              soc.reservation_times     AS "orderCondition.reservationTimes",
+              soc.tracking_flag         AS "orderCondition.trackingFlag",
+              soc.tracking_message      AS "orderCondition.trackingMessage",
+              soc.tracking_date         AS "orderCondition.trackingDate",
+              soc.feedback_flag         AS "orderCondition.feedbackFlag",
+              soc.reply_flag            AS "orderCondition.replyFlag",
+              soc.feedback_id           AS "orderCondition.feedbackId",
+              soc.feedback_title        AS "orderCondition.feedbackTitle",
+              soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+              soc.order_id,
+              sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order so ON so.id = soc.order_id
+              INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+            <if test="engineer != null and (engineer.name != ''.toString() || engineer.phone != ''.toString())">
+                LEFT JOIN md_engineer me ON me.id = soc.engineer_id
+            </if>
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <![CDATA[AND soc.status BETWEEN 40 AND 50 AND soc.reservation_times >= 2]]>
+            <if test="beginDate != null and endDate != null">
+                AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <if test="dataSource != null and dataSource > 0">
+                AND so.data_source = #{dataSource}
+            </if>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="userName!=null and userName!=''.toString() ">
+                AND soc.user_name like CONCAT(#{userName},'%')
+            </if>
+            <if test="phone1!=null and phone1!=''.toString() ">
+                <choose>
+                    <when test="phone1.length==11">
+                        AND soc.service_phone = #{phone1}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                and soc.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="engineer != null and engineer.name != ''.toString()">
+                AND me.name LIKE CONCAT('%',#{engineer.name},'%')
+            </if>
+            <if test="engineer != null and engineer.phone != ''.toString()">
+                AND me.contact_info LIKE CONCAT('%',#{engineer.phone},'%')
+            </if>
+            <if test="productId !=null and productId>0">
+                and soc.product_ids LIKE CONCAT('%,',#{productId}, ',%')
+            </if>
+            <if test="serviceTypeId !=null and serviceTypeId>0">
+                and soc.service_types LIKE CONCAT('%,',#{serviceTypeId}, ',%')
+            </if>
+            <if test="reservationTime !=null and reservationTime>0">
+                AND <![CDATA[soc.reservation_times>=#{reservationTime}]]>
+            </if>
+            <choose>
+                <when test="area != null and area.id != null ">
+                    <choose>
+                        <when test="areaLevel == 2">
+                            AND soc.area_id = #{area.id}
+                        </when>
+                        <otherwise>
+                            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_user_area ua
+                                INNER JOIN sys_area a ON ua.user_id = #{createBy.id} AND ua.area_type=4 AND ua.area_id = a.id
+                                AND a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4
+                                WHERE ua.area_id = soc.area_id
+                                )
+                            </if>
+                            <if test="subQueryUserArea == null or subQueryUserArea == 0">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_area a
+                                WHERE a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4 AND a.id = soc.area_id
+                                )
+                            </if>
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                        AND EXISTS(
+                        SELECT 1
+                        FROM sys_user_area ua
+                        WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                        )
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+ <!--   <select id="getBrokeAppointmentOrderlist" resultType="Order">
+        SELECT
+              soc.order_id              AS "id",
+              soc.order_no,
+              soc.quarter,
+              soc.status                AS "orderCondition.status.value",
+              soc.sub_status            AS "orderCondition.subStatus",
+              so.data_source            AS "dataSource.value",
+              so.repeate_no,
+              so.orderitem_json         AS "orderItemJson",
+              soc.kefu_id               AS "orderCondition.kefu.id",
+              soc.user_name             AS "orderCondition.userName",
+              soc.service_phone         AS "orderCondition.servicePhone",
+              soc.phone2                AS "orderCondition.phone2",
+              soc.area_id               AS "orderCondition.area.id",
+              soc.area_name             AS "orderCondition.area.name",
+              soc.service_address       AS "orderCondition.serviceAddress",
+              sos.plan_date             AS "orderStatus.planDate",
+              soc.appointment_date      AS "orderCondition.appointmentDate",
+              soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+              sos.accept_date           AS "orderStatus.acceptDate",
+              soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+              soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+              soc.grade_flag            AS "orderCondition.gradeFlag",
+              soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+              soc.engineer_id           AS "orderCondition.engineer.id",
+              soc.reservation_times     AS "orderCondition.reservationTimes",
+              soc.tracking_flag         AS "orderCondition.trackingFlag",
+              soc.tracking_message      AS "orderCondition.trackingMessage",
+              soc.tracking_date         AS "orderCondition.trackingDate",
+              soc.feedback_flag         AS "orderCondition.feedbackFlag",
+              soc.reply_flag            AS "orderCondition.replyFlag",
+              soc.feedback_id           AS "orderCondition.feedbackId",
+              soc.feedback_title        AS "orderCondition.feedbackTitle",
+              soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+              soc.order_id,
+              sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order so ON so.id = soc.order_id
+              INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+             &lt;!&ndash;
+             <if test="engineer != null and (engineer.name != ''.toString() || engineer.phone != ''.toString())">
+                LEFT JOIN md_engineer me ON me.id = soc.engineer_id
+            </if>
+            &ndash;&gt;
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <![CDATA[AND soc.status BETWEEN 40 AND 50 AND soc.reservation_times >= 2]]>
+            <if test="beginDate != null and endDate != null">
+                AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <if test="dataSource != null and dataSource > 0">
+                AND so.data_source = #{dataSource}
+            </if>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="userName!=null and userName!=''.toString() ">
+                AND soc.user_name like CONCAT(#{userName},'%')
+            </if>
+            <if test="phone1!=null and phone1!=''.toString() ">
+                <choose>
+                    <when test="phone1.length==11">
+                        AND soc.service_phone = #{phone1}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                and soc.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="engineerIds != null and engineerIds.size>0">
+                and soc.engineer_id in
+                <foreach collection="engineerIds" item="id" open="(" separator="," close=")">
+                    ${id}
+                </foreach>
+            </if>
+            &lt;!&ndash;
+            <if test="engineer != null and engineer.name != ''.toString()">
+                AND me.name LIKE CONCAT('%',#{engineer.name},'%')
+            </if>
+            <if test="engineer != null and engineer.phone != ''.toString()">
+                AND me.contact_info LIKE CONCAT('%',#{engineer.phone},'%')
+            </if>
+            &ndash;&gt;
+            <if test="productId !=null and productId>0">
+                and soc.product_ids LIKE CONCAT('%,',#{productId}, ',%')
+            </if>
+            <if test="serviceTypeId !=null and serviceTypeId>0">
+                and soc.service_types LIKE CONCAT('%,',#{serviceTypeId}, ',%')
+            </if>
+            <if test="reservationTime !=null and reservationTime>0">
+                AND <![CDATA[soc.reservation_times>=#{reservationTime}]]>
+            </if>
+            <choose>
+                <when test="area != null and area.id != null ">
+                    <choose>
+                        <when test="areaLevel == 2">
+                            AND soc.area_id = #{area.id}
+                        </when>
+                        <otherwise>
+                            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_user_area ua
+                                INNER JOIN sys_area a ON ua.user_id = #{createBy.id} AND ua.area_type=4 AND ua.area_id = a.id
+                                AND a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4
+                                WHERE ua.area_id = soc.area_id
+                                )
+                            </if>
+                            <if test="subQueryUserArea == null or subQueryUserArea == 0">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_area a
+                                WHERE a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4 AND a.id = soc.area_id
+                                )
+                            </if>
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                        AND EXISTS(
+                        SELECT 1
+                        FROM sys_user_area ua
+                        WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                        )
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id
+    </select>-->
+    <select id="getBrokeAppointmentOrderlist" parameterType="OrderSearchModel" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="getBrokeAppointmentOrder" />
+                order by soc.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="getBrokeAppointmentOrder" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="getBrokeAppointmentOrder" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="getBrokeAppointmentOrder"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="getBrokeAppointmentOrder"/>
+                        order by soc.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <sql id="getBrokeAppointmentOrder">
+        SELECT
+        soc.order_id              AS "id",
+        soc.order_no,
+        soc.quarter,
+        soc.status                AS "orderCondition.status.value",
+        soc.sub_status            AS "orderCondition.subStatus",
+        so.data_source            AS "dataSource.value",
+        so.repeate_no,
+        so.orderitem_json         AS "orderItemJson",
+        soc.kefu_id               AS "orderCondition.kefu.id",
+        soc.user_name             AS "orderCondition.userName",
+        soc.service_phone         AS "orderCondition.servicePhone",
+        soc.phone2                AS "orderCondition.phone2",
+        soc.area_id               AS "orderCondition.area.id",
+        soc.area_name             AS "orderCondition.area.name",
+        soc.service_address       AS "orderCondition.serviceAddress",
+        sos.plan_date             AS "orderStatus.planDate",
+        soc.appointment_date      AS "orderCondition.appointmentDate",
+        soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+        sos.accept_date           AS "orderStatus.acceptDate",
+        soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+        soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+        soc.grade_flag            AS "orderCondition.gradeFlag",
+        soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+        soc.engineer_id           AS "orderCondition.engineer.id",
+        soc.reservation_times     AS "orderCondition.reservationTimes",
+        soc.tracking_flag         AS "orderCondition.trackingFlag",
+        soc.tracking_message      AS "orderCondition.trackingMessage",
+        soc.tracking_date         AS "orderCondition.trackingDate",
+        soc.feedback_flag         AS "orderCondition.feedbackFlag",
+        soc.reply_flag            AS "orderCondition.replyFlag",
+        soc.feedback_id           AS "orderCondition.feedbackId",
+        soc.feedback_title        AS "orderCondition.feedbackTitle",
+        soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+        soc.order_id,
+        sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order so ON so.id = soc.order_id
+        INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            <choose>
+                <when test="customerType != null and customerType == 1">
+                    inner join sys_user_customer uc
+                    on uc.user_id = #{createBy.id} and soc.customer_id = uc.customer_id
+                </when>
+                <when test="customerType != null">
+                    inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = soc.customer_id
+                </when>
+            </choose>
+        </if>
+        <where>
+           <!-- <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+
+                <otherwise></otherwise>
+            </choose>-->
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in
+                    <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                        #{quarters[${index}]}
+                    </foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <![CDATA[AND soc.status BETWEEN 40 AND 50 AND soc.reservation_times >= 2]]>
+            <if test="beginDate != null and endDate != null">
+                AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <if test="dataSource != null and dataSource > 0">
+                AND so.data_source = #{dataSource}
+            </if>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="userName!=null and userName!=''.toString() ">
+                AND soc.user_name like CONCAT(#{userName},'%')
+            </if>
+            <if test="phone1!=null and phone1!=''.toString() ">
+                <choose>
+                    <when test="phone1.length==11">
+                        AND soc.service_phone = #{phone1}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                and soc.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="engineerIds != null and engineerIds.size>0">
+                and soc.engineer_id in
+                <foreach collection="engineerIds" item="id" open="(" separator="," close=")">
+                    ${id}
+                </foreach>
+            </if>
+            <!--
+            <if test="engineer != null and engineer.name != ''.toString()">
+                AND me.name LIKE CONCAT('%',#{engineer.name},'%')
+            </if>
+            <if test="engineer != null and engineer.phone != ''.toString()">
+                AND me.contact_info LIKE CONCAT('%',#{engineer.phone},'%')
+            </if>
+            -->
+            <if test="productId !=null and productId>0">
+                and soc.product_ids LIKE CONCAT('%,',#{productId}, ',%')
+            </if>
+            <if test="serviceTypeId !=null and serviceTypeId>0">
+                and soc.service_types LIKE CONCAT('%,',#{serviceTypeId}, ',%')
+            </if>
+            <if test="reservationTime !=null and reservationTime>0">
+                AND <![CDATA[soc.reservation_times>=#{reservationTime}]]>
+            </if>
+            <!-- 选择的查询区域 -->
+            <include refid="selectedAreaFilter" />
+            <!-- 账号负责区域 -->
+            <include refid="RegionFilter" />
+            <!-- 可突击订单 -->
+            <include refid="rushFilter"/>
+        </where>
+    </sql>
+
+
+ <!--   <select id="getBrokeAppointmentOrderlistNew" resultType="Order">
+        SELECT
+        soc.order_id              AS "id",
+        soc.order_no,
+        soc.quarter,
+        soc.status                AS "orderCondition.status.value",
+        soc.sub_status            AS "orderCondition.subStatus",
+        so.data_source            AS "dataSource.value",
+        so.repeate_no,
+        so.orderitem_json         AS "orderItemJson",
+        soc.kefu_id               AS "orderCondition.kefu.id",
+        soc.user_name             AS "orderCondition.userName",
+        soc.service_phone         AS "orderCondition.servicePhone",
+        soc.phone2                AS "orderCondition.phone2",
+        soc.area_id               AS "orderCondition.area.id",
+        soc.area_name             AS "orderCondition.area.name",
+        soc.service_address       AS "orderCondition.serviceAddress",
+        sos.plan_date             AS "orderStatus.planDate",
+        soc.appointment_date      AS "orderCondition.appointmentDate",
+        soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+        sos.accept_date           AS "orderStatus.acceptDate",
+        soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+        soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+        soc.grade_flag            AS "orderCondition.gradeFlag",
+        soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+        soc.engineer_id           AS "orderCondition.engineer.id",
+        soc.reservation_times     AS "orderCondition.reservationTimes",
+        soc.tracking_flag         AS "orderCondition.trackingFlag",
+        soc.tracking_message      AS "orderCondition.trackingMessage",
+        soc.tracking_date         AS "orderCondition.trackingDate",
+        soc.feedback_flag         AS "orderCondition.feedbackFlag",
+        soc.reply_flag            AS "orderCondition.replyFlag",
+        soc.feedback_id           AS "orderCondition.feedbackId",
+        soc.feedback_title        AS "orderCondition.feedbackTitle",
+        soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+        soc.order_id,
+        sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <if test="orderNoSearchType == 1 or isPhone == 1">
+                <if test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </if>
+                <if test="orderNoSearchType == 1">
+                    AND soc.order_no = #{orderNo}
+                </if>
+                <if test="isPhone == 1">
+                    AND soc.service_phone = #{phone1}
+                </if>
+            </if>
+            <![CDATA[AND soc.status BETWEEN 40 AND 50 AND soc.reservation_times >= 2]]>
+            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                AND EXISTS(
+                SELECT 1
+                FROM sys_user_area ua
+                WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                )
+            </if>
+        </where>
+        ORDER BY soc.order_id
+    </select>-->
+
+    <sql id="getBrokeAppointmentOrderNew">
+        SELECT
+        soc.order_id              AS "id",
+        soc.order_no,
+        soc.quarter,
+        soc.status                AS "orderCondition.status.value",
+        soc.sub_status            AS "orderCondition.subStatus",
+        so.data_source            AS "dataSource.value",
+        so.repeate_no,
+        so.orderitem_json         AS "orderItemJson",
+        soc.kefu_id               AS "orderCondition.kefu.id",
+        soc.user_name             AS "orderCondition.userName",
+        soc.service_phone         AS "orderCondition.servicePhone",
+        soc.phone2                AS "orderCondition.phone2",
+        soc.area_id               AS "orderCondition.area.id",
+        soc.area_name             AS "orderCondition.area.name",
+        soc.service_address       AS "orderCondition.serviceAddress",
+        sos.plan_date             AS "orderStatus.planDate",
+        soc.appointment_date      AS "orderCondition.appointmentDate",
+        soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+        sos.accept_date           AS "orderStatus.acceptDate",
+        soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+        soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+        soc.grade_flag            AS "orderCondition.gradeFlag",
+        soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+        soc.engineer_id           AS "orderCondition.engineer.id",
+        soc.reservation_times     AS "orderCondition.reservationTimes",
+        soc.tracking_flag         AS "orderCondition.trackingFlag",
+        soc.tracking_message      AS "orderCondition.trackingMessage",
+        soc.tracking_date         AS "orderCondition.trackingDate",
+        soc.feedback_flag         AS "orderCondition.feedbackFlag",
+        soc.reply_flag            AS "orderCondition.replyFlag",
+        soc.feedback_id           AS "orderCondition.feedbackId",
+        soc.feedback_title        AS "orderCondition.feedbackTitle",
+        soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+        soc.order_id,
+        sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order so ON so.id = soc.order_id
+        INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            <choose>
+                <when test="customerType != null and customerType == 1">
+                    inner join sys_user_customer uc
+                    on uc.user_id = #{createBy.id} and soc.customer_id = uc.customer_id
+                </when>
+                <when test="customerType != null">
+                    inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = soc.customer_id
+                </when>
+            </choose>
+        </if>
+        <where>
+            <if test="orderNoSearchType == 1 or isPhone == 1">
+                <if test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </if>
+                <if test="orderNoSearchType == 1">
+                    AND soc.order_no = #{orderNo}
+                </if>
+                <if test="isPhone == 1">
+                    AND soc.service_phone = #{phone1}
+                </if>
+            </if>
+            <![CDATA[AND soc.status BETWEEN 40 AND 50 AND soc.reservation_times >= 2]]>
+           <!-- <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                AND EXISTS(
+                SELECT 1
+                FROM sys_user_area ua
+                WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                )
+            </if>-->
+            <!-- 选择的查询区域 -->
+            <include refid="selectedAreaFilter" />
+            <!-- 账号负责区域 -->
+            <include refid="RegionFilter" />
+            <!-- 可突击订单 -->
+            <include refid="rushFilter"/>
+        </where>
+    </sql>
+
+    <select id="getBrokeAppointmentOrderlistNew" parameterType="OrderSearchModel" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="getBrokeAppointmentOrderNew" />
+                order by soc.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="getBrokeAppointmentOrderNew" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="getBrokeAppointmentOrderNew" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="getBrokeAppointmentOrderNew"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="getBrokeAppointmentOrderNew"/>
+                        order by soc.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取爽约工单列表 -->
+    <select id="getComplainedOrderlist_old" resultType="Order">
+        SELECT
+              soc.order_id              AS "id",
+              soc.order_no,
+              soc.quarter,
+              soc.status                AS "orderCondition.status.value",
+              soc.sub_status            AS "orderCondition.subStatus",
+              so.data_source            AS "dataSource.value",
+              so.repeate_no,
+              so.orderitem_json         AS "orderItemJson",
+              soc.kefu_id               AS "orderCondition.kefu.id",
+              soc.user_name             AS "orderCondition.userName",
+              soc.service_phone         AS "orderCondition.servicePhone",
+              soc.phone2                AS "orderCondition.phone2",
+              soc.area_id               AS "orderCondition.area.id",
+              soc.area_name             AS "orderCondition.area.name",
+              soc.service_address       AS "orderCondition.serviceAddress",
+              sos.plan_date             AS "orderStatus.planDate",
+              soc.appointment_date      AS "orderCondition.appointmentDate",
+              soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+              sos.accept_date           AS "orderStatus.acceptDate",
+              soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+              soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+              soc.grade_flag            AS "orderCondition.gradeFlag",
+              soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+              soc.engineer_id           AS "orderCondition.engineer.id",
+              soc.reservation_times     AS "orderCondition.reservationTimes",
+              soc.tracking_flag         AS "orderCondition.trackingFlag",
+              soc.tracking_message      AS "orderCondition.trackingMessage",
+              soc.tracking_date         AS "orderCondition.trackingDate",
+              soc.feedback_flag         AS "orderCondition.feedbackFlag",
+              soc.reply_flag            AS "orderCondition.replyFlag",
+              soc.feedback_id           AS "orderCondition.feedbackId",
+              soc.feedback_title        AS "orderCondition.feedbackTitle",
+              soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+              soc.order_id,
+              sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order so ON so.id = soc.order_id
+              INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+            <if test="engineer != null and (engineer.name != ''.toString() || engineer.phone != ''.toString())">
+                LEFT JOIN md_engineer me ON me.id = soc.engineer_id
+            </if>
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <![CDATA[AND soc.status BETWEEN 20 AND 50 AND sos.complain_flag > 0]]>
+            <if test="beginDate != null and endDate != null">
+                AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <if test="dataSource != null and dataSource > 0">
+                AND so.data_source = #{dataSource}
+            </if>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="userName!=null and userName!=''.toString() ">
+                AND soc.user_name like CONCAT(#{userName},'%')
+            </if>
+            <if test="phone1!=null and phone1!=''.toString() ">
+                <choose>
+                    <when test="phone1.length==11">
+                        AND soc.service_phone = #{phone1}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                and soc.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="engineer != null and engineer.name != ''.toString()">
+                AND me.name LIKE CONCAT('%',#{engineer.name},'%')
+            </if>
+            <if test="engineer != null and engineer.phone != ''.toString()">
+                AND me.contact_info LIKE CONCAT('%',#{engineer.phone},'%')
+            </if>
+            <if test="productId !=null and productId>0">
+                and soc.product_ids LIKE CONCAT('%,',#{productId}, ',%')
+            </if>
+            <if test="serviceTypeId !=null and serviceTypeId>0">
+                and soc.service_types LIKE CONCAT('%,',#{serviceTypeId}, ',%')
+            </if>
+            <if test="reservationTime !=null and reservationTime>0">
+                AND <![CDATA[soc.reservation_times>=#{reservationTime}]]>
+            </if>
+            <choose>
+                <when test="area != null and area.id != null ">
+                    <choose>
+                        <when test="areaLevel == 2">
+                            AND soc.area_id = #{area.id}
+                        </when>
+                        <otherwise>
+                            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_user_area ua
+                                INNER JOIN sys_area a ON ua.user_id = #{createBy.id} AND ua.area_type=4 AND ua.area_id = a.id
+                                AND a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4
+                                WHERE ua.area_id = soc.area_id
+                                )
+                            </if>
+                            <if test="subQueryUserArea == null or subQueryUserArea == 0">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_area a
+                                WHERE a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4 AND a.id = soc.area_id
+                                )
+                            </if>
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                        AND EXISTS(
+                        SELECT 1
+                        FROM sys_user_area ua
+                        WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                        )
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+
+    <select id="getComplainedOrderlist" resultType="Order">
+        SELECT
+              soc.order_id              AS "id",
+              soc.order_no,
+              soc.quarter,
+              soc.status                AS "orderCondition.status.value",
+              soc.sub_status            AS "orderCondition.subStatus",
+              so.data_source            AS "dataSource.value",
+              so.repeate_no,
+              so.orderitem_json         AS "orderItemJson",
+              soc.kefu_id               AS "orderCondition.kefu.id",
+              soc.user_name             AS "orderCondition.userName",
+              soc.service_phone         AS "orderCondition.servicePhone",
+              soc.phone2                AS "orderCondition.phone2",
+              soc.area_id               AS "orderCondition.area.id",
+              soc.area_name             AS "orderCondition.area.name",
+              soc.service_address       AS "orderCondition.serviceAddress",
+              sos.plan_date             AS "orderStatus.planDate",
+              soc.appointment_date      AS "orderCondition.appointmentDate",
+              soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+              sos.accept_date           AS "orderStatus.acceptDate",
+              soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+              soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+              soc.grade_flag            AS "orderCondition.gradeFlag",
+              soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+              soc.engineer_id           AS "orderCondition.engineer.id",
+              soc.reservation_times     AS "orderCondition.reservationTimes",
+              soc.tracking_flag         AS "orderCondition.trackingFlag",
+              soc.tracking_message      AS "orderCondition.trackingMessage",
+              soc.tracking_date         AS "orderCondition.trackingDate",
+              soc.feedback_flag         AS "orderCondition.feedbackFlag",
+              soc.reply_flag            AS "orderCondition.replyFlag",
+              soc.feedback_id           AS "orderCondition.feedbackId",
+              soc.feedback_title        AS "orderCondition.feedbackTitle",
+              soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+              soc.order_id,
+              sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order so ON so.id = soc.order_id
+              INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+            <!--
+            // Engigneer微服务
+            <if test="engineer != null and (engineer.name != ''.toString() || engineer.phone != ''.toString())">
+                LEFT JOIN md_engineer me ON me.id = soc.engineer_id
+            </if>
+            -->
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <![CDATA[AND soc.status BETWEEN 20 AND 50 AND sos.complain_flag > 0]]>
+            <if test="beginDate != null and endDate != null">
+                AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <if test="dataSource != null and dataSource > 0">
+                AND so.data_source = #{dataSource}
+            </if>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="userName!=null and userName!=''.toString() ">
+                AND soc.user_name like CONCAT(#{userName},'%')
+            </if>
+            <if test="phone1!=null and phone1!=''.toString() ">
+                <choose>
+                    <when test="phone1.length==11">
+                        AND soc.service_phone = #{phone1}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                and soc.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="engineerIds != null and engineerIds.size>0">
+                and soc.engineer_id in
+                <foreach collection="engineerIds" item="id" open="(" separator="," close=")">
+                    ${id}
+                </foreach>
+            </if>
+            <!--
+            <if test="engineer != null and engineer.name != ''.toString()">
+                AND me.name LIKE CONCAT('%',#{engineer.name},'%')
+            </if>
+            <if test="engineer != null and engineer.phone != ''.toString()">
+                AND me.contact_info LIKE CONCAT('%',#{engineer.phone},'%')
+            </if>
+            -->
+            <if test="productId !=null and productId>0">
+                and soc.product_ids LIKE CONCAT('%,',#{productId}, ',%')
+            </if>
+            <if test="serviceTypeId !=null and serviceTypeId>0">
+                and soc.service_types LIKE CONCAT('%,',#{serviceTypeId}, ',%')
+            </if>
+            <if test="reservationTime !=null and reservationTime>0">
+                AND <![CDATA[soc.reservation_times>=#{reservationTime}]]>
+            </if>
+            <choose>
+                <when test="area != null and area.id != null ">
+                    <choose>
+                        <when test="areaLevel == 2">
+                            AND soc.area_id = #{area.id}
+                        </when>
+                        <otherwise>
+                            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_user_area ua
+                                INNER JOIN sys_area a ON ua.user_id = #{createBy.id} AND ua.area_type=4 AND ua.area_id = a.id
+                                AND a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4
+                                WHERE ua.area_id = soc.area_id
+                                )
+                            </if>
+                            <if test="subQueryUserArea == null or subQueryUserArea == 0">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_area a
+                                WHERE a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4 AND a.id = soc.area_id
+                                )
+                            </if>
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                        AND EXISTS(
+                        SELECT 1
+                        FROM sys_user_area ua
+                        WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                        )
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+    <select id="getComplainedOrderlistNew" resultType="Order">
+        SELECT
+        soc.order_id              AS "id",
+        soc.order_no,
+        soc.quarter,
+        soc.status                AS "orderCondition.status.value",
+        soc.sub_status            AS "orderCondition.subStatus",
+        so.data_source            AS "dataSource.value",
+        so.repeate_no,
+        so.orderitem_json         AS "orderItemJson",
+        soc.kefu_id               AS "orderCondition.kefu.id",
+        soc.user_name             AS "orderCondition.userName",
+        soc.service_phone         AS "orderCondition.servicePhone",
+        soc.phone2                AS "orderCondition.phone2",
+        soc.area_id               AS "orderCondition.area.id",
+        soc.area_name             AS "orderCondition.area.name",
+        soc.service_address       AS "orderCondition.serviceAddress",
+        sos.plan_date             AS "orderStatus.planDate",
+        soc.appointment_date      AS "orderCondition.appointmentDate",
+        soc.app_abnormaly_flag    AS "orderCondition.appAbnormalyFlag",
+        sos.accept_date           AS "orderStatus.acceptDate",
+        soc.operation_app_flag    AS "orderCondition.operationAppFlag",
+        soc.reply_flag_customer   AS "orderCondition.replyFlagCustomer",
+        soc.grade_flag            AS "orderCondition.gradeFlag",
+        soc.servicepoint_id       AS "orderCondition.servicePoint.id",
+        soc.engineer_id           AS "orderCondition.engineer.id",
+        soc.reservation_times     AS "orderCondition.reservationTimes",
+        soc.tracking_flag         AS "orderCondition.trackingFlag",
+        soc.tracking_message      AS "orderCondition.trackingMessage",
+        soc.tracking_date         AS "orderCondition.trackingDate",
+        soc.feedback_flag         AS "orderCondition.feedbackFlag",
+        soc.reply_flag            AS "orderCondition.replyFlag",
+        soc.feedback_id           AS "orderCondition.feedbackId",
+        soc.feedback_title        AS "orderCondition.feedbackTitle",
+        soc.finish_photo_qty      AS "orderCondition.finishPhotoQty",
+        soc.order_id,
+        sos.complain_flag         AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <if test="orderNoSearchType == 1 or isPhone == 1">
+                <if test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </if>
+                <if test="orderNoSearchType == 1">
+                    AND soc.order_no = #{orderNo}
+                </if>
+                <if test="isPhone == 1">
+                    AND soc.service_phone = #{phone1}
+                </if>
+            </if>
+            <![CDATA[AND soc.status BETWEEN 20 AND 50 AND sos.complain_flag > 0]]>
+            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                AND EXISTS(
+                SELECT 1
+                FROM sys_user_area ua
+                WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                )
+            </if>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+    <!-- 获取远程工单列表 -->
+    <select id="getTravelOrderlist_old" resultType="Order">
+    SELECT
+    soc.order_id                AS "id",
+    soc.order_no,
+    soc.quarter,
+    soc.status                  AS "orderCondition.status.value",
+    soc.sub_status              AS "orderCondition.subStatus",
+    so.data_source              AS "dataSource.value",
+    so.repeate_no,
+    so.orderitem_json           AS "orderItemJson",
+    soc.kefu_id                 AS "orderCondition.kefu.id",
+    soc.user_name               AS "orderCondition.userName",
+    soc.service_phone           AS "orderCondition.servicePhone",
+    soc.phone2                  AS "orderCondition.phone2",
+    soc.area_id                 AS "orderCondition.area.id",
+    soc.area_name               AS "orderCondition.area.name",
+    soc.service_address         AS "orderCondition.serviceAddress",
+    sos.plan_date               AS "orderStatus.planDate",
+    soc.appointment_date        AS "orderCondition.appointmentDate",
+    soc.app_abnormaly_flag      AS "orderCondition.appAbnormalyFlag",
+    sos.accept_date             AS "orderStatus.acceptDate",
+    soc.operation_app_flag      AS "orderCondition.operationAppFlag",
+    soc.reply_flag_customer     AS "orderCondition.replyFlagCustomer",
+    soc.grade_flag              AS "orderCondition.gradeFlag",
+    soc.servicepoint_id         AS "orderCondition.servicePoint.id",
+    soc.engineer_id             AS "orderCondition.engineer.id",
+    soc.reservation_times       AS "orderCondition.reservationTimes",
+    soc.tracking_flag           AS "orderCondition.trackingFlag",
+    soc.tracking_message        AS "orderCondition.trackingMessage",
+    soc.tracking_date           AS "orderCondition.trackingDate",
+    soc.feedback_flag           AS "orderCondition.feedbackFlag",
+    soc.reply_flag              AS "orderCondition.replyFlag",
+    soc.feedback_id             AS "orderCondition.feedbackId",
+    soc.feedback_title          AS "orderCondition.feedbackTitle",
+    soc.finish_photo_qty        AS "orderCondition.finishPhotoQty",
+    sof.engineer_travel_charge  AS "orderFee.engineerTravelCharge",
+    sof.engineer_other_charge   AS "orderFee.engineerOtherCharge",
+    soc.order_id,
+    sos.complain_flag           AS "orderStatus.complainFlag"
+    FROM  sd_order_condition soc
+    INNER JOIN sd_order so ON so.id = soc.order_id
+    INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+    INNER JOIN sd_order_fee sof on sof.order_id = soc.order_id
+    <if test="engineer != null and (engineer.name != ''.toString() || engineer.phone != ''.toString())">
+        LEFT JOIN md_engineer me ON me.id = soc.engineer_id
+    </if>
+    <if test="createBy != null and createBy.id != null and createBy.id != 0">
+        INNER JOIN md_productcategory_user mpu
+        ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+    </if>
+    <where>
+        <choose>
+            <when test="quarter != null and quarter != ''.toString()">
+                AND soc.quarter = #{quarter}
+            </when>
+            <when test="quarters != null and quarters.size > 0">
+                AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+            </when>
+            <otherwise></otherwise>
+        </choose>
+        <![CDATA[AND soc.status = 50 AND sof.engineer_travel_charge > 20 - sof.engineer_other_charge]]>
+        <if test="beginDate != null and endDate != null">
+            AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+        </if>
+        <if test="dataSource != null and dataSource > 0">
+            AND so.data_source = #{dataSource}
+        </if>
+        <if test="orderNo != null and orderNo != ''.toString()">
+            <choose>
+                <when test="orderNoSearchType==1">
+                    AND soc.order_no = #{orderNo}
+                </when>
+                <otherwise>
+                    AND FALSE
+                </otherwise>
+            </choose>
+        </if>
+        <if test="userName!=null and userName!=''.toString() ">
+            AND soc.user_name like CONCAT(#{userName},'%')
+        </if>
+        <if test="phone1!=null and phone1!=''.toString() ">
+            <choose>
+                <when test="phone1.length==11">
+                    AND soc.service_phone = #{phone1}
+                </when>
+                <otherwise>
+                    AND FALSE
+                </otherwise>
+            </choose>
+        </if>
+        <if test="customer != null and customer.id != null and customer.id >0">
+            AND soc.customer_id = #{customer.id}
+        </if>
+        <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+            and soc.servicepoint_id = #{servicePoint.id}
+        </if>
+        <if test="engineer != null and engineer.name != ''.toString()">
+            AND me.name LIKE CONCAT('%',#{engineer.name},'%')
+        </if>
+        <if test="engineer != null and engineer.phone != ''.toString()">
+            AND me.contact_info LIKE CONCAT('%',#{engineer.phone},'%')
+        </if>
+        <if test="productId !=null and productId>0">
+            and soc.product_ids LIKE CONCAT('%,',#{productId}, ',%')
+        </if>
+        <if test="serviceTypeId !=null and serviceTypeId>0">
+            and soc.service_types LIKE CONCAT('%,',#{serviceTypeId}, ',%')
+        </if>
+        <if test="reservationTime !=null and reservationTime>0">
+            AND <![CDATA[soc.reservation_times>=#{reservationTime}]]>
+        </if>
+        <choose>
+            <when test="area != null and area.id != null ">
+                <choose>
+                    <when test="areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </when>
+                    <otherwise>
+                        <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                            AND EXISTS(
+                            SELECT 1
+                            FROM sys_user_area ua
+                            INNER JOIN sys_area a ON ua.user_id = #{createBy.id} AND ua.area_type=4 AND ua.area_id = a.id
+                            AND a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4
+                            WHERE ua.area_id = soc.area_id
+                            )
+                        </if>
+                        <if test="subQueryUserArea == null or subQueryUserArea == 0">
+                            AND EXISTS(
+                            SELECT 1
+                            FROM sys_area a
+                            WHERE a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4 AND a.id = soc.area_id
+                            )
+                        </if>
+                    </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                    AND EXISTS(
+                    SELECT 1
+                    FROM sys_user_area ua
+                    WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                    )
+                </if>
+            </otherwise>
+        </choose>
+    </where>
+    ORDER BY soc.order_id
+</select>
+
+    <select id="getTravelOrderlist" resultType="Order">
+        SELECT
+              soc.order_id                AS "id",
+              soc.order_no,
+              soc.quarter,
+              soc.status                  AS "orderCondition.status.value",
+              soc.sub_status              AS "orderCondition.subStatus",
+              so.data_source              AS "dataSource.value",
+              so.repeate_no,
+              so.orderitem_json           AS "orderItemJson",
+              soc.kefu_id                 AS "orderCondition.kefu.id",
+              soc.user_name               AS "orderCondition.userName",
+              soc.service_phone           AS "orderCondition.servicePhone",
+              soc.phone2                  AS "orderCondition.phone2",
+              soc.area_id                 AS "orderCondition.area.id",
+              soc.area_name               AS "orderCondition.area.name",
+              soc.service_address         AS "orderCondition.serviceAddress",
+              sos.plan_date               AS "orderStatus.planDate",
+              soc.appointment_date        AS "orderCondition.appointmentDate",
+              soc.app_abnormaly_flag      AS "orderCondition.appAbnormalyFlag",
+              sos.accept_date             AS "orderStatus.acceptDate",
+              soc.operation_app_flag      AS "orderCondition.operationAppFlag",
+              soc.reply_flag_customer     AS "orderCondition.replyFlagCustomer",
+              soc.grade_flag              AS "orderCondition.gradeFlag",
+              soc.servicepoint_id         AS "orderCondition.servicePoint.id",
+              soc.engineer_id             AS "orderCondition.engineer.id",
+              soc.reservation_times       AS "orderCondition.reservationTimes",
+              soc.tracking_flag           AS "orderCondition.trackingFlag",
+              soc.tracking_message        AS "orderCondition.trackingMessage",
+              soc.tracking_date           AS "orderCondition.trackingDate",
+              soc.feedback_flag           AS "orderCondition.feedbackFlag",
+              soc.reply_flag              AS "orderCondition.replyFlag",
+              soc.feedback_id             AS "orderCondition.feedbackId",
+              soc.feedback_title          AS "orderCondition.feedbackTitle",
+              soc.finish_photo_qty        AS "orderCondition.finishPhotoQty",
+              sof.engineer_travel_charge  AS "orderFee.engineerTravelCharge",
+              sof.engineer_other_charge   AS "orderFee.engineerOtherCharge",
+              soc.order_id,
+              sos.complain_flag           AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order so ON so.id = soc.order_id
+              INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+              INNER JOIN sd_order_fee sof on sof.order_id = soc.order_id
+            <!--
+            <if test="engineer != null and (engineer.name != ''.toString() || engineer.phone != ''.toString())">
+                LEFT JOIN md_engineer me ON me.id = soc.engineer_id
+            </if>
+            -->
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <![CDATA[AND soc.status = 50 AND sof.engineer_travel_charge > 20 - sof.engineer_other_charge]]>
+            <if test="beginDate != null and endDate != null">
+                AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <if test="dataSource != null and dataSource > 0">
+                AND so.data_source = #{dataSource}
+            </if>
+            <if test="orderNo != null and orderNo != ''.toString()">
+                <choose>
+                    <when test="orderNoSearchType==1">
+                        AND soc.order_no = #{orderNo}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="userName!=null and userName!=''.toString() ">
+                AND soc.user_name like CONCAT(#{userName},'%')
+            </if>
+            <if test="phone1!=null and phone1!=''.toString() ">
+                <choose>
+                    <when test="phone1.length==11">
+                        AND soc.service_phone = #{phone1}
+                    </when>
+                    <otherwise>
+                        AND FALSE
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="customer != null and customer.id != null and customer.id >0">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                and soc.servicepoint_id = #{servicePoint.id}
+            </if>
+            <if test="engineerIds != null and engineerIds.size>0">
+                and soc.engineer_id in
+                <foreach collection="engineerIds" item="id" open="(" separator="," close=")">
+                    ${id}
+                </foreach>
+            </if>
+            <!--
+            <if test="engineer != null and engineer.name != ''.toString()">
+                AND me.name LIKE CONCAT('%',#{engineer.name},'%')
+            </if>
+            <if test="engineer != null and engineer.phone != ''.toString()">
+                AND me.contact_info LIKE CONCAT('%',#{engineer.phone},'%')
+            </if>
+            -->
+            <if test="productId !=null and productId>0">
+                and soc.product_ids LIKE CONCAT('%,',#{productId}, ',%')
+            </if>
+            <if test="serviceTypeId !=null and serviceTypeId>0">
+                and soc.service_types LIKE CONCAT('%,',#{serviceTypeId}, ',%')
+            </if>
+            <if test="reservationTime !=null and reservationTime>0">
+                AND <![CDATA[soc.reservation_times>=#{reservationTime}]]>
+            </if>
+            <choose>
+                <when test="area != null and area.id != null ">
+                    <choose>
+                        <when test="areaLevel == 2">
+                            AND soc.area_id = #{area.id}
+                        </when>
+                        <otherwise>
+                            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_user_area ua
+                                INNER JOIN sys_area a ON ua.user_id = #{createBy.id} AND ua.area_type=4 AND ua.area_id = a.id
+                                AND a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4
+                                WHERE ua.area_id = soc.area_id
+                                )
+                            </if>
+                            <if test="subQueryUserArea == null or subQueryUserArea == 0">
+                                AND EXISTS(
+                                SELECT 1
+                                FROM sys_area a
+                                WHERE a.parent_ids LIKE concat('0,%',',',#{area.id},',%') AND a.type = 4 AND a.id = soc.area_id
+                                )
+                            </if>
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                        AND EXISTS(
+                        SELECT 1
+                        FROM sys_user_area ua
+                        WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                        )
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+
+    <select id="getTravelOrderlistNew" resultType="Order">
+        SELECT
+        soc.order_id                AS "id",
+        soc.order_no,
+        soc.quarter,
+        soc.status                  AS "orderCondition.status.value",
+        soc.sub_status              AS "orderCondition.subStatus",
+        so.data_source              AS "dataSource.value",
+        so.repeate_no,
+        so.orderitem_json           AS "orderItemJson",
+        soc.kefu_id                 AS "orderCondition.kefu.id",
+        soc.user_name               AS "orderCondition.userName",
+        soc.service_phone           AS "orderCondition.servicePhone",
+        soc.phone2                  AS "orderCondition.phone2",
+        soc.area_id                 AS "orderCondition.area.id",
+        soc.area_name               AS "orderCondition.area.name",
+        soc.service_address         AS "orderCondition.serviceAddress",
+        sos.plan_date               AS "orderStatus.planDate",
+        soc.appointment_date        AS "orderCondition.appointmentDate",
+        soc.app_abnormaly_flag      AS "orderCondition.appAbnormalyFlag",
+        sos.accept_date             AS "orderStatus.acceptDate",
+        soc.operation_app_flag      AS "orderCondition.operationAppFlag",
+        soc.reply_flag_customer     AS "orderCondition.replyFlagCustomer",
+        soc.grade_flag              AS "orderCondition.gradeFlag",
+        soc.servicepoint_id         AS "orderCondition.servicePoint.id",
+        soc.engineer_id             AS "orderCondition.engineer.id",
+        soc.reservation_times       AS "orderCondition.reservationTimes",
+        soc.tracking_flag           AS "orderCondition.trackingFlag",
+        soc.tracking_message        AS "orderCondition.trackingMessage",
+        soc.tracking_date           AS "orderCondition.trackingDate",
+        soc.feedback_flag           AS "orderCondition.feedbackFlag",
+        soc.reply_flag              AS "orderCondition.replyFlag",
+        soc.feedback_id             AS "orderCondition.feedbackId",
+        soc.feedback_title          AS "orderCondition.feedbackTitle",
+        soc.finish_photo_qty        AS "orderCondition.finishPhotoQty",
+        sof.engineer_travel_charge  AS "orderFee.engineerTravelCharge",
+        sof.engineer_other_charge   AS "orderFee.engineerOtherCharge",
+        soc.order_id,
+        sos.complain_flag           AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+            INNER JOIN sd_order so ON so.id = soc.order_id
+            INNER JOIN sd_order_status sos on sos.order_id = soc.order_id
+            INNER JOIN sd_order_fee sof on sof.order_id = soc.order_id
+            <if test="createBy != null and createBy.id != null and createBy.id != 0">
+                INNER JOIN md_productcategory_user mpu
+                ON mpu.product_category_id = soc.product_category_id AND mpu.user_id = #{createBy.id}
+            </if>
+        <where>
+            <if test="orderNoSearchType == 1 or isPhone == 1">
+                <if test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </if>
+                <if test="orderNoSearchType == 1">
+                    AND soc.order_no = #{orderNo}
+                </if>
+                <if test="isPhone == 1">
+                    AND soc.service_phone = #{phone1}
+                </if>
+            </if>
+            <![CDATA[AND soc.status = 50 AND sof.engineer_travel_charge > 20 - sof.engineer_other_charge]]>
+            <if test="subQueryUserArea != null and subQueryUserArea == 1">
+                AND EXISTS(
+                SELECT 1
+                FROM sys_user_area ua
+                WHERE ua.user_id = #{createBy.id} AND ua.area_type = 4 AND soc.area_id = ua.area_id
+                )
+            </if>
+        </where>
+        ORDER BY soc.order_id
+    </select>
+
+    <!-- 获取工单的投诉状态 -->
+    <select id="getComplainStatusByOrderIds" resultType="LongTwoTuple">
+        SELECT
+        order_id    AS "aElement",
+        min(status) AS "bElement"
+        FROM  sd_order_complain soc
+        <where>
+            soc.quarter = #{quarter}
+            <choose>
+                <when test="orderIds.size == 1">
+                    AND soc.order_id = #{orderIds[0]}
+                </when>
+                <otherwise>
+                    AND soc.order_id IN
+                    <foreach item="orderId" index="index" collection="orderIds" open="(" separator="," close=")">
+                        #{orderId}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </where>
+        GROUP BY soc.order_id
+    </select>
+
+
+</mapper>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp" %>
+<html>
+<head>
+    <%@ include file="/WEB-INF/views/include/head.jsp" %>
+    <title>用户管理</title>
+    <meta name="decorator" content="default"/>
+    <%@ include file="/WEB-INF/views/include/pageSearch.jsp" %>
+    <style>
+        .margin_line{
+            margin-left: 30px;
+        }
+        .edit_button{
+            margin-top: -4px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid;
+            border-color: #C0C0C0;
+            background-color: rgb(238,238,238);
+            width: 100px;
+            height: 30px;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+        });
+        function search() {
+            $("#pageNo").val(1);
+            $("#searchForm").attr("action", "${ctx}/sys/user/list");
+            $("#searchForm").submit();
+            return false;
+        }
+
+        function selectUserType(type) {
+            if (type == 'user') {
+                $("#u_user").addClass('active');
+                $("#u_sales").removeClass('active');
+                $("#userType").attr("value",1);
+                search();
+            } else {
+                $("#u_user").removeClass('active');
+                $("#u_sales").addClass('active');
+                $("#userType").attr("value",7);
+                search();
+            }
+        }
+
+        function editUser(type, id) {
+            var h = $(top.window).height();
+            var w = $(top.window).width();
+            var text;
+            var url;
+            if (type == 1) {
+                text = "添加用户";
+                url = "${ctx}/sys/user/form?type=1";
+            } else {
+                text = "添加业务";
+                url = "${ctx}/sys/user/form?type=7";
+            }
+            var area = ['900px',(h-130)+'px'];
+            if (type == 1 && id != null) {
+                text = "修改用户";
+                url = "${ctx}/sys/user/form?type=1&id=" + id;
+                area = ['900px',(h-130)+'px'];
+            } else if (type == 2 && id != null){
+                text = "修改业务";
+                url = "${ctx}/sys/user/form?type=7&id=" + id;
+                area = ['900px',(h-130)+'px'];
+            }
+            top.layer.open({
+                type: 2,
+                id:"user",
+                zIndex:19891015,
+                title:text,
+                content: url,
+                area: area,
+                shade: 0.3,
+                maxmin: false,
+                success: function(layero,index){
+                },
+                end:function(){
+                }
+            });
+        }
+
+        function removeUser(userId, type){
+            var typeName = (type == 1 ? '用户' : '业务员');
+            layer.confirm(
+                '确认要删除该'+typeName+'吗？',
+                {
+                    btn: ['确定','取消'], //按钮
+                    title:'提示'
+                }, function(index){
+                    layer.close(index);//关闭本身
+                    var loadingIndex = top.layer.msg('正在删除，请稍等...', {
+                        icon: 16,
+                        time: 0,//不定时关闭
+                        shade: 0.3
+                    });
+                    $.ajax({
+                        url: "${ctx}/sys/user/delete?id=" + userId,
+                        success:function (data) {
+                            // 提交后的回调函数
+                            if(loadingIndex) {
+                                setTimeout(function () {
+                                    layer.close(loadingIndex);
+                                }, 2000);
+                            }
+                            if (data.success) {
+                                layerMsg(data.message);
+
+                                var pframe = getActiveTabIframe();//定义在jeesite.min.js中
+                                if(pframe){
+                                    pframe.repage();
+                                }
+                            } else {
+                                layerError("删除"+typeName+"失败:" + data.message, "错误提示");
+                            }
+                            return false;
+                        },
+                        error: function (data) {
+                            ajaxLogout(data,null,"数据操作错误，请重试!");
+                        },
+                    });
+                    return false;
+                }, function(){
+                    // 取消操作
+                });
+        }
+    </script>
+</head>
+<body>
+<ul class="nav nav-tabs">
+    <li class="active" id="u_user"><a href="#" onclick="selectUserType('user')">用户</a></li>
+    <li class="" id="u_sales"><a href="#" onclick="selectUserType('sales')">业务</a></li>
+</ul>
+<form:form id="searchForm" modelAttribute="user" action="${ctx}/sys/user/list" method="post"
+           class="form-inline">
+    <form:hidden path="userType" />
+    <input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}"/>
+    <input id="pageSize" name="pageSize" type="hidden" value="${page.pageSize}"/>
+    <sys:tableSort id="orderBy" name="orderBy" value="${page.orderBy}" callback="page();"/>
+
+    <div class="control-group" style="height: 45px;margin-top: 20px;border-bottom: 1px solid #EEEEEE;">
+        <label>登录名称：</label>
+        <form:input path="loginName" htmlEscape="false" maxlength="50" class="input-medium"/>
+        <label class="margin_line">姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名：</label>
+        <form:input path="name" htmlEscape="false" maxlength="50" class="input-medium"/>
+        &nbsp;&nbsp;
+        <input id="btnSubmit" class="btn btn-primary" type="button" onclick="search();" value="查询"/>
+    </div>
+</form:form>
+
+<shiro:hasPermission name="sys:user:edit">
+    <c:choose>
+        <c:when test="${userType == 1}">
+            <button class="edit_button" onclick="editUser(1, null)">
+                <i class="icon-plus-sign"></i>&nbsp;添加用户
+            </button>
+        </c:when>
+        <c:otherwise>
+            <button class="edit_button" onclick="editUser(2, null)">
+                <i class="icon-plus-sign"></i>&nbsp;添加业务
+            </button>
+        </c:otherwise>
+    </c:choose>
+</shiro:hasPermission>
+<sys:message content="${message}"/>
+<table id="contentTable" class="table table-striped table-bordered table-condensed table-hover">
+    <thead>
+    <tr>
+        <th>序号</th>
+        <th class="sort-column login_name">登录名称</th>
+        <th class="sort-column name">姓名</th>
+        <th>电话</th>
+        <th>QQ</th>
+        <th>手机</th>
+        <th>角色</th>
+        <th>最近登录IP</th>
+        <th>最近登录时间</th>
+        <shiro:hasPermission name="sys:user:edit">
+            <th>操作</th>
+        </shiro:hasPermission>
+    </tr>
+    </thead>
+    <tbody>
+    <c:forEach items="${page.list}" var="user">
+        <c:set var="index" value="${index+1}" />
+        <tr>
+            <td>${index+(page.pageNo-1)*page.pageSize}</td>
+            <td><a href="${ctx}/sys/user/form?id=${user.id}">${user.loginName}</a></td>
+            <td>${user.name}</td>
+            <td>${user.phone}</td>
+            <td>${user.qq}</td>
+            <td>${user.mobile}</td>
+            <td>${user.roleNames}</td>
+            <td>${user.loginIp}</td>
+            <td><fmt:formatDate value="${user.loginDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+            <shiro:hasPermission name="sys:user:edit">
+                <td>
+
+                    <c:choose>
+                        <c:when test="${userType == 1}">
+                            <a href="#" onclick="editUser(1, '${user.id}')">修改</a>
+                            <a href="#" onclick="removeUser('${user.id}', 1)">删除</a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="#" onclick="editUser(2, '${user.id}')">修改</a>
+                            <a href="#" onclick="removeUser('${user.id}', 2)">删除</a>
+                        </c:otherwise>
+                    </c:choose>
+
+                </td>
+            </shiro:hasPermission>
+        </tr>
+    </c:forEach>
+    </tbody>
+</table>
+<div class="pagination">${page}</div>
+</body>
+<script class="removedscript" type="text/javascript">
+    $(document).ready(function() {
+        $("th").css({"text-align":"center","vertical-align":"middle"});
+        $("td").css({"text-align":"center","vertical-align":"middle"});
+
+        <c:if test="${user != null}">
+            <c:choose>
+                <c:when test="${user.userType == 1}">
+                    $("#u_user").addClass('active');
+                    $("#u_sales").removeClass('active');
+                </c:when>
+                <c:otherwise>
+                    $("#u_user").removeClass('active');
+                    $("#u_sales").addClass('active');
+                </c:otherwise>
+            </c:choose>
+        </c:if>
+    });
+</script>
+</html>

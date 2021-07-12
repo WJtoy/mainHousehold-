@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.InsurancePriceDao">
+    <!--
+    <sql id="columns">
+            a.id,
+            a.product_category_id as "category.id",
+
+            mp.name               as "category.name",
+
+            a.insurance,
+            a.create_date,
+            a.remarks
+    </sql>
+    <sql id="sqlJoins">
+        LEFT JOIN md_productcategory mp ON a.product_category_id=mp.id AND mp.del_flag=0
+    </sql>
+-->
+    <!--
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+
+        DELETE FROM md_product_insurance
+        WHERE product_category_id=#{category.id};
+
+        INSERT INTO md_product_insurance(
+			product_category_id,
+			insurance,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{category.id},
+			#{insurance},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_product_insurance
+        SET
+            insurance = #{insurance},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_product_insurance
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="get" resultType="InsurancePrice">
+        SELECT
+                <include refid="columns"/>
+        FROM
+                md_product_insurance a
+
+               <include refid="sqlJoins"/>
+
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="getByCategory" resultType="InsurancePrice">
+        SELECT
+          <include refid="columns"/>
+        FROM
+          md_product_insurance a
+          <include refid="sqlJoins"/>
+        WHERE
+          a.product_category_id = #{categoryId}
+          AND   a.del_flag = 0
+        limit 1
+    </select>
+
+    <select id="findAllList" resultType="InsurancePrice">
+        SELECT
+                <include refid="columns"/>
+
+        FROM
+                md_product_insurance a
+               <include refid="sqlJoins"/>
+        WHERE
+                a.del_flag = 0
+        ORDER BY
+                a.create_date
+    </select>
+
+    <select id="findList" resultType="InsurancePrice">
+        SELECT
+                <include refid="columns"/>
+        FROM
+                md_product_insurance a
+               <include refid="sqlJoins"/>
+        <where>
+                AND   a.del_flag = 0
+
+                <if test="category != null and category.name != null and category.name !=''.toString() ">
+                    AND mp.name LIKE CONCAT('%', #{category.name}, '%')
+                </if>
+
+                <if test="category != null and category.id != null and category.id >0 ">
+                    AND a.product_category_id = #{category.id}
+                </if>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.create_date
+            </otherwise>
+        </choose>
+    </select>
+  -->
+</mapper>

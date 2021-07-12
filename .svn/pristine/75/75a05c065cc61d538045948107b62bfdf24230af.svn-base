@@ -1,0 +1,302 @@
+package com.wolfking.jeesite.modules.sd.web;
+
+
+import com.wolfking.jeesite.common.config.redis.RedisConstant;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.common.utils.DateUtils;
+import com.wolfking.jeesite.common.utils.RedisUtils;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.common.web.BaseController;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.entity.viewModel.OrderSearchModel;
+import com.wolfking.jeesite.modules.sd.service.ServiceLeaderOrderService;
+import com.wolfking.jeesite.modules.sd.utils.OrderUtils;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.UserUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
+
+/**
+ * 客服订单Controller
+ *
+ * @author Ryan
+ */
+@Controller
+@RequestMapping(value = "${adminPath}/sd/order/serviceLeaderNew/")
+@Slf4j
+public class ServiceLeaderOrderController extends BaseController {
+
+    @Autowired
+    private ServiceLeaderOrderService serviceLeaderOrderService;
+
+    @Autowired
+    private RedisUtils redisUtils;
+
+    private static final String MODEL_ATTR_PAGE = "page";
+    private static final String MODEL_ATTR_ORDER = "order";
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
+
+    private static final String VIEW_NAME_DELAY_ORDER_LIST = "modules/sd/serviceleaderNew/delayList";
+    private static final String VIEW_NAME_BROKE_APPOINTMENT_ORDER_LIST = "modules/sd/serviceleaderNew/reservationList";
+    private static final String VIEW_NAME_COMPLAINED_ORDER_LIST = "modules/sd/serviceleaderNew/complainList";
+    private static final String VIEW_NAME_TRAVEL_ORDER_LIST = "modules/sd/serviceleaderNew/travelList";
+
+    //region 订单列表
+
+    private Boolean checkOrderNoAndPhone(OrderSearchModel searchModel,Model model,Page<Order> page){
+        if(searchModel == null){
+            return true;
+        }
+        //检查电话
+        int orderSerchType = searchModel.getOrderNoSearchType();
+        if (orderSerchType != 1 && StringUtils.isNotBlank(searchModel.getOrderNo())){
+            addMessage(model, "错误：请输入正确的订单号码");
+            model.addAttribute(MODEL_ATTR_PAGE, page);
+            model.addAttribute(MODEL_ATTR_ORDER, searchModel);
+            return false;
+        }
+        if (StringUtils.isNotBlank(searchModel.getPhone1())){
+            if(searchModel.getIsPhone() != 1){
+                addMessage(model, "错误：请输入正确的用户电话");
+                model.addAttribute(MODEL_ATTR_PAGE, page);
+                model.addAttribute(MODEL_ATTR_ORDER, searchModel);
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * 异常订单-延时列表
+     * 下单超过1小时未接单
+     */
+    @RequiresPermissions(value = "sd:order:serviceleader")
+    @RequestMapping(value = "delaylist")
+    public String delayList(OrderSearchModel order, HttpServletRequest request, HttpServletResponse response, Model model) {
+        Page<Order> page = new Page<>();
+        User user = UserUtils.getUser();
+        //date,一个小时前
+        order.setBeginDate(DateUtils.addHour(new Date(), -1));
+
+        Boolean isValid = checkOrderNoAndPhone(order,model,page);
+        if(!isValid){
+            return VIEW_NAME_DELAY_ORDER_LIST;
+        }
+
+        Boolean isSystemUser = user.isSystemUser();
+        if (isSystemUser) {
+            try {
+                Boolean isKefu = user.isKefu() || user.isKefuLeader();
+                if (isKefu && (order.getCustomer() == null || order.getCustomer().getId() == null)) {
+                    //检查客户是否指派负责的客服
+                    if (redisUtils.exists(String.format(RedisConstant.SHIRO_KEFU_CUSTOMER, user.getId()))) {
+                        order.setSubQueryUserCustomer(1);//指派客户,子查询,关联sys_user_customer
+                        order.setCreateBy(user);
+                    }
+                }
+                int subQueryUserArea = 1;
+                //客服帐号，只查询自己负责的单
+                //by 区域
+                //按其负责的区域过滤，前端区域选择已经按帐号做筛选
+                //如选择的区域是 [区/县]级，则直接查询订单的area_id与传入值相等
+                //否则，需要关联sys_area表，根据parent_ids like查询
+                //if(!user.isAdmin()) {
+                if (isKefu) {
+                    order.setSubQueryUserArea(subQueryUserArea);
+                    order.setCreateBy(user);//*,只有客服才按帐号筛选
+                }
+                page = serviceLeaderOrderService.getDelayedOrderlist(new Page<>(request, response), order);
+            } catch (Exception e) {
+                addMessage(model, "错误：" + e.getMessage());
+            }
+        }
+        model.addAttribute(MODEL_ATTR_PAGE, page);
+        model.addAttribute(MODEL_ATTR_ORDER, order);
+        return VIEW_NAME_DELAY_ORDER_LIST;
+    }
+
+    /**
+     * 异常订单-爽约列表
+     * 预约时间两次及以上的工单
+     */
+    @RequiresPermissions(value = "sd:order:serviceleader")
+    @RequestMapping(value = "reservationlist")
+    public String reservationList(OrderSearchModel order, HttpServletRequest request, HttpServletResponse response, Model model) {
+        Page<Order> page = new Page<>();
+        User user = UserUtils.getUser();
+        order.setOrderDataLevel(OrderUtils.OrderDataLevel.CONDITION);//从数据库/redis中读取具体的数据内容
+        //date
+        if (order.getBeginDate() == null) {
+            order.setEndDate(DateUtils.getDateEnd(new Date()));
+            order.setBeginDate(DateUtils.getStartDayOfMonth(DateUtils.addMonth(new Date(), -3)));
+        } else {
+            order.setEndDate(DateUtils.getDateEnd(order.getEndDate()));
+        }
+
+        Boolean isValid = checkOrderNoAndPhone(order,model,page);
+        if(!isValid){
+            return VIEW_NAME_BROKE_APPOINTMENT_ORDER_LIST;
+        }
+
+        Boolean isSystemUser = user.isSystemUser();
+        if (isSystemUser) {
+            try {
+                Boolean isKefu = user.isKefu() || user.isKefuLeader();
+                if (isKefu && (order.getCustomer() == null || order.getCustomer().getId() == null)) {
+                    //检查客户是否指派负责的客服
+                    if (redisUtils.exists(String.format(RedisConstant.SHIRO_KEFU_CUSTOMER, user.getId()))) {
+                        order.setSubQueryUserCustomer(1);//指派客户,子查询,关联sys_user_customer
+                        order.setCreateBy(user);
+                    }
+                }
+                int subQueryUserArea = 1;
+                //安维帐号，只查询自己负责的单
+                //by 区域
+                //按其负责的区域过滤，前端区域选择已经按帐号做筛选
+                //如选择的区域是 [区/县]级，则直接查询订单的area_id与传入值相等
+                //否则，需要关联sys_area表，根据parent_ids like查询
+                //if(!user.isAdmin()) {
+                if (isKefu) {
+                    order.setSubQueryUserArea(subQueryUserArea);
+                    order.setCreateBy(user);//*,只有客服才按帐号筛选
+                }
+                page = serviceLeaderOrderService.getBrokeAppointmentOrderlist(new Page<>(request, response), order);
+            } catch (Exception e) {
+                addMessage(model, "错误：" + e.getMessage());
+            }
+        }
+
+        model.addAttribute(MODEL_ATTR_PAGE, page);
+        model.addAttribute(MODEL_ATTR_ORDER, order);
+        return VIEW_NAME_BROKE_APPOINTMENT_ORDER_LIST;
+    }
+
+    /**
+     * 异常订单-投诉单列表
+     * 被厂商或用户投诉的工单
+     */
+    @RequiresPermissions(value = "sd:order:serviceleader")
+    @RequestMapping(value = "complainlist")
+    public String complainList(OrderSearchModel order, HttpServletRequest request, HttpServletResponse response, Model model) {
+        Page<Order> page = new Page<>();
+        User user = UserUtils.getUser();
+        order.setOrderDataLevel(OrderUtils.OrderDataLevel.CONDITION);//从数据库/redis中读取具体的数据内容
+        //date
+        if (order.getBeginDate() == null) {
+            order.setEndDate(DateUtils.getDateEnd(new Date()));
+            order.setBeginDate(DateUtils.getStartDayOfMonth(DateUtils.addMonth(new Date(), -3)));
+        } else {
+            order.setEndDate(DateUtils.getDateEnd(order.getEndDate()));
+        }
+
+        Boolean isValid = checkOrderNoAndPhone(order,model,page);
+        if(!isValid){
+            return VIEW_NAME_COMPLAINED_ORDER_LIST;
+        }
+
+        Boolean isSystemUser = user.isSystemUser();
+        if (isSystemUser) {
+            try {
+                Boolean isKefu = user.isKefu() || user.isKefuLeader();
+                if (isKefu && (order.getCustomer() == null || order.getCustomer().getId() == null)) {
+                    //检查客户是否指派负责的客服
+                    if (redisUtils.exists(String.format(RedisConstant.SHIRO_KEFU_CUSTOMER, user.getId()))) {
+                        order.setSubQueryUserCustomer(1);//指派客户,子查询,关联sys_user_customer
+                        order.setCreateBy(user);
+                    }
+                }
+
+                int subQueryUserArea = 1;
+                //安维帐号，只查询自己负责的单
+                //by 区域
+                //按其负责的区域过滤，前端区域选择已经按帐号做筛选
+                //如选择的区域是 [区/县]级，则直接查询订单的area_id与传入值相等
+                //否则，需要关联sys_area表，根据parent_ids like查询
+                //if(!user.isAdmin()) {
+                if (isKefu) {
+                    order.setSubQueryUserArea(subQueryUserArea);
+                    order.setCreateBy(user);//*,只有客服才按帐号筛选
+                }
+                page = serviceLeaderOrderService.getComplainedOrderlist(new Page<>(request, response), order);
+            } catch (Exception e) {
+                addMessage(model, "错误：" + e.getMessage());
+            }
+        }
+
+        model.addAttribute(MODEL_ATTR_PAGE, page);
+        model.addAttribute(MODEL_ATTR_ORDER, order);
+        return VIEW_NAME_COMPLAINED_ORDER_LIST;
+    }
+
+    /**
+     * 异常订单-远程单列表
+     * 远程费超过20的工单
+     */
+    @RequiresPermissions(value = "sd:order:serviceleader")
+    @RequestMapping(value = "travellist")
+    public String travelList(OrderSearchModel order, HttpServletRequest request, HttpServletResponse response, Model model) {
+        Page<Order> page = new Page<>();
+        User user = UserUtils.getUser();
+        order.setOrderDataLevel(OrderUtils.OrderDataLevel.FEE);//从数据库/redis中读取具体的数据内容
+        //date
+        if (order.getBeginDate() == null) {
+            order.setEndDate(DateUtils.getDateEnd(new Date()));
+            order.setBeginDate(DateUtils.getStartDayOfMonth(DateUtils.addMonth(new Date(), -3)));
+        } else {
+            order.setEndDate(DateUtils.getDateEnd(order.getEndDate()));
+        }
+
+        Boolean isValid = checkOrderNoAndPhone(order,model,page);
+        if(!isValid){
+            return VIEW_NAME_TRAVEL_ORDER_LIST;
+        }
+
+        Boolean isSystemUser = user.isSystemUser();
+        if (isSystemUser) {
+            try {
+                Boolean isKefu = user.isKefu() || user.isKefuLeader();
+                if (isKefu && (order.getCustomer() == null || order.getCustomer().getId() == null)) {
+                    //检查客户是否指派负责的客服
+                    if (redisUtils.exists(String.format(RedisConstant.SHIRO_KEFU_CUSTOMER, user.getId()))) {
+                        order.setSubQueryUserCustomer(1);//指派客户,子查询,关联sys_user_customer
+                        //order.setCreateBy(user);
+                    } else {
+                        order.setSubQueryUserCustomer(0);
+                    }
+                }
+
+                int subQueryUserArea = 1;
+                //安维帐号，只查询自己负责的单
+                //by 区域
+                //按其负责的区域过滤，前端区域选择已经按帐号做筛选
+                //如选择的区域是 [区/县]级，则直接查询订单的area_id与传入值相等
+                //否则，需要关联sys_area表，根据parent_ids like查询
+                //if(!user.isAdmin()) {
+                if (isKefu) {
+                    order.setSubQueryUserArea(subQueryUserArea);
+                    order.setCreateBy(user);//*,只有客服才按帐号筛选
+                }
+                page = serviceLeaderOrderService.getTravelOrderlist(new Page<>(request, response), order);
+            } catch (Exception e) {
+                addMessage(model, "错误：" + e.getMessage());
+            }
+        }
+
+        model.addAttribute(MODEL_ATTR_PAGE, page);
+        model.addAttribute(MODEL_ATTR_ORDER, order);
+        return VIEW_NAME_TRAVEL_ORDER_LIST;
+    }
+
+    //endregion 订单列表
+}
+

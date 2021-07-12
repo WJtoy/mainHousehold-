@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderImportDao">
+
+	<!-- 导入订单 -->
+	<insert id="insertTempOrder">
+		insert into sd_temporder
+		(id,customer_id,user_name,phone,tel,address,product_id,product_name,product_brand,
+		 product_spec,service_type_id,description,qty,remarks,
+    	 error_msg,success_flag,order_no,repeate_order_no,express_company,express_no,
+    	 create_by,create_date,update_by,update_date,del_flag,retry_times,thd_no
+		<if test="b2bShop != null and b2bShop.shopId != null">
+			,shop_id
+		</if>
+    	)
+    	values(
+    	 #{id},#{customer.id},#{userName},#{phone},#{tel},#{address},#{product.id},#{product.name},#{brand},
+    	 #{productSpec},#{serviceType.id},#{description},#{qty},#{remarks},
+    	 #{errorMsg},0,#{orderNo},#{repeateOrderNo},#{expressCompany.value},#{expressNo},
+    	 #{createBy.id},#{createDate},#{createBy.id},#{createDate},2,1,#{thdNo}
+		<if test="b2bShop != null and b2bShop.shopId != null">
+			,#{b2bShop.shopId}
+		</if>
+    	)
+	</insert>
+
+	<sql id="tempOrderColumns">
+		o.id,
+		o.customer_id as "customer.id",
+		o.user_name,
+		o.phone,
+		o.tel,
+		o.address,
+		o.product_id as "product.id",
+		o.product_name as "product.name",
+		o.product_brand as "brand",
+		o.product_spec as "productSpec",
+		o.service_type_id as "serviceType.id",
+		'' as "serviceType.name",
+		o.description,
+		o.qty,
+		o.error_msg,
+		o.success_flag,
+		o.order_no,
+		o.repeate_order_no,
+		o.thd_no,
+		o.create_by as "createBy.id",
+		o.create_date,
+		o.update_date,
+		o.remarks,
+		o.express_company as "expressCompany.value",
+		o.express_no,
+		o.retry_times,
+		o.shop_id as 'b2bShop.shopId'
+	</sql>
+
+	<update id="updateTempOrder" parameterType="java.util.HashMap">
+		update sd_temporder
+		<set >
+			<if test="remarks != null" >
+				remarks = #{remarks},
+			</if>
+
+			<if test="errorMsg != null " >
+				error_msg = #{errorMsg},
+			</if>
+			<if test="delFlag != null" >
+				del_flag = #{delFlag},
+			</if>
+			<if test="retryTimes != null">
+				retry_times = #{retryTimes},
+			</if>
+			<if test="updateBy != null and updateBy.id != null" >
+				update_by = #{updateBy.id},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+			<if test="successFlag != null" >
+				success_flag = #{successFlag},
+			</if>
+			<if test="orderNo != null" >
+				order_no = #{orderNo},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<select id="findRetryTempOrder" resultType="TempOrder">
+		SELECT
+		<include refid="tempOrderColumns"/>
+		from sd_temporder o
+		<where >
+			<if test="customer != null and customer.id != null and customer.id >0">
+				and o.customer_id = #{customer.id}
+			</if>
+			<if test="phone != null and phone != ''.toString()">
+				and o.phone = #{phone}
+			</if>
+			<if test="userName != null and userName != ''.toString()">
+				and o.user_name like CONCAT(#{userName},'%')
+			</if>
+            <if test="createDate != null">
+                <choose>
+                    <when test="updateDate != null">
+                        and o.create_date between #{createDate} and #{updateDate}
+                    </when>
+                    <otherwise>
+                        and o.create_date >= #{createDate}
+                    </otherwise>
+                </choose>
+            </if>
+			and o.success_flag = 0
+			and o.del_flag = 2
+		</where>
+		order by o.create_date
+	</select>
+
+	<select id="getTempOrder" resultType="TempOrder">
+		SELECT
+		<include refid="tempOrderColumns"/>
+		,o.create_by as "createBy.id"
+		,'' as "createBy.name"
+		from sd_temporder o
+		WHERE o.id = #{id}
+	</select>
+
+	<select id="getTempOrderStatus" resultType="TempOrder">
+		SELECT
+			success_flag,
+			del_flag
+		FROM
+			sd_temporder
+		WHERE
+			id = #{id}
+	</select>
+
+	<update id="retryError">
+		update
+			sd_temporder
+		<set>
+			<if test="errorMsg != null " >
+				error_msg = #{errorMsg},
+			</if>
+			retry_times = retry_times + 1,
+			<if test="updateBy != null and updateBy.id != null" >
+				update_by = #{updateBy.id},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+			<if test="successFlag != null">
+				success_flag = #{success_flag},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+	<!-- 导入订单 END -->
+
+</mapper>

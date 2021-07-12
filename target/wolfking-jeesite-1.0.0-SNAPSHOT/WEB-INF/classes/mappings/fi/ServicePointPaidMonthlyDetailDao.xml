@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.ServicePointPaidMonthlyDetailDao">
+	<insert id="incrAmountForUpdateBalanceDetail" parameterType="com.kkl.kklplus.entity.fi.servicepoint.ServicePointPaidMonthlyDetail" >
+		INSERT INTO fi_servicepoint_paid_monthly_detail (
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`,
+				product_category_id,
+				${monthField}
+		) VALUES (
+				#{id},
+				#{servicepointId},
+				#{paymentType},
+				#{year},
+				#{productCategoryId},
+				#{amount}
+		)
+		ON DUPLICATE KEY
+		UPDATE ${monthField} = ${monthField} + #{amount}
+	</insert>
+	
+</mapper>

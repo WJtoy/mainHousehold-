@@ -1,0 +1,677 @@
+package com.wolfking.jeesite.modules.sd.web;
+
+
+import com.wolfking.jeesite.common.config.redis.GsonRedisSerializer;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.common.utils.DateUtils;
+import com.wolfking.jeesite.common.web.BaseController;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.md.service.ServicePointService;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.entity.viewModel.OrderSearchModel;
+import com.wolfking.jeesite.modules.sd.entity.viewModel.OrderServicePointSearchModel;
+import com.wolfking.jeesite.modules.sd.service.ServicePointOrderService;
+import com.wolfking.jeesite.modules.sd.utils.OrderUtils;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.UserUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+
+/**
+ * 网点工单Controller
+ *
+ * @author Ryan
+ */
+@Controller
+@RequestMapping(value = "${adminPath}/sd/order/servicepoint/")
+@Slf4j
+public class ServicePointOrderController extends BaseController {
+
+    @Autowired
+    private ServicePointOrderService servicePointOrderService;
+
+    @Autowired
+    private ServicePointService servicePointService;
+
+    @Resource(name = "gsonRedisSerializer")
+    public GsonRedisSerializer gsonRedisSerializer;
+
+    //region 网点工单列表
+
+    /**
+     * 网点的等待预约的订单列表
+     *
+     * @param order
+     * @param request
+     * @param response
+     * @param model
+     * @return
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = {"waitingAppointmentList", "list"})
+    public String servicePointWaitingAppointmentList(OrderServicePointSearchModel order, Model model,
+                                                     HttpServletRequest request, HttpServletResponse response) {
+
+        User user = UserUtils.getUser();
+        Long servicePointId = null;
+        Long engineerId = null;
+
+        if (user.isEngineer()) {
+            Engineer e = null;
+            if (user.getCompanyId() > 0) {
+                e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+            }
+            if (e == null) {
+                e = servicePointService.getEngineer(user.getEngineerId());
+            }
+            servicePointId = (e.getServicePoint() == null ? null : e.getServicePoint().getId());
+            order.setServicePointId(servicePointId);
+            //子帐号只查询自己的订单
+            if (e.getMasterFlag() == 0) {
+                engineerId = user.getEngineerId();
+                order.setEngineerId(engineerId);
+            } else {
+                order.setMasterId(user.getEngineerId());
+            }
+        }
+
+        Date now = new Date();
+        //接单时间范围
+        if (order.getBeginAcceptDate() == null) {
+            order.setBeginAcceptDate(DateUtils.addMonth(now, -1));
+        }
+
+        order.setEndAcceptDate(DateUtils.getEndOfDay(order.getEndAcceptDate()));
+        order.setBeginAcceptDate(DateUtils.getStartOfDay(order.getBeginAcceptDate()));
+
+        Page<Order> page = new Page<>(request, response);
+        try {
+            order.setOrderListType(ServicePoint.SERVICE_POINT_ORDER_LIST_TYPE_WAITING_APPOINTMENT);
+            page = servicePointOrderService.findServicePointWaitingAppointmentOrder(new Page<>(request, response), order);
+            List<Order> list = page.getList();
+            if (list != null && list.size() > 0) {
+                batchLoadServicePointComplainFlag(servicePointId, list);
+            }
+        } catch (Exception e) {
+            addMessage(model, "错误：" + e.getMessage());
+        }
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+
+        return "modules/sd/servicepoint/servicePointWaitingAppointmentOrderList";
+    }
+
+    /**
+     * 读取网点订单投诉标记
+     *
+     * @param list
+     */
+    private void batchLoadServicePointComplainFlag(Long servicePointId, List<Order> list) {
+        if (list == null || list.size() == 0 || servicePointId == null || servicePointId <= 0) {
+            return;
+        }
+        List<Long> ids = list.stream().map(t -> t.getId()).collect(Collectors.toList());
+        if (ids == null || ids.size() == 0) {
+            return;
+        }
+        Set<Long> orderIds = servicePointOrderService.getServicePointComplainOrderIdSet(servicePointId, ids);
+        Order order;
+        for (int i = 0, size = list.size(); i < size; i++) {
+            order = list.get(i);
+           /* if (orderIds.contains(order.getId())) {
+                order.getOrderCondition().setIsComplained(2);
+            } else {
+                order.getOrderCondition().setIsComplained(0);
+            }*/
+            if (orderIds.contains(order.getId())) {
+                order.getOrderStatus().setComplainFlag(2);
+            } else {
+                order.getOrderStatus().setComplainFlag(0);
+            }
+        }
+    }
+
+    /**
+     * 网点的处理中的订单列表
+     *
+     * @param order
+     * @param request
+     * @param response
+     * @param model
+     * @return
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = {"processingList"})
+    public String servicePointProcessingList(OrderServicePointSearchModel order, Model model,
+                                             HttpServletRequest request, HttpServletResponse response) {
+
+        User user = UserUtils.getUser();
+        Long servicePointId = null;
+        Long engineerId = null;
+
+        if (user.isEngineer()) {
+            Engineer e = null;
+            if (user.getCompanyId() > 0) {
+                e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+            }
+            if (e == null) {
+                e = servicePointService.getEngineer(user.getEngineerId());
+            }
+            servicePointId = (e.getServicePoint() == null ? null : e.getServicePoint().getId());
+            order.setServicePointId(servicePointId);
+            //子帐号只查询自己的订单
+            if (e.getMasterFlag() == 0) {
+                engineerId = user.getEngineerId();
+                order.setEngineerId(engineerId);
+            } else {
+                order.setMasterId(user.getEngineerId());
+            }
+        }
+
+        Date now = new Date();
+        //接单时间范围
+        if (order.getBeginAcceptDate() == null) {
+            order.setBeginAcceptDate(DateUtils.addMonth(now, -1));
+        }
+
+        order.setEndAcceptDate(DateUtils.getEndOfDay(order.getEndAcceptDate()));
+        order.setBeginAcceptDate(DateUtils.getStartOfDay(order.getBeginAcceptDate()));
+
+        Page<Order> page = new Page<>(request, response);
+        try {
+            order.setOrderListType(ServicePoint.SERVICE_POINT_ORDER_LIST_TYPE_PROCESSING);
+            page = servicePointOrderService.findServicePointProcessingOrder(new Page<>(request, response), order);
+            List<Order> list = page.getList();
+            if (list != null && list.size() > 0) {
+                batchLoadServicePointComplainFlag(servicePointId, list);
+            }
+        } catch (Exception e) {
+            addMessage(model, "错误：" + e.getMessage());
+        }
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+
+        return "modules/sd/servicepoint/servicePointProcessingOrderList";
+    }
+
+    /**
+     * 网点的预约中的订单列表
+     *
+     * @param order
+     * @param request
+     * @param response
+     * @param model
+     * @return
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = {"appointedList"})
+    public String servicePointAppointedOrderList(OrderServicePointSearchModel order, Model model,
+                                                 HttpServletRequest request, HttpServletResponse response) {
+
+        User user = UserUtils.getUser();
+        Long servicePointId = null;
+        Long engineerId = null;
+
+        if (user.isEngineer()) {
+            Engineer e = null;
+            if (user.getCompanyId() > 0) {
+                e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+            }
+            if (e == null) {
+                e = servicePointService.getEngineer(user.getEngineerId());
+            }
+            servicePointId = (e.getServicePoint() == null ? null : e.getServicePoint().getId());
+            order.setServicePointId(servicePointId);
+            //子帐号只查询自己的订单
+            if (e.getMasterFlag() == 0) {
+                engineerId = user.getEngineerId();
+                order.setEngineerId(engineerId);
+            } else {
+                order.setMasterId(user.getEngineerId());
+            }
+        }
+
+        Date now = new Date();
+        //接单时间范围
+        if (order.getBeginAcceptDate() == null) {
+            order.setBeginAcceptDate(DateUtils.addMonth(now, -1));
+        }
+
+        order.setEndAcceptDate(DateUtils.getEndOfDay(order.getEndAcceptDate()));
+        order.setBeginAcceptDate(DateUtils.getStartOfDay(order.getBeginAcceptDate()));
+
+        Page<Order> page = new Page<>(request, response);
+        try {
+            order.setOrderListType(ServicePoint.SERVICE_POINT_ORDER_LIST_TYPE_APPOINTED);
+            page = servicePointOrderService.findServicePointAppointedOrder(new Page<>(request, response), order);
+            List<Order> list = page.getList();
+            if (list != null && list.size() > 0) {
+                batchLoadServicePointComplainFlag(servicePointId, list);
+            }
+        } catch (Exception e) {
+            addMessage(model, "错误：" + e.getMessage());
+        }
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+
+        return "modules/sd/servicepoint/servicePointAppointedOrderList";
+    }
+
+
+    /**
+     * 网点的等待配件的订单列表
+     *
+     * @param order
+     * @param request
+     * @param response
+     * @param model
+     * @return
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = {"waitingAccessoryList"})
+    public String servicePointWaitingAccessoryOrderList(OrderServicePointSearchModel order, Model model,
+                                                        HttpServletRequest request, HttpServletResponse response) {
+
+        User user = UserUtils.getUser();
+        Long servicePointId = null;
+        Long engineerId = null;
+
+        if (user.isEngineer()) {
+            Engineer e = null;
+            if (user.getCompanyId() > 0) {
+                e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+            }
+            if (e == null) {
+                e = servicePointService.getEngineer(user.getEngineerId());
+            }
+            servicePointId = (e.getServicePoint() == null ? null : e.getServicePoint().getId());
+            order.setServicePointId(servicePointId);
+            //子帐号只查询自己的订单
+            if (e.getMasterFlag() == 0) {
+                engineerId = user.getEngineerId();
+                order.setEngineerId(engineerId);
+            } else {
+                order.setMasterId(user.getEngineerId());
+            }
+        }
+
+        Date now = new Date();
+        //接单时间范围
+        if (order.getBeginAcceptDate() == null) {
+            order.setBeginAcceptDate(DateUtils.addMonth(now, -1));
+        }
+
+        order.setEndAcceptDate(DateUtils.getEndOfDay(order.getEndAcceptDate()));
+        order.setBeginAcceptDate(DateUtils.getStartOfDay(order.getBeginAcceptDate()));
+
+        Page<Order> page = new Page<>(request, response);
+        try {
+            order.setOrderListType(ServicePoint.SERVICE_POINT_ORDER_LIST_TYPE_WAITING_ACCESSORY);
+            page = servicePointOrderService.findServicePointWaitingPartOrder(new Page<>(request, response), order);
+            List<Order> list = page.getList();
+            if (list != null && list.size() > 0) {
+                batchLoadServicePointComplainFlag(servicePointId, list);
+            }
+        } catch (Exception e) {
+            addMessage(model, "错误：" + e.getMessage());
+        }
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+
+        return "modules/sd/servicepoint/servicePointWaitingAccesoryOrderList";
+    }
+
+    /**
+     * 网点停滞的订单列表(不包括等配件、预约中)
+     *
+     * @param order
+     * @param request
+     * @param response
+     * @param model
+     * @return
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = {"pendingList"})
+    public String servicePointOtherPendingOrderList(OrderServicePointSearchModel order, Model model,
+                                                    HttpServletRequest request, HttpServletResponse response) {
+
+        User user = UserUtils.getUser();
+        Long servicePointId = null;
+        Long engineerId = null;
+
+        if (user.isEngineer()) {
+            Engineer e = null;
+            if (user.getCompanyId() > 0) {
+                e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+            }
+            if (e == null) {
+                e = servicePointService.getEngineer(user.getEngineerId());
+            }
+            servicePointId = (e.getServicePoint() == null ? null : e.getServicePoint().getId());
+            order.setServicePointId(servicePointId);
+            //子帐号只查询自己的订单
+            if (e.getMasterFlag() == 0) {
+                engineerId = user.getEngineerId();
+                order.setEngineerId(engineerId);
+            } else {
+                order.setMasterId(user.getEngineerId());
+            }
+        }
+
+        Date now = new Date();
+        //接单时间范围
+        if (order.getBeginAcceptDate() == null) {
+            order.setBeginAcceptDate(DateUtils.addMonth(now, -1));
+        }
+
+        order.setEndAcceptDate(DateUtils.getEndOfDay(order.getEndAcceptDate()));
+        order.setBeginAcceptDate(DateUtils.getStartOfDay(order.getBeginAcceptDate()));
+
+        Page<Order> page = new Page<>(request, response);
+        try {
+            order.setOrderListType(ServicePoint.SERVICE_POINT_ORDER_LIST_TYPE_OTHER_PENDING);
+            page = servicePointOrderService.findServicePointPendingOrder(new Page<>(request, response), order);
+            List<Order> list = page.getList();
+            if (list != null && list.size() > 0) {
+                batchLoadServicePointComplainFlag(servicePointId, list);
+            }
+        } catch (Exception e) {
+            addMessage(model, "错误：" + e.getMessage());
+        }
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+
+        return "modules/sd/servicepoint/servicePointPendingOrderList";
+    }
+
+
+    /**
+     * 我的订单之完成列表
+     * 订单状态(>=80)：Completed,Returned,Canceled
+     *
+     * @param order 查询条件
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = "finishlist")
+    public String engineerFinishlist(OrderSearchModel order, HttpServletRequest request, HttpServletResponse response, Model model) {
+        Page<Order> page = new Page<Order>();
+        User user = UserUtils.getUser();
+        Boolean canSearch = true;
+        Boolean erroFlag = false;
+        String viewForm = "modules/sd/servicepoint/finishList";
+        if (user == null || user.getId() == null) {
+            addMessage(model,"错误：登录超时，请退出后重新登录。");
+            erroFlag = true;
+        }
+        //检查客户帐号信息
+        if (!erroFlag && user.isCustomer()) {
+            addMessage(model, "错误：您没有权限访问此功能。");
+            erroFlag = true;
+        }
+        if(erroFlag) {
+            model.addAttribute("page", page);
+            model.addAttribute("order", order);
+            model.addAttribute("canSearch", false);
+            return viewForm;
+        }
+        //提交查询
+        if(request.getMethod().equalsIgnoreCase("post")) {
+            if (user.isEngineer()) {
+                Engineer e = null;
+                if (user.getCompanyId() > 0) {
+                    e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+                }
+                if (e == null) {
+                    e = servicePointService.getEngineer(user.getEngineerId());
+                }
+                order.setServicePoint(e.getServicePoint());
+                //子帐号只查询自己的订单
+                if (e.getMasterFlag() == 0) {
+                    order.setEngineer(new User(user.getEngineerId()));
+                }
+            }
+            order.setOrderDataLevel(OrderUtils.OrderDataLevel.DETAIL);//从数据库/redis中读取具体的数据内容
+            //状态：所有
+            order.setStatus(new Dict("80", ""));
+//			if(order.getStatus() == null || StringUtils.isBlank(order.getStatus().getValue())){
+//				order.setStatus(null);//*
+//				IntegerRange statusRange = new IntegerRange(Order.ORDER_STATUS_COMPLETED,0);//完成订单>=80
+//				order.setStatusRange(statusRange);
+//			}
+            //date
+            if (order.getAcceptBeginDate() == null) {
+                order.setAcceptEndDate(DateUtils.getDateEnd(new Date()));
+                order.setAcceptBeginDate(DateUtils.getDateStart(DateUtils.addMonth(new Date(), -1)));
+            } else {
+                order.setAcceptEndDate(DateUtils.getDateEnd(order.getAcceptEndDate()));
+            }
+            try {
+                order.setOrderNo(order.getOrderNo().trim());
+                order.setUserName(order.getUserName().trim());
+                order.setServicePhone(order.getServicePhone().trim());
+                //if(order.getEngineer()!=null){
+                //	order.getEngineer().setName(order.getEngineer().getName().trim());
+                //}
+                //子帐号，只查询自己的单
+                //if(user.getUserType().equals(User.USER_TYPE_SUBCUSTOMER)){
+                //	order.setCreateBy(user);
+                //}
+                order.setSearchType("finish");
+                page = servicePointOrderService.findServicePointCompletedOrderList(new Page<>(request, response), order);
+                List<Order> list = page.getList();
+                if (list != null && list.size() > 0) {
+                    batchLoadServicePointComplainFlag(order.getServicePoint().getId(), list);
+                }
+            } catch (Exception e) {
+                addMessage(model, "错误：" + e.getMessage());
+            }
+        }else{
+			order.setAcceptEndDate(new Date());
+            order.setAcceptBeginDate(DateUtils.getDateStart(DateUtils.addMonth(new Date(), -1)));
+		}
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+        model.addAttribute("canSearch", canSearch);
+        return viewForm;
+    }
+
+    /**
+     * 我的订单之退单列表
+     * 订单状态(=90)：Returned
+     *
+     * @param order 查询条件
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = "returnlist")
+    public String engineerReturnList(OrderSearchModel order, HttpServletRequest request, HttpServletResponse response, Model model) {
+        Page<Order> page = new Page<Order>();
+        User user = UserUtils.getUser();
+        Boolean canSearch = true;
+        Boolean erroFlag = false;
+        String viewForm = "modules/sd/servicepoint/returnList";
+        if (user == null || user.getId() == null) {
+            addMessage(model,"错误：登录超时，请退出后重新登录。");
+            erroFlag = true;
+        }
+        //检查客户帐号信息
+        if (!erroFlag && user.isCustomer()) {
+            addMessage(model, "错误：您没有权限访问此功能。");
+        }
+        if(erroFlag) {
+            model.addAttribute("page", page);
+            model.addAttribute("order", order);
+            model.addAttribute("canSearch", false);
+            return viewForm;
+        }
+        //提交查询
+		if(request.getMethod().equalsIgnoreCase("post")) {
+            if (user.isEngineer()) {
+                Engineer e = null;
+                if (user.getCompanyId() > 0) {
+                    e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+                }
+                if (e == null) {
+                    e = servicePointService.getEngineer(user.getEngineerId());
+                }
+                //子帐号只查询自己的订单
+                //if (user.getSubFlag() == 1){
+                if (e.getMasterFlag() == 0) {
+                    order.setEngineer(new User(user.getEngineerId()));
+                } else {
+                    order.setServicePoint(e.getServicePoint());
+                }
+            }
+            order.setOrderDataLevel(OrderUtils.OrderDataLevel.DETAIL);//从数据库/redis中读取具体的数据内容
+            //状态：所有
+            order.setStatus(new Dict("90", ""));//*
+//		if(order.getStatus() == null || StringUtils.isBlank(order.getStatus().getValue())){
+//			order.setStatus(null);//*
+//			IntegerRange statusRange = new IntegerRange(Order.ORDER_STATUS_COMPLETED,0);//完成订单>=80
+//			order.setStatusRange(statusRange);
+//		}
+            //date
+            if (order.getAcceptBeginDate() == null) {
+                order.setAcceptEndDate(DateUtils.getDateEnd(new Date()));
+                order.setAcceptBeginDate(DateUtils.getDateStart(DateUtils.addMonth(new Date(), -1)));
+            } else {
+                order.setAcceptEndDate(DateUtils.getDateEnd(order.getAcceptEndDate()));
+            }
+            if (order.getCompleteEnd() != null) {
+                order.setCompleteEnd(DateUtils.getDateEnd(order.getCompleteEnd()));
+            }
+            try {
+                order.setOrderNo(order.getOrderNo().trim());
+                order.setUserName(order.getUserName().trim());
+                order.setServicePhone(order.getServicePhone().trim());
+                if (order.getEngineer() != null) {
+                    order.getEngineer().setName(order.getEngineer().getName().trim());
+                }
+                //子帐号，只查询自己的单
+                if (user.getUserType().equals(User.USER_TYPE_SUBCUSTOMER)) {
+                    order.setCreateBy(user);
+                }
+                order.setSearchType("return");
+                page = servicePointOrderService.findServicePointReturnedOrderList(new Page<>(request, response), order);
+                List<Order> list = page.getList();
+                if (list != null && list.size() > 0) {
+                    batchLoadServicePointComplainFlag(order.getServicePoint().getId(), list);
+                }
+            } catch (Exception e) {
+                addMessage(model, "错误：" + e.getMessage());
+            }
+        }else{
+			order.setAcceptEndDate(new Date());
+            order.setAcceptBeginDate(DateUtils.getDateStart(DateUtils.addMonth(new Date(), -1)));
+		}
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+        model.addAttribute("canSearch", canSearch);
+        return viewForm;
+    }
+
+
+    /**
+     * 网点所有订单列表
+     *
+     * @param order
+     * @param request
+     * @param response
+     * @param model
+     * @return
+     */
+    @RequiresPermissions("sd:order:engineeraccept")
+    @RequestMapping(value = {"allList"})
+    public String servicePointAllOrderList(OrderServicePointSearchModel order, Model model,
+                                           HttpServletRequest request, HttpServletResponse response) {
+        Page<Order> page = new Page<>(request, response);
+        User user = UserUtils.getUser();
+        Long servicePointId = null;
+        Long engineerId = null;
+        Boolean erroFlag = false;
+        String viewForm = "modules/sd/servicepoint/servicePointAllOrderList";
+        if (user == null || user.getId() == null) {
+            addMessage(model,"错误：登录超时，请退出后重新登录。");
+            erroFlag = true;
+        }
+        //检查客户帐号信息
+        if (!erroFlag && user.isCustomer()) {
+            addMessage(model, "错误：您没有权限访问此功能。");
+        }
+        if(erroFlag) {
+            model.addAttribute("page", page);
+            model.addAttribute("order", order);
+            return viewForm;
+        }
+        Date now = new Date();
+        //提交查询
+        if(request.getMethod().equalsIgnoreCase("post")) {
+            if (user.isEngineer()) {
+                Engineer e = null;
+                if (user.getCompanyId() > 0) {
+                    e = servicePointService.getEngineerFromCache(user.getCompanyId(), user.getEngineerId());
+                }
+                if (e == null) {
+                    e = servicePointService.getEngineer(user.getEngineerId());
+                }
+                servicePointId = (e.getServicePoint() == null ? null : e.getServicePoint().getId());
+                order.setServicePointId(servicePointId);
+                //order.setServicePoint(new ServicePoint(servicePointId));
+                //子帐号只查询自己的订单
+                //if (user.getSubFlag() == 1){
+                if (e.getMasterFlag() == 0) {
+                    engineerId = user.getEngineerId();
+                    //order.setEngineer(new User(engineerId));
+                    order.setEngineerId(engineerId);
+                }
+            }
+
+            //接单时间范围
+            if (order.getBeginAcceptDate() == null) {
+                order.setBeginAcceptDate(DateUtils.addMonth(now, -1));
+            }
+            if (order.getBeginAcceptDate().getTime() < DateUtils.addMonth(now, -3).getTime()) { //最多只允许查3个月之内的数据
+                order.setBeginAcceptDate(DateUtils.addMonth(now, -3));
+            }
+            order.setEndAcceptDate(DateUtils.getEndOfDay(order.getEndAcceptDate()));
+            order.setBeginAcceptDate(DateUtils.getStartOfDay(order.getBeginAcceptDate()));
+            //String engineerName = (order.getEngineer()==null?null:order.getEngineer().getName());
+
+            try {
+                page = servicePointOrderService.findServicePointAllOrderList(new Page<>(request, response), order);
+                List<Order> list = page.getList();
+                if (list != null && list.size() > 0) {
+                    batchLoadServicePointComplainFlag(servicePointId, list);
+                }
+            } catch (Exception e) {
+                addMessage(model, "错误：" + e.getMessage());
+            }
+        }else{
+            order.setEndAcceptDate(now);
+            order.setBeginAcceptDate(DateUtils.addMonth(now, -1));
+        }
+        model.addAttribute("page", page);
+        model.addAttribute("order", order);
+        return viewForm;
+    }
+
+
+    //endregion 网点
+
+
+}
+

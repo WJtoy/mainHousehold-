@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.CustomerProductModelDao">
+    <sql id="columns">
+            a.id,
+            a.customer_id as "customer.id",
+            a.product_id as "product.id",
+            a.customer_model,
+            a.customer_product_name,
+            a.remarks
+    </sql>
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO md_customer_product_model(
+			customer_id,
+			product_id,
+			customer_model,
+			customer_product_name,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks
+		) VALUES (
+			#{customer.id},
+			#{product.id},
+			#{customerModel},
+			#{customerProductName},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks}
+		)
+    </insert>
+
+    <delete id="deleteByCustomer">
+        delete from md_customer_product_model
+        where customer_id = #{customerId}
+    </delete>
+
+    <select id="getProductModelListByCustomer" resultType="CustomerProductModel">
+        select
+              id,
+              product_id as  "product.id",
+              customer_id as "customer.id",
+              customer_model,
+              customer_product_name
+        from
+              md_customer_product_model
+        where
+              customer_id = #{customerId}
+         and  del_flag = 0
+    </select>
+
+    <select id="get" resultType="CustomerProductModel">
+        SELECT
+               <include refid="columns"/>
+        FROM
+                md_customer_product_model a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="findAllList" resultType="CustomerProductModel">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_customer_product_model a
+        WHERE
+            a.del_flag = 0
+        ORDER BY a.create_date
+        LIMIT 20000
+    </select>
+
+    <select id="findList" resultType="CustomerProductModel">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_customer_product_model a
+        <where>
+            a.del_flag = 0
+            <if test="customer != null and customer.id != null and customer.id > 0">
+                AND a.customer_id = #{customer.id}
+            </if>
+            <if test="product != null and product.id != null and product.id > 0">
+                AND a.product_id = #{product.id}
+            </if>
+            <if test="customerModel !=null and customerModel!=''">
+                AND a.customer_model LIKE concat('%', #{customerModel}, '%')
+            </if>
+        </where>
+        ORDER BY a.customer_id,a.product_id
+    </select>
+    <update id="update">
+        update md_customer_product_model
+        set
+          customer_model = #{customerModel},
+          customer_product_name  = #{customerProductName},
+          remarks        = #{remarks},
+          update_by      = #{updateBy.id},
+          update_date    = #{updateDate}
+        where
+          id = #{id}
+    </update>
+
+    <update id="delete">
+        update md_customer_product_model set del_flag=1
+        where id = #{id}
+    </update>
+
+    <select id="checkIsExist" resultType="java.lang.Long">
+        SELECT
+               id
+        FROM
+               md_customer_product_model
+        WHERE
+               customer_id    = #{customer.id}
+        AND    product_id     = #{product.id}
+        AND    customer_model = #{customerModel}
+        AND    del_flag       = #{DEL_FLAG_NORMAL}
+        LIMIT  1
+    </select>
+
+    <select id="getListByProductId" resultType="CustomerProductModel">
+        select
+                id,
+                product_id as  "product.id",
+                customer_id as "customer.id",
+                customer_model,
+                customer_product_name
+        from
+                md_customer_product_model
+        where
+                customer_id = #{customerId}
+        and     product_id  = #{productId}
+        and     del_flag = 0
+        LIMIT   20000
+    </select>
+
+</mapper>

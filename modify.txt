@@ -1,0 +1,44 @@
+for mac:
+1.修改resources/logback-spring.xml
+  在目录前统一增加"."，否则出现无法发现.log的报错,如
+  更改前：
+  <file>/data/jeesite/logs/sys.log</file>
+  更改后：
+  <file>./data/jeesite/logs/sys.log</file>
+  
+
+2.修改resources/ehcache.xml
+  diskStore的path内容前增加"." 
+  更改前：
+  <diskStore path="/data/jeesite/ehcache" />
+  更改后：
+  <diskStore path="./data/jeesite/ehcache" />
+  
+3.修改application.yml
+  更改前：
+  basedir: /data/jeesite/tomcat
+  更改后：
+  basedir: ./data/jeesite/tomcat
+
+管理页面不加admin:
+1.修改application.yml
+  将adminPath的值改成空白
+
+2.LoginController.java
+  2.1.index()
+   修改前：
+   @RequestMapping(value = "${adminPath}/")
+   修改后：
+   @RequestMapping(value = {"${adminPath}/index", "${adminPath}"})
+   
+  2.2.login()
+  更改前：
+  return "redirect:" + adminPath;
+  更改后：
+  return "redirect:" + adminPath + "/index";
+  
+  2.3.loginFail()
+  更改前：
+  return "redirect:" + adminPath;
+  更改后：
+  return "redirect:" + adminPath + "/index";

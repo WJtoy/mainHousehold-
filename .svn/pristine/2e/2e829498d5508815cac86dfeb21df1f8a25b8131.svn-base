@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.ServicePointWithdrawDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_servicepoint_withdraw(
+			id,
+			withdraw_no,
+			service_point_id,
+			engineer_id,
+			payment_type,
+			status,
+			withdraw_type,
+			bank,
+			branch,
+			bank_no,
+			bank_owner,
+            bank_owner_idno,
+            bank_owner_phone,
+			before_balance,
+			before_debts,
+			apply_amount,
+			pay_amount,
+			debts_deduction,
+			deduction_amount,
+			platform_fee,
+			pay_by,
+			pay_date,
+			pay_for_year,
+			pay_for_month,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		) VALUES (
+			#{id},
+			#{withdrawNo},
+			#{servicePoint.id},
+			#{engineer.id},
+			#{paymentType},
+			#{status},
+			#{withdrawType},
+			#{bank},
+			#{branch},
+			#{bankNo},
+			#{bankOwner},
+            #{bankOwnerIdNo},
+            #{bankOwnerPhone},
+			#{beforeBalance},
+			#{beforeDebts},
+			#{applyAmount},
+			#{payAmount},
+			#{debtsDeduction},
+			#{deductionAmount},
+			#{platformFee},
+			#{payBy.id},
+			#{payDate},
+			#{payForYear},
+			#{payForMonth},
+			#{createBy.id},
+			#{createDate},
+			#{remarks},
+			#{quarter}
+		)
+	</insert>
+
+	<update id="updatePayForYearMonth">
+		UPDATE
+		fi_servicepoint_withdraw
+		<set>
+			<if test="payForYear != null">
+				pay_for_year = #{payForYear},
+			</if>
+			<if test="payForMonth != null">
+				pay_for_month = #{payForMonth},
+			</if>
+			<if test="remarks != null">
+				remarks = #{remarks},
+			</if>
+		</set>
+		<where>
+			id = #{id}
+			<if test="quarter != null and quarter != null">
+				AND quarter = #{quarter}
+			</if>
+		</where>
+	</update>
+
+	<update id="update">
+		UPDATE
+			fi_servicepoint_withdraw
+		<set>
+			<if test="bank != null">
+				bank = #{bank},
+			</if>
+			<if test="branch != null">
+				branch = #{branch},
+			</if>
+			<if test="bankNo != null">
+				bank_no = #{bankNo},
+			</if>
+			<if test="bankOwner != null">
+				bank_owner = #{bankOwner},
+			</if>
+			<if test="status != null">
+				status = #{status},
+			</if>
+			<if test="payBy != null and payBy.id != null">
+				pay_by = #{payBy.id},
+			</if>
+			<if test="payDate != null">
+				pay_date = #{payDate},
+			</if>
+			<if test="payAmount != null">
+				pay_amount = #{payAmount},
+			</if>
+			<if test="updateBy != null and updateBy.id != null">
+				update_by = #{updateBy.id},
+			</if>
+			<if test="updateDate != null">
+				update_date = #{updateDate},
+			</if>
+		</set>
+		<where>
+			id = #{id}
+			<if test="quarter != null and quarter != null">
+				AND quarter = #{quarter}
+			</if>
+		</where>
+	</update>
+
+	<delete id="delete">
+		DELETE FROM fi_servicepoint_withdraw
+		WHERE id = #{id}
+	</delete>
+
+	<select id="getOneId" parameterType="ServicePointWithdraw" resultType="Long">
+		SELECT
+			id
+		FROM
+			fi_servicepoint_withdraw
+		<where>
+			<if test="servicePoint != null and servicePoint.id != null">
+				AND service_point_id = #{servicePoint.id}
+			</if>
+			<if test="bank != null">
+				AND bank = #{bank}
+			</if>
+			<if test="paymentType != null">
+				AND payment_type = #{paymentType}
+			</if>
+			<if test="status != null">
+				AND status = #{status}
+			</if>
+			AND del_flag = 0
+		</where>
+		LIMIT 1
+	</select>
+
+	<select id="getProcessOneId" parameterType="Long" resultType="Long">
+		SELECT
+			id
+		FROM
+			fi_servicepoint_withdraw
+		WHERE
+				service_point_id = #{id}
+			AND 30 > status
+			AND withdraw_type > 20
+			AND del_flag = 0
+		LIMIT 1
+	</select>
+
+	<select id="get" resultType="ServicePointWithdraw">
+		SELECT
+			id,
+			withdraw_no,
+			service_point_id	as 'servicePoint.id',
+			engineer_id			as	'engineer.id',
+			payment_type,
+			status,
+			withdraw_type,
+			bank,
+			branch,
+			bank_no,
+			bank_owner,
+			bank_owner_idno,
+			bank_owner_phone,
+			before_balance,
+			before_debts,
+			apply_amount,
+			pay_amount,
+			debts_deduction,
+			deduction_amount,
+			platform_fee,
+			pay_by				as 'payBy.id',
+			pay_date,
+			pay_for_year,
+			pay_for_month,
+			create_by			as 'createBy.id',
+			create_date,
+			update_by			as 'updateBy.id',
+			update_date
+			remarks,
+			quarter
+		FROM
+			fi_servicepoint_withdraw
+		WHERE
+			id = #{id}
+		  AND
+		  	del_flag = 0
+	</select>
+
+	<select id="getForConfirm" parameterType="Long" resultType="ServicePointWithdraw">
+		SELECT
+			id,
+			withdraw_no,
+			service_point_id	as 'servicePoint.id',
+			engineer_id			as	'engineer.id',
+			payment_type,
+			apply_amount,
+			deduction_amount,
+			platform_fee,
+			pay_for_year,
+			pay_for_month,
+			status,
+			bank,
+			bank_no,
+			create_by			as 'createBy.id',
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_servicepoint_withdraw
+		WHERE
+			id = #{id}
+		AND
+			del_flag = 0
+	</select>
+
+	<select id="findAll" resultType="ServicePointWithdraw">
+		SELECT
+			id,
+			withdraw_no,
+			service_point_id	as 'servicePoint.id',
+			engineer_id			as	'engineer.id',
+			payment_type,
+			status,
+			withdraw_type,
+			bank,
+			branch,
+			bank_no,
+			bank_owner,
+			bank_owner_idno,
+			bank_owner_phone,
+			before_balance,
+			before_debts,
+			apply_amount,
+			pay_amount,
+			debts_deduction,
+			deduction_amount,
+			platform_fee,
+			pay_by				as 'payBy.id',
+			pay_date,
+			pay_for_year,
+			pay_for_month,
+			create_by			as 'createBy.id',
+			create_date,
+			update_by			as 'updateBy.id',
+			update_date
+			remarks,
+			quarter
+		FROM
+			fi_servicepoint_withdraw
+		WHERE
+			id = #{id}
+		  AND
+			del_flag = 0
+	</select>
+
+	<select id="findAllList" parameterType="ServicePointWithdraw" resultType="ServicePointWithdraw">
+		SELECT
+			id,
+			withdraw_no,
+			service_point_id	as 'servicePoint.id',
+			engineer_id			as	'engineer.id',
+			payment_type,
+			status,
+			withdraw_type,
+			bank,
+			branch,
+			bank_no,
+			bank_owner,
+			bank_owner_idno,
+			bank_owner_phone,
+			before_balance,
+			before_debts,
+			apply_amount,
+			pay_amount,
+			debts_deduction,
+			deduction_amount,
+			platform_fee,
+			pay_by				as 'payBy.id',
+			pay_date,
+			pay_for_year,
+			pay_for_month,
+			create_by			as 'createBy.id',
+			create_date,
+			update_by			as 'updateBy.id',
+			update_date,
+			remarks,
+			quarter
+		FROM
+			fi_servicepoint_withdraw
+		<where>
+			<if test="servicePoint != null and servicePoint.id !=null ">
+				AND service_point_id = #{servicePoint.id}
+			</if>
+			AND del_flag = 0
+		</where>
+		ORDER BY
+			create_date
+		LIMIT 100000;
+	</select>
+
+	<select id="getProcessBankList" resultType="Integer">
+		SELECT
+			DISTINCT bank
+		FROM
+			fi_servicepoint_withdraw
+		WHERE
+			STATUS = 20
+			<if test="paymentType != null">
+			AND payment_type = #{paymentType}
+			</if>
+		AND del_flag = 0
+	</select>
+
+	<select id="getInvoiceConfirmList" parameterType="ServicePointWithdraw" resultType="ServicePointPayCondition">
+		SELECT
+			fsw.service_point_id	AS 'servicePointId',
+			fsw.payment_type 		AS 'paymentType',
+			fsw.bank
+		FROM
+			fi_servicepoint_withdraw fsw
+		WHERE
+			<if test="servicePoint != null and servicePoint.id !=null ">
+				AND service_point_id = #{servicePoint.id}
+			</if>
+			status = 20
+			<if test="paymentType != null">
+				AND payment_type = #{paymentType}
+			</if>
+		AND	del_flag = 0
+		ORDER BY
+			fsw.bank
+		LIMIT 50000;
+	</select>
+
+	<!-- mark on 2020-2-16
+	<select id="getInvoiceConfirmDetailList" parameterType="ServicePointWithdraw" resultType="ServicePointWithdraw">
+		SELECT
+			fsw.id,
+			fsw.withdraw_no,
+			fsw.payment_type,
+			fsw.status,
+			fsw.withdraw_type,
+			fsw.bank,
+			fsw.branch,
+			fsw.bank_no,
+			fsw.bank_owner,
+			fsw.apply_amount,
+			fsw.pay_amount,
+			fsw.deduction_amount,
+			fsw.platform_fee,
+			fsw.create_date,
+			fsw.pay_date,
+			fsw.pay_for_year,
+			fsw.pay_for_month,
+			ms.id					AS 'servicePoint.id',
+			ms.servicepoint_no		AS 'servicePoint.servicePointNo',
+			ms.name					AS 'servicePoint.name',
+			ms.contact_info1		AS 'servicePoint.contactInfo1',
+			ms.contact_info2		AS 'servicePoint.contactInfo2',
+			me.name                 AS 'servicePoint.primary.name',
+			ms.invoice_flag        AS 'servicePoint.finance.invoiceFlag',
+			ms.discount_flag        AS 'servicePoint.finance.discountFlag',
+			ms.bank_issue          AS 'servicePoint.finance.bankIssue.value',
+			fsw.remarks
+		FROM
+			fi_servicepoint_withdraw fsw
+		INNER JOIN
+			md_servicepoint ms
+		ON  fsw.service_point_id = ms.id AND ms.del_flag = 0
+		LEFT JOIN
+			md_engineer me
+		ON  ms.primary_id = me.id
+		<where>
+			<if test="servicePoint != null and servicePoint.id !=null ">
+				AND fsw.service_point_id = #{servicePoint.id}
+			</if>
+			<if test="withdrawNo != null">
+				AND fsw.withdraw_no = #{withdrawNo}
+			</if>
+			<if test="status != null">
+				AND fsw.status = #{status}
+			</if>
+			<if test="bank != null">
+				AND fsw.bank = #{bank}
+			</if>
+			<if test="paymentType != null">
+				AND fsw.payment_type = #{paymentType}
+			</if>
+			<if test="servicePoint != null and servicePoint.finance != null and servicePoint.finance.invoiceFlag != null">
+				AND ms.invoice_flag = #{servicePoint.finance.invoiceFlag}
+			</if>
+			<if test="servicePoint != null and servicePoint.finance != null and servicePoint.finance.discountFlag != null">
+				AND ms.discount_flag = #{servicePoint.finance.discountFlag}
+			</if>
+			<if test="createBeginDate != null">
+				AND fsw.create_date >= #{createBeginDate}
+			</if>
+			<if test="createEndDate != null">
+				AND #{createEndDate} >= fsw.create_date
+			</if>
+			<if test="payBeginDate != null">
+				AND fsw.pay_date >= #{payBeginDate}
+			</if>
+			<if test="payEndDate != null">
+				AND #{payEndDate} >= fsw.pay_date
+			</if>
+			AND	fsw.del_flag = 0
+		</where>
+		ORDER BY
+			fsw.bank
+	</select>
+	-->
+
+	<select id="getInvoiceConfirmDetailListWithoutServicePoint" parameterType="ServicePointWithdraw" resultType="ServicePointWithdraw">
+		SELECT
+			fsw.id,
+			fsw.withdraw_no,
+			fsw.payment_type,
+			fsw.status,
+			fsw.withdraw_type,
+			fsw.bank,
+			fsw.branch,
+			fsw.bank_no,
+			fsw.bank_owner,
+			fsw.bank_owner_idno,
+			fsw.bank_owner_phone,
+			fsw.apply_amount,
+			fsw.pay_amount,
+			fsw.deduction_amount,
+			fsw.platform_fee,
+			fsw.create_date,
+			fsw.pay_date,
+			fsw.pay_for_year,
+			fsw.pay_for_month,
+			fsw.service_point_id AS 'servicePoint.id',
+			<!--
+			ms.id					AS 'servicePoint.id',
+			ms.servicepoint_no		AS 'servicePoint.servicePointNo',
+			ms.name					AS 'servicePoint.name',
+			ms.contact_info1		AS 'servicePoint.contactInfo1',
+			ms.contact_info2		AS 'servicePoint.contactInfo2',
+			me.name                 AS 'servicePoint.primary.name',
+			ms.invoice_flag        AS 'servicePoint.finance.invoiceFlag',
+			ms.discount_flag        AS 'servicePoint.finance.discountFlag',
+			ms.bank_issue          AS 'servicePoint.finance.bankIssue.value',
+			-->
+			fsw.remarks
+		FROM
+		fi_servicepoint_withdraw fsw
+		<!--
+		INNER JOIN
+		md_servicepoint ms
+		ON  fsw.service_point_id = ms.id AND ms.del_flag = 0
+		LEFT JOIN
+		md_engineer me
+		ON  ms.primary_id = me.id
+		-->
+		<where>
+			<if test="servicePoint != null and servicePoint.id !=null ">
+				AND fsw.service_point_id = #{servicePoint.id}
+			</if>
+			<if test="withdrawNo != null">
+				AND fsw.withdraw_no = #{withdrawNo}
+			</if>
+			<if test="status != null">
+				AND fsw.status = #{status}
+			</if>
+			<if test="bank != null">
+				AND fsw.bank = #{bank}
+			</if>
+			<if test="paymentType != null">
+				AND fsw.payment_type = #{paymentType}
+			</if>
+			<!--
+			<if test="servicePoint != null and servicePoint.finance != null and servicePoint.finance.invoiceFlag != null">
+				AND ms.invoice_flag = #{servicePoint.finance.invoiceFlag}
+			</if>
+			<if test="servicePoint != null and servicePoint.finance != null and servicePoint.finance.discountFlag != null">
+				AND ms.discount_flag = #{servicePoint.finance.discountFlag}
+			</if>
+			-->
+			<if test="createBeginDate != null">
+				AND fsw.create_date >= #{createBeginDate}
+			</if>
+			<if test="createEndDate != null">
+				AND #{createEndDate} >= fsw.create_date
+			</if>
+			<if test="payBeginDate != null">
+				AND fsw.pay_date >= #{payBeginDate}
+			</if>
+			<if test="payEndDate != null">
+				AND #{payEndDate} >= fsw.pay_date
+			</if>
+			AND	fsw.del_flag = 0
+		</where>
+		ORDER BY
+			fsw.bank
+		<if test="page == null or page.pageSize &lt;= 0">
+			LIMIT 20000
+		</if>
+	</select>
+
+	<select id="getWithdrawByDateRangeForUpdateBalanceDetail" resultType="ServicePointWithdraw">
+		SELECT
+			id,
+			service_point_id	AS "servicePoint.id",
+			payment_type,
+			pay_for_year,
+			pay_for_month,
+			pay_amount,
+			platform_fee
+		FROM
+			fi_servicepoint_withdraw
+		WHERE
+			quarter IN ('20193','20194')
+			AND (create_date BETWEEN #{beginDate} AND #{endDate})
+			AND del_flag = 0
+			AND STATUS = 40
+		ORDER BY id
+	</select>
+</mapper>

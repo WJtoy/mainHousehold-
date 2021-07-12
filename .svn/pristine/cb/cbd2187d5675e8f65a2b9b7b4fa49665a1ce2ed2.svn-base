@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.md.dao.B2bCustomerMapDao">
+
+    <sql id="SimpleSelectColumns">
+        a.id,
+        a.data_source,
+        a.shop_id,
+        a.shop_name,
+        a.customer_id
+    </sql>
+    <select id="get" parameterType="java.lang.Long" resultType="B2bCustomerMap">
+        SELECT
+              <include refid="SimpleSelectColumns"/>
+        FROM  md_b2b_customer_map a
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="getShopListByCustomer" resultType="B2bCustomerMap">
+        SELECT
+             <include refid="SimpleSelectColumns"/>
+        FROM  md_b2b_customer_map a
+        <where>
+            a.del_flag = 0
+            AND a.data_source = #{dataSource}
+            <if test="customerId != null and customerId >0">
+                AND a.customer_id = #{customerId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getCustomerIdByShopId" resultType="java.lang.Long">
+        select customer_id
+        from md_b2b_customer_map
+        where
+            data_source = #{dataSource}
+            AND shop_id = #{shopId}
+            AND del_flag = 0
+        limit 1
+    </select>
+
+    <select id="getByShopId" resultType="java.lang.Long">
+        select id
+        from md_b2b_customer_map
+        where data_source = #{dataSource}
+        and shop_id = #{shopId}
+        and id != #{id}
+        and del_flag = 0
+        limit 1
+    </select>
+
+
+    <insert id="insert" parameterType="B2bCustomerMap" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO md_b2b_customer_map (
+            data_source,
+            shop_id,
+            shop_name,
+            customer_id,
+            remarks,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            del_flag
+        ) VALUES (
+            #{dataSource},
+            #{shopId},
+            #{shopName},
+            #{customerId},
+            #{remarks},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="delete" parameterType="B2bCustomerMap">
+        UPDATE md_b2b_customer_map
+        <set>
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 如更改店铺Id，md_b2b_product_map中对应的数据也要同步变更 -->
+    <update id="update" parameterType="B2bCustomerMap">
+        UPDATE md_b2b_customer_map
+        <set>
+            shop_id = #{shopId},
+            shop_name = #{shopName},
+            remarks = #{remarks},
+            customer_id = #{customerId},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        </set>
+        WHERE id = #{id}
+    </update>
+    <select id="findList" resultType="B2bCustomerMap">
+        select
+        a.id,
+        a.data_source,
+        a.shop_id,
+        a.shop_name,
+        a.customer_id,
+        a.remarks
+        from md_b2b_customer_map a
+        <where>
+            a.del_flag = 0
+            <if test="shopId != null and shopId !=''.toString()">
+                and a.shop_id like CONCAT('%', #{shopId}, '%')
+            </if>
+            <if test="shopName != null and shopName !=''.toString()">
+                and a.shop_name like CONCAT('%', #{shopName}, '%')
+            </if>
+            <if test="customerId != null and customerId > 0">
+                and a.customer_id = #{customerId}
+            </if>
+        </where>
+        order by a.data_source,a.customer_id
+    </select>
+
+</mapper>

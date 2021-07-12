@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.CustomerChargeDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_customercharge(
+			id,
+			order_id,
+			order_no,
+			customer_id,
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			time_liness_charge,
+			urgent_charge,
+			praise_fee,
+			other_charge,
+			service_times,
+			payment_type,
+			status,
+			charge_order_type,
+			create_by, 
+			create_date,
+			remarks,
+			quarter
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{orderNo},
+			#{customer.id},
+			#{serviceCharge},
+			#{expressCharge},
+			#{travelCharge},
+			#{materialCharge},
+			#{timeLinessCharge},
+			#{urgentCharge},
+			#{praiseFee},
+			#{otherCharge},
+			#{serviceTimes},
+			#{paymentType},
+			#{status},
+			#{chargeOrderType},
+			#{createBy.id},
+			#{createDate},
+			#{remarks},
+			#{quarter}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_customercharge SET
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}, 
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE fi_customercharge SET
+			del_flag = #{DEL_FLAG_DELETE},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+
+	<select id="get" resultType="CustomerCharge">
+		SELECT
+			id,
+			order_id,
+			order_no,
+			customer_id as 'customer.id',
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			time_liness_charge,
+			urgent_charge,
+			praise_fee,
+			other_charge,
+			service_times,
+			payment_type,
+			status,
+			charge_order_type,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_customercharge
+		WHERE
+			id = #{id}
+		AND del_flag = 0
+	</select>
+
+	<select id="findList" parameterType="CustomerCharge" resultType="CustomerCharge">
+		SELECT
+			id,
+			order_id,
+			order_no,
+			customer_id as 'customer.id',
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			time_liness_charge,
+			urgent_charge,
+			praise_fee,
+			other_charge,
+			service_times,
+			payment_type,
+			status,
+			charge_order_type,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_customercharge
+		<where>
+			<if test="orderId !=null">
+			AND order_id=#{orderId}
+			</if>
+			<if test="chargeOrderType !=null">
+			AND charge_order_type=#{chargeOrderType}
+			</if>
+			AND del_flag = 0
+		</where>
+	</select>
+
+	<!-- 读取订单最新的一条退补单 -->
+	<select id="getCustomerRetrieveCharge" resultType="CustomerCharge">
+		select c.id,c.order_id,c.remarks,c.create_date,i.invoice_date as update_date
+		from fi_customercharge c
+		left join fi_customerinvoice i
+		on c.id = i.id
+		where
+		  <if test="quarter !=null"> c.quarter = #{quarter} and </if>
+		  c.order_id = #{orderId}
+		  and c.charge_order_type = 1
+		  and c.del_flag = 0
+		order by c.create_date desc
+		limit 1
+	</select>
+	
+</mapper>

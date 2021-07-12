@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.finance.md.dao.FiCustomerFinanceDao">
+
+    <select id="get" resultType="CustomerFinance">
+        select
+        a.id,
+        a.payment_type,
+        a.rebate_rate,
+        a.LEVEL,
+        a.lock_flag,
+        a.public_bank,
+        a.public_account,
+        a.public_name,
+        a.public_branch,
+        a.private_bank,
+        a.private_account,
+        a.private_name,
+        a.private_branch,
+        a.credit,
+        a.credit_flag,
+        a.block_amount,
+        a.order_payment_amount,
+        a.refund_amount,
+        a.replenish_amount,
+        a.balance,
+        a.prepaid_amount,
+        a.total_amount,
+        a.unit,
+        a.create_by,
+        a.create_date,
+        a.update_by,
+        a.update_date,
+        a.remarks,
+        a.del_flag,
+        a.taxpayer_code,
+        a.deposit,
+        a.payment_type as "paymentType.value",
+        '' as "paymentType.label",
+        a.invoice_flag
+        from md_customer_finance a
+        where a.id =#{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_customer_finance
+        (
+            id,
+            payment_type,
+            rebate_rate,
+            LEVEL,
+            lock_flag,
+            public_bank,
+            public_account,
+            public_name,
+            public_branch,
+            private_bank,
+            private_account,
+            private_name,
+            private_branch,
+            credit,
+            credit_flag,
+            block_amount,
+            order_payment_amount,
+            refund_amount,
+            replenish_amount,
+            balance,
+            prepaid_amount,
+            total_amount,
+            unit,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            remarks,
+            del_flag,
+            taxpayer_code,
+            deposit,
+            invoice_flag
+        )
+        VALUES
+        (
+            #{id},
+            #{paymentType.value},
+            #{rebateRate},
+            #{level},
+            #{lockFlag},
+            #{publicBank},
+            #{publicAccount},
+            #{publicName},
+            #{publicBranch},
+            #{privateBank},
+            #{privateAccount},
+            #{privateName},
+            #{privateBranch},
+            #{credit},
+            #{creditFlag},
+            #{blockAmount},
+            #{ordePaymentAmount},
+            #{refundAmount},
+            #{replenishAmount},
+            #{balance},
+            #{prepaidAmount},
+            #{totalAmount},
+            #{unit},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{remarks},
+            #{delFlag},
+            #{taxpayerCode},
+            #{deposit},
+            #{invoiceFlag}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE md_customer_finance
+          SET
+            payment_type = #{paymentType.value},
+            rebate_rate = #{rebateRate},
+            LEVEL = #{level},
+            lock_flag = #{lockFlag},
+            public_bank = #{publicBank},
+            public_account = #{publicAccount},
+            public_name = #{publicName},
+            public_branch = #{publicBranch},
+            private_bank = #{privateBank},
+            private_account = #{privateAccount},
+            private_name = #{privateName},
+            private_branch = #{privateBranch},
+            credit = #{credit},
+            credit_flag = #{creditFlag},
+            unit = #{unit},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate},
+            remarks = #{remarks},
+            del_flag = #{delFlag},
+            taxpayer_code = #{taxpayerCode},
+            deposit = #{deposit},
+            invoice_flag = #{invoiceFlag}
+          WHERE
+            id =#{id}
+    </update>
+
+    <update id="deleteById">
+        UPDATE md_customer_finance
+        SET   update_by = #{updateBy},
+        update_date = NOW(),
+        del_flag = 1
+        WHERE
+        id = #{id}
+    </update>
+
+    <update id="updatePrivate">
+        UPDATE md_customer_finance
+        SET
+        private_bank = #{privateBank},
+        private_account = #{privateAccount},
+        private_name = #{privateName},
+        private_branch = #{privateBranch},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate}
+        WHERE
+        id =#{id}
+    </update>
+
+    <update id="updatePublic">
+        UPDATE md_customer_finance
+        SET
+        public_bank = #{publicBank},
+        public_account = #{publicAccount},
+        public_name = #{publicName},
+        public_branch = #{publicBranch},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate}
+        WHERE
+        id =#{id}
+    </update>
+</mapper>

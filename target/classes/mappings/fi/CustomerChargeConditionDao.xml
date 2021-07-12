@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.CustomerChargeConditionDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_customercharge_condition(
+			id,
+			order_id,
+			order_no,
+			customer_id,
+			product_category_id,
+			product_ids,
+			service_times,
+			payment_type,
+			status,
+			charge_order_type,
+			create_date, 
+			total_qty,
+			order_create_date,
+			order_close_date,
+			service_types,
+			time_liness,
+			quarter
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{orderNo},
+			#{customerId},
+			#{productCategoryId},
+			#{productIds},
+			#{serviceTimes},
+			#{paymentType},
+			#{status},
+			#{chargeOrderType},
+			#{createDate}, 
+			#{totalQty},
+			#{orderCreateDate},
+			#{orderCloseDate},
+			#{serviceTypes},
+			#{timeLiness},
+			#{quarter}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_customercharge_condition SET
+			status = #{status}
+		WHERE id = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM fi_customercharge_condition
+		WHERE id = #{id}
+	</delete>
+
+	<select id="get" resultType="CustomerChargeCondition">
+		SELECT
+				id,
+				order_id,
+				order_no,
+				customer_id,
+				product_category_id,
+				product_ids,
+				service_times,
+				payment_type,
+				charge_order_type,
+				create_date,
+				total_qty,
+				order_create_date,
+				order_close_date,
+				service_types,
+				time_liness,
+				quarter
+		FROM
+				fi_customercharge_condition
+		WHERE
+				id = #{id}
+	</select>
+
+	<select id="selectConditionInfo" parameterType="CustomerChargeCondition" resultType="CustomerChargeCondition">
+		SELECT
+			  	id,
+				order_create_date,
+				order_close_date,
+				service_times
+		FROM
+				fi_customercharge_condition
+		<where>
+			<if test="customerId != null">
+				AND customer_id = #{customerId}
+			</if>
+			<if test="orderNo != null">
+				AND order_no = #{orderNo}
+			</if>
+			<if test="productCategoryId != null">
+				AND product_category_id = #{productCategoryId}
+			</if>
+			<if test="productIds != null">
+				AND product_ids LIKE CONCAT('%,',#{productIds},',%')
+			</if>
+			<if test="createBeginDate != null">
+				AND create_date >= #{createBeginDate}
+			</if>
+			<if test="createEndDate != null">
+				AND ADDDATE(#{createEndDate},1) > create_date
+			</if>
+			<if test="orderCreateBeginDate != null">
+				AND order_create_date >= #{orderCreateBeginDate}
+			</if>
+			<if test="orderCreateEndDate != null">
+				AND ADDDATE(#{orderCreateEndDate},1) > order_create_date
+			</if>
+			<if test="orderCloseBeginDate != null">
+				AND order_close_date >= #{orderCloseBeginDate}
+			</if>
+			<if test="orderCloseEndDate != null">
+				AND ADDDATE(#{orderCloseEndDate},1) > order_close_date
+			</if>
+			<if test="totalQty != null">
+				AND total_qty = #{totalQty}
+			</if>
+			<if test="status != null">
+				AND status = #{status}
+			</if>
+			<if test="serviceTimes != null and serviceTimes > 0">
+				AND service_times = #{serviceTimes}
+			</if>
+		</where>
+	</select>
+	
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.mq.dao.MqB2bTmallDao">
+
+    <sql id="MqB2bTmallColumns">
+        a.id,
+        a.queue_id,
+        a.message_json,
+        a.process_flag,
+        a.process_time,
+        a.process_comment,
+        a.create_by AS "createBy.id",
+        a.create_date,
+        a.update_by AS "updateBy.id",
+        a.update_date,
+        a.quarter
+    </sql>
+
+    <select id="get" parameterType="Long" resultType="MqB2bTmallLog">
+        SELECT
+              <include refid="MqB2bTmallColumns"/>
+        FROM  mq_b2b_tmall a
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="com.wolfking.jeesite.ms.tmall.mq.entity.MqB2bTmallLog">
+        SELECT
+            <include refid="MqB2bTmallColumns"/>
+        FROM mq_b2b_tmall a
+        WHERE a.queue_id = #{queueId}
+            AND a.quarter = #{quarter}
+            AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date <= #{endCreateDate} ]]>
+        LIMIT 20000
+    </select>
+
+
+    <insert id="insert" parameterType="MqB2bTmallLog" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO mq_b2b_tmall (
+            queue_id,
+            message_json,
+            process_flag,
+            process_time,
+            process_comment,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            quarter
+        ) VALUES (
+            #{queueId},
+            #{messageJson},
+            #{processFlag},
+            #{processTime},
+            #{processComment},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{quarter}
+        )
+    </insert>
+
+    <update id="updateProcessStatus" parameterType="MqB2bTmallLog">
+        UPDATE mq_b2b_tmall
+        <set>
+            process_flag = #{processFlag},
+            process_time = #{processTime},
+          <if test="processComment != null and processComment != ''">
+            process_comment = #{processComment},
+          </if>
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.MaterialCategoryDao">
+    <!--
+    <sql id="materialCategoryColumns">
+            a.id,
+            a.name,
+            a.remarks
+    </sql>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_material_category(
+			name,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks
+		) VALUES (
+            #{name},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_material_category
+        SET
+            name = #{name},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_material_category
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="get" resultType="MaterialCategory">
+        SELECT
+                <include refid="materialCategoryColumns"/>
+        FROM
+               md_material_category a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+
+    <select id="findAllList" resultType="MaterialCategory">
+        SELECT
+                <include refid="materialCategoryColumns"/>
+        FROM
+                md_material_category a
+        WHERE
+                a.del_flag = 0
+        LIMIT  2000
+    </select>
+
+    <select id="findList" resultType="MaterialCategory">
+        SELECT
+               <include refid="materialCategoryColumns"/>
+        FROM
+               md_material_category a
+        <where>
+               a.del_flag = 0
+            <if test="name!=null and name !=''">
+               AND a.name LIKE CONCAT('%',#{name},'%')
+            </if>
+        </where>
+    </select>
+    <select id="checkIsExist" resultType="java.lang.Long">
+        SELECT
+              id
+        FROM
+              md_material_category
+        WHERE
+              name = #{name}
+        AND   del_flag = 0
+        LIMIT 1
+    </select>
+    -->
+</mapper>

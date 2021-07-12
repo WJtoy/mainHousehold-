@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.UserKeFuDao">
+
+
+	<!-- 分页查询用户客服信息 -->
+	<select id="findList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+		a.id,
+		a.office_id AS "office.id",
+		a.login_name,
+		a.name,
+		a.mobile,
+		a.user_type,
+		a.sub_flag,
+		a.status_flag,
+		a.manager_flag
+		FROM sys_user a
+		<if test="role != null and role.id != null and role.id != ''.toString()">
+			JOIN sys_user_role ur ON ur.user_id = a.id AND ur.role_id = #{role.id}
+		</if>
+		WHERE
+			a.user_type = #{userType}
+		and a.del_flag = #{DEL_FLAG_NORMAL}
+		<!-- 如果不是超级管理员，则不显示超级管理员用户 -->
+		<if test="!currentUser.admin">
+			AND a.id != 1
+		</if>
+		<if test="office != null and office.id != null and office.id != -1 and office.id != ''.toString()">
+			AND a.office_id in
+			<foreach collection="officeIds" item="oid" open="(" close=")" separator=",">
+				${oid}
+			</foreach>
+		</if>
+		<if test="loginName != null and loginName != ''.toString()">
+			AND a.login_name like CONCAT('%',#{loginName}, '%')
+		</if>
+		<if test="name != null and name != ''.toString()">
+			AND a.name like CONCAT('%',#{name}, '%')
+		</if>
+		<if test="statusFlag != null and statusFlag != -1">
+			AND a.status_flag = #{statusFlag}
+		</if>
+		<!-- 数据范围过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''.toString()">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.name
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getProductCategoryIds" resultType="com.wolfking.jeesite.modules.sys.entity.UserProductCategory">
+        SELECT
+        user_id as "userId",
+        product_category_id as "productCategoryId"
+        FROM  md_productcategory_user
+        WHERE user_id in
+        <foreach collection="userIds" item="cid" open="(" close=")" separator=",">
+			${cid}
+		</foreach>
+		limit 5000
+    </select>
+
+    <!-- 插入用户客服 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sys_user(
+			office_id,
+			login_name,
+			password,
+			qq,
+			name,
+			mobile,
+			user_type,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			sub_flag,
+			del_flag,
+			manager_flag
+		) VALUES (
+			#{office.id},
+			#{loginName},
+			#{password},
+			#{qq},
+			#{name},
+			#{mobile},
+			#{userType},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{subFlag},
+			#{delFlag},
+			#{managerFlag}
+		)
+	</insert>
+
+    <!-- 更新用户 -->
+    <update id="update">
+        UPDATE sys_user SET
+        office_id = #{office.id},
+        login_name = #{loginName},
+        <if test="password != null and password != ''.toString()" >
+            password = #{password},
+        </if>
+        qq = #{qq},
+        name = #{name},
+        mobile = #{mobile},
+        user_type = #{userType},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate},
+        remarks = #{remarks},
+        sub_flag = #{subFlag},
+        manager_flag = #{managerFlag}
+        WHERE id = #{id}
+    </update>
+
+	<!-- 停用/逻辑删除用户 -->
+	<update id="delete">
+		UPDATE sys_user SET
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<select id="getManagerFlag" resultType="java.lang.Integer">
+		select
+		manager_flag
+		from  sys_user
+		where id = #{userId}
+	</select>
+
+	<update id="updateSubFlag">
+		UPDATE sys_user SET
+		sub_flag = #{subFlag}
+		WHERE id = #{userId}
+	</update>
+
+
+	<!-- 按品类+区县+客服类型读取客服主管 -->
+	<select id="getKefuSupervisor" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+		      u.id,
+		      u.office_id as 'office.id',
+		      u.name
+		from
+		      sys_user_region ua force INDEX (idx_sys_user_region_uid)
+		inner join sys_user u on ua.user_id = u.id
+		and u.user_type = 2
+		and u.del_flag = 0
+		and u.sub_flag = #{subFlag}
+		and u.manager_flag = 1
+		inner join sys_user_role ur on ur.user_id = u.id
+		and ur.role_id = 14
+		inner join md_productcategory_user pu on pu.product_category_id = #{productCategoryId}
+		and pu.user_id = u.id
+		where (ua.province_id = #{provinceId} and ua.city_id = #{cityId} and ua.area_id = #{areaId} and  ua.area_type = 4)
+		or    (ua.city_id = #{cityId} and ua.area_type = 3)
+		or    (ua.province_id = #{provinceId} and ua.area_type = 2)
+		or     area_type = 1
+		limit 1
+	</select>
+
+	<!-- 按客户+品类+区域读取vip客服列表 排除客服主管(manager_flag栏位)-->
+	<select id="getVIPKefuSupervisor" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+		SELECT
+		      u.id,
+		      u.office_id as 'office.id',
+		      u.name
+		from
+		      sys_user_customer uc
+		inner join sys_user_region ua on (ua.area_id = #{areaId}
+		and uc.user_id = ua.user_id and ua.area_type = 4)
+		or (ua.city_id = #{cityId} and ua.area_type=3 and uc.user_id = ua.user_id)
+		or (ua.province_id = #{provinceId} and ua.area_type=2 and uc.user_id = ua.user_id)
+		or (ua.area_type=1 and uc.user_id = ua.user_id)
+		inner join sys_user u on uc.user_id = u.id
+		and u.user_type = 2
+		and u.sub_flag = 1
+		and u.del_flag = 0
+		and u.manager_flag = 1
+		inner join sys_user_role ur on ur.user_id = u.id
+		and ur.role_id = 14
+		inner join md_productcategory_user pu on pu.product_category_id = #{productCategoryId}
+		and pu.user_id = u.id
+		where
+		     uc.customer_id = #{customerId}
+		limit 1
+	</select>
+
+</mapper>

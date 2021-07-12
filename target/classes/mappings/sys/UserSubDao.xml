@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.UserSubDao">
+    <select id="getAllUserSubList" resultType="com.wolfking.jeesite.modules.sys.entity.UserSub">
+        select
+            user_id,
+            sub_user_id,
+            type
+        from
+            sys_user_sub
+        limit 500
+    </select>
+
+    <select id="getUserSubList" resultType="com.wolfking.jeesite.modules.sys.entity.UserSub">
+        select
+            user_id,
+            sub_user_id,
+            type
+        from
+            sys_user_sub
+        where
+            user_id = #{userId}
+        limit 500
+    </select>
+
+    <insert id="saveUserUnderling">
+        INSERT INTO sys_user_sub(
+        user_id,
+        sub_user_id,
+        type
+        ) VALUES (
+        #{userId},
+        #{subUserId},
+        #{type}
+        )
+    </insert>
+
+    <select id="findCustomerIdListByUserId" resultType="long">
+        SELECT customer_id
+        FROM md_customer_sales
+        WHERE sub_flag = 1
+              AND sales_id in (
+                SELECT sub_user_id
+                FROM sys_user_sub
+                WHERE user_id = #{userId}
+                AND type = #{type}
+              )
+    </select>
+
+    <delete id="deleteUserUnderling">
+        DELETE FROM sys_user_sub
+        where user_id = #{userId}
+    </delete>
+
+    <delete id="deleteUserSub">
+        DELETE FROM sys_user_sub
+        where sub_user_id = #{userSubId}
+    </delete>
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ProductCompletePicDao">
+    <!--
+    <sql id="columns">
+            a.id,
+            a.product_id as "product.id",
+            a.json_info
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_product_pic_mapping(
+			product_id,
+			json_info,
+			create_by,
+			create_date
+		) VALUES (
+			#{product.id},
+			#{jsonInfo},
+			#{createBy.id},
+			#{createDate}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_product_pic_mapping
+        SET
+            json_info = #{jsonInfo},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_product_pic_mapping
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="findAllList" resultType="ProductCompletePic">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_product_pic_mapping a
+        WHERE
+            a.del_flag = 0
+        ORDER BY
+            a.product_id
+    </select>
+
+    <select id="findList" resultType="ProductCompletePic">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_product_pic_mapping a
+        <where>
+            <if test="product != null and product.id != null and product.id>0">
+              AND a.product_id = #{product.id}
+            </if>
+              AND a.del_flag = 0
+        </where>
+        ORDER BY a.product_id
+    </select>
+
+    <select id="get" resultType="ProductCompletePic">
+        SELECT
+          <include refid="columns"/>
+        FROM
+          md_product_pic_mapping a
+        WHERE
+            id = #{id}
+    </select>
+    -->
+</mapper>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.UserRegionDao">
+
+	<sql id="regionColumns">
+		a.id,
+		a.user_id,
+		a.area_type,
+		a.province_id,
+		a.city_id,
+		a.area_id
+	</sql>
+
+	<select id="getUserRegions" resultType="com.wolfking.jeesite.modules.sys.entity.UserRegion">
+		/*#mycat:db_type=master*/
+		SELECT
+			<include refid="regionColumns"/>
+		FROM sys_user_region a
+		WHERE a.user_id = #{userId}
+		limit 5000
+	</select>
+
+	<select id="findAllList" resultType="com.wolfking.jeesite.modules.sys.entity.UserRegion">
+		SELECT
+		<include refid="regionColumns"/>
+		FROM sys_user_region a
+		Where a.user_id > 0
+	</select>
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sys_user_region(
+			user_id,
+			area_type,
+			province_id,
+			city_id,
+			area_id
+		) VALUES (
+			#{userId},
+			#{areaType},
+			#{provinceId},
+			#{cityId},
+			#{areaId}
+		)
+	</insert>
+
+	<delete id="deleteByUserAndAreaType">
+		delete from
+			sys_user_region
+		where
+			user_id = #{userId}
+			and area_type = #{areaType}
+	</delete>
+
+	<delete id="deleteByUserId">
+		delete from sys_user_region
+		where user_id = #{userId}
+	</delete>
+
+	<delete id="delete" parameterType="UserRegion">
+		delete from
+			sys_user_region
+		where
+			id = #{id}
+	</delete>
+
+	<delete id="deleteByUserAndAreaAndAreaType">
+		delete  from
+			sys_user_region
+		where
+		user_id = #{userId}
+		<if test="areaType == 2">
+			and province_id = #{areaId}
+		</if>
+		<if test="areaType == 3">
+			and city_id = #{areaId}
+		</if>
+		<if test="areaType == 4">
+			and areaId = #{areaId}
+		</if>
+	</delete>
+</mapper>

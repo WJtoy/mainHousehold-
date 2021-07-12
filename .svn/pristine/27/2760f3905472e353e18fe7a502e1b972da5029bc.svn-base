@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderServicePointFeeDao">
+
+	<select id="getByPrimaryKeys" resultType="OrderServicePointFee">
+		select
+			quarter,
+			order_id,
+			servicepoint_id as "servicePoint.id",
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			other_charge,
+			insurance_charge,
+			insurance_no,
+			time_liness,
+			time_liness_charge,
+			customer_time_liness,
+			customer_time_liness_charge,
+			urgent_charge,
+			order_charge,
+			del_flag,
+			rebate_flag,
+			praise_fee,
+			tax_fee,
+			info_fee,
+			deposit
+		from
+			sd_order_servicepoint_fee
+		<where>
+				order_id = #{orderId}
+			and servicepoint_id = #{servicePointId}
+			and quarter = #{quarter}
+		</where>
+		limit 1
+	</select>
+
+	<!-- 对账后更新财务网点其他扣费 -->
+	<update id="updateFeeAfterCharge">
+		update
+			sd_order_servicepoint_fee
+		<set>
+			tax_fee = #{engineerTaxFee},
+			info_fee = #{engineerInfoFee},
+			deposit = #{engineerDeposit},
+			order_charge = order_charge + #{engineerTaxFee} + #{engineerInfoFee} + #{engineerDeposit},
+		</set>
+		where
+			order_id = #{orderId}
+			and servicepoint_id = #{servicePointId}
+			and quarter = #{quarter}
+	</update>
+
+	<!-- 更新好评费 -->
+	<update id="updatePraiseFee">
+		update
+			sd_order_servicepoint_fee
+		<set>
+			<if test="praiseFee != null">
+				praise_fee = #{praiseFee},
+				order_charge = service_charge
+					+ express_charge
+					+ travel_charge
+					+ material_charge
+					+ other_charge
+					+ insurance_charge
+					+ time_liness_charge
+					+ urgent_charge
+					+ #{praiseFee}
+			</if>
+		</set>
+		where
+			order_id = #{orderId}
+			and servicepoint_id = #{servicePointId}
+			and quarter = #{quarter}
+	</update>
+
+</mapper>

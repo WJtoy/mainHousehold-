@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerCurrencyDao">
+
+	<!--
+    //mark on 2020-1-13  web端去除md_engineer
+	<select id="getServicePointCurrencyList" parameterType="Map" resultType="EngineerCurrency">
+		select 	fec.id,
+			  	fec.service_point_id as 'servicePoint.id',
+			  	fec.currency_type,
+			  	fec.currency_no,
+			  	fec.before_balance,
+			  	fec.balance,
+			  	fec.amount,
+			  	fec.payment_type,
+			  	fec.action_type,
+			  	fec.create_by,
+			  	fec.create_date,
+			  	fec.update_by,
+			  	fec.update_date,
+			  	fec.remarks,
+			  	fec.quarter,
+			  	msp.servicepoint_no as 'servicePoint.servicePointNo',
+				msp.name as 'servicePoint.name',
+				0 as 'servicePoint.finance.balance',
+				msp.payment_type as 'servicePoint.finance.paymentType.value',
+				me.name as 'servicePoint.primary.name'
+		from 	fi_engineercurrency fec
+				left join md_servicepoint msp on msp.id = fec.service_point_id
+				left join md_engineer me on me.id = msp.primary_id
+		<where>
+				<if test="beginDate != null">
+					fec.create_date >= #{beginDate}
+				</if>
+				<if test="endDate != null">
+				and <![CDATA[ fec.create_date <= #{endDate} ]]>
+				</if>
+				<if test="servicePointId != null">
+					and fec.service_point_id = #{servicePointId}
+				</if>
+				<if test="actionType != null">
+					<choose>
+						<when test="actionType == 3040">
+							and (fec.action_type = 30 or fec.action_type = 40)
+						</when>
+						<otherwise>
+							and fec.action_type = #{actionType}
+						</otherwise>
+					</choose>
+				</if>
+				<if test="currencyNo != null and currencyNo != ''">
+					and fec.currency_no = #{currencyNo}
+				</if>
+		</where>
+		order by fec.id desc
+	</select>
+	-->
+
+	<select id="getServicePointCurrencyListWithoutServicePointAndEngineer" parameterType="Map" resultType="EngineerCurrency">
+		select 	fec.id,
+		fec.service_point_id as 'servicePoint.id',
+		fec.currency_type,
+		fec.currency_no,
+		fec.before_balance,
+		fec.balance,
+		fec.amount,
+		fec.payment_type,
+		fec.action_type,
+		fec.create_by,
+		fec.create_date,
+		fec.update_by,
+		fec.update_date,
+		fec.remarks,
+		fec.quarter
+		<!--
+		,
+		msp.servicepoint_no as 'servicePoint.servicePointNo',
+		msp.name as 'servicePoint.name',
+		0 as 'servicePoint.finance.balance',
+		msp.payment_type as 'servicePoint.finance.paymentType.value',
+		me.name as 'servicePoint.primary.name'
+		-->
+		from 	fi_engineercurrency fec
+		<!--
+		left join md_servicepoint msp on msp.id = fec.service_point_id
+		left join md_engineer me on me.id = msp.primary_id
+		-->
+		<where>
+			<if test="beginDate != null">
+				fec.create_date >= #{beginDate}
+			</if>
+			<if test="endDate != null">
+				and <![CDATA[ fec.create_date <= #{endDate} ]]>
+			</if>
+			<if test="servicePointId != null">
+				and fec.service_point_id = #{servicePointId}
+			</if>
+			<if test="actionType != null">
+				<choose>
+					<when test="actionType == 3040">
+						and (fec.action_type = 30 or fec.action_type = 40)
+					</when>
+					<otherwise>
+						and fec.action_type = #{actionType}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="currencyNo != null and currencyNo != ''">
+				and fec.currency_no = #{currencyNo}
+			</if>
+		</where>
+		order by fec.id desc
+	</select>
+
+	<select id="getServicePointCurrencyListForApi" parameterType="Map" resultType="EngineerCurrency">
+		select
+				fec.id,
+				fec.currency_no,
+				fec.before_balance,
+				fec.balance,
+				fec.amount,
+				fec.action_type,
+				fec.create_date,
+				fec.remarks
+		from 	fi_engineercurrency fec
+		<where>
+			<if test="beginDate != null">
+				fec.create_date >= #{beginDate}
+			</if>
+			<if test="endDate != null">
+				and <![CDATA[ fec.create_date <= #{endDate} ]]>
+			</if>
+			<if test="servicePointId != null">
+				and fec.service_point_id = #{servicePointId}
+			</if>
+			<if test="actionType != null">
+				<choose>
+					<when test="actionType == 3040">
+						and (fec.action_type = 30 or fec.action_type = 40)
+					</when>
+					<otherwise>
+						and fec.action_type = #{actionType}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="actionType == null">
+				and <![CDATA[ fec.action_type < 60 ]]>
+			</if>
+			<if test="currencyNo != null and currencyNo != ''">
+				and fec.currency_no = #{currencyNo}
+			</if>
+			<if test="quarters != null and quarters.size>0">
+				and fec.quarter in
+				<foreach collection="quarters" item="item" open="(" close=")" separator=",">
+					${item}
+				</foreach>
+			</if>
+		</where>
+		order by fec.id desc
+	</select>
+
+	<select id="getServicePointCurrencySummryByMonthApi" parameterType="Map" resultType="Map">
+		select
+			fec.action_type,
+			sum(fec.amount) as amount
+		from
+			fi_engineercurrency fec
+		<where>
+			fec.create_date between #{beginDate} and #{endDate}
+			and fec.service_point_id = #{servicePointId}
+			<if test="actionType != null">
+				<choose>
+					<when test="actionType == 3040">
+						and (fec.action_type = 30 or fec.action_type = 40)
+					</when>
+					<otherwise>
+						and fec.action_type = #{actionType}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="actionType == null">
+				and <![CDATA[ fec.action_type < 60 ]]>
+			</if>
+		</where>
+		group by fec.action_type
+		limit 20
+	</select>
+
+	<select id="getModifyList" resultType="EngineerCurrency">
+		SELECT
+			id,
+			service_point_id as 'servicePoint.id',
+			currency_type,
+			currency_no,
+			before_balance,
+			balance,
+			amount,
+			payment_type,
+			action_type,
+			create_by as 'createBy.id',
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_engineercurrency
+		WHERE
+			id in (
+			916581609753415680,
+			916581631035314176,
+			916581613909970944,
+			916581604783165440,
+			916577850918834176,
+			916581607027118080,
+			916581618397876224,
+			916581615122124800,
+			916581623074525184,
+			916581635665825792,
+			916581611565355008,
+			916581602962837504,
+			916581614727860224,
+			916581618532093952,
+			916581616460107776,
+			916577838495305728,
+			916581605022240768,
+			916581630418751488,
+			916581615277314048,
+			916581617835839488,
+			916581612211277824,
+			916581607509463040,
+			916581608826474496,
+			916581631811260416,
+			916577845755645952,
+			916581611670212608,
+			916581625112956928,
+			916581623628173312,
+			916581613394071552,
+			916581607383633920,
+			916581606301503488,
+			916581614279069696
+			)
+		ORDER BY
+			service_point_id
+		LIMIT 10000
+	</select>
+
+	<update id="updateMSF" parameterType="Map">
+		UPDATE md_servicepoint_finance SET balance=balance+#{amount},daily_balance=daily_balance+#{amount},total_amount=total_amount-#{amount} WHERE id  = #{servicePointId}
+	</update>
+
+	<!--<update id="updateFSPM" parameterType="Map">-->
+		<!--UPDATE fi_servicepoint_paid_monthly SET m10=m10-#{amount} WHERE servicepoint_id=#{servicePointId}-->
+	<!--</update>-->
+
+	<!--<update id="updateFSIM" parameterType="Map">-->
+		<!--UPDATE fi_servicepoint_invoice_monthly SET m10=m10-#{amount} WHERE servicepoint_id=#{servicePointId}-->
+	<!--</update>-->
+
+	<!--<update id="updateFSBM" parameterType="Map">-->
+		<!--UPDATE rpt_servicepoint_balance_monthly SET m10=m10+#{amount} WHERE servicepoint_id=#{servicePointId}-->
+	<!--</update>-->
+
+	<!--<update id="updateCurrency" parameterType="Map">-->
+		<!--UPDATE fi_engineercurrency SET before_balance=before_balance+#{amount},balance=balance+#{amount} WHERE service_point_id = #{servicePointId} AND create_date > #{deleteCreateDate}-->
+	<!--</update>-->
+
+	<update id="deleteById" parameterType="Map">
+		DELETE FROM fi_engineercurrency WHERE id = #{deleteId}
+	</update>
+
+	<select id="getOnePrevious" resultType="EngineerCurrency">
+		SELECT
+		*
+		FROM
+		fi_engineercurrency
+		WHERE
+		#{id} > id
+		AND service_point_id = #{servicePointId}
+		AND currency_type > 0
+		LIMIT 1
+	</select>
+
+	<select id="getOneNext" resultType="EngineerCurrency">
+		SELECT
+		*
+		FROM
+		fi_engineercurrency
+		WHERE
+		id > #{id}
+		AND service_point_id = #{servicePointId}
+		AND currency_type > 0
+		LIMIT 1
+	</select>
+
+	<select id="getFirstCurrency" resultType="EngineerCurrency">
+		SELECT
+			id,
+			create_date
+		FROM
+			fi_engineercurrency
+		WHERE
+			service_point_id = #{servicePointId}
+		ORDER BY
+			id
+		LIMIT 1
+	</select>
+
+	<insert id="insert">
+		INSERT INTO fi_engineercurrency(
+			id,
+			service_point_id,
+			currency_type,
+			currency_no,
+			before_balance,
+			balance,
+			amount,
+			payment_type,
+			action_type,
+			create_by, 
+			create_date,
+			remarks,
+			quarter
+		) VALUES (
+			#{id},
+			#{servicePoint.id},
+			#{currencyType},
+			#{currencyNo},
+			#{beforeBalance},
+			#{balance},
+			#{amount},
+			#{paymentType},
+			#{actionType},
+			#{createBy.id},
+			#{createDate},
+			#{remarks},
+			#{quarter}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_engineercurrency SET
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}, 
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE fi_engineercurrency SET
+			del_flag = #{DEL_FLAG_DELETE},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 补10月网点按品类应付数据 -->
+	<select id="getCurrencyByDateRangeForUpdatePayable" resultType="EngineerCurrency">
+		SELECT
+			currency_no,
+			amount
+		FROM
+			fi_engineercurrency
+		WHERE
+			quarter = '20194'
+			AND service_point_id = #{servicePointId}
+			AND (create_date BETWEEN #{beginDate} AND #{endDate})  AND action_type IN (20,30,40)
+		ORDER BY id
+	</select>
+</mapper>

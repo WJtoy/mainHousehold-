@@ -1,0 +1,3183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.develop.sd.dao.DevelopOrderListDao">
+
+    <resultMap id="historyPlanOrderMap" type="HistoryPlanOrderModel">
+        <id property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no" />
+        <result property="quarter" column="quarter" />
+        <result property="userName" column="user_name" />
+        <result property="userPhone" column="service_phone" />
+        <result property="userAddress" column="service_address" />
+        <result property="createDate" column="create_date" />
+        <result property="productCategoryId" column="product_category_id" />
+        <result property="servicePointId" column="servicepoint_id" />
+        <result property="statusValue" column="status" />
+        <result property="itemsPb" column="orderitem_json" />
+        <association property="area"  column="order_area" javaType="Area" >
+            <id property="id" column="area_id"/>
+            <result property="name" column="area_name"/>
+        </association>
+        <association property="subArea"  column="order_subArea" javaType="Area" >
+            <id property="id" column="sub_area_id"/>
+        </association>
+    </resultMap>
+
+    <!-- 列表返回的公共字段 -->
+    <sql id="commonFields">
+        c.data_source         AS "dataSource.value",
+        c.shop_id             AS "b2bShop.shopId",
+        c.repeate_no,
+        c.orderitem_json      AS "itemsPb",
+        o.user_name           AS "orderCondition.userName",
+        o.service_phone       AS "orderCondition.servicePhone",
+        o.phone2              AS "orderCondition.phone2",
+        o.area_id             AS "orderCondition.area.id",
+        o.area_name           AS "orderCondition.area.name",
+        o.service_address     AS "orderCondition.serviceAddress",
+        o.order_id            AS "id",
+        o.quarter,
+        o.order_no,
+        o.status              AS "orderCondition.status.value",
+        o.servicepoint_id     AS "orderCondition.servicePoint.id",
+        o.engineer_id         AS "orderCondition.engineer.id",
+        o.tracking_flag       AS "orderCondition.trackingFlag",
+        o.tracking_date       AS "orderCondition.trackingDate",
+        o.tracking_message    AS "orderCondition.trackingMessage",
+        o.appointment_date    AS "orderCondition.appointmentDate",
+        o.feedback_flag       AS "orderCondition.feedbackFlag",
+        o.feedback_id         AS "orderCondition.feedbackId",
+        o.feedback_title      AS "orderCondition.feedbackTitle",
+        o.finish_photo_qty    AS "orderCondition.finishPhotoQty",
+        o.pending_type        AS "orderCondition.pendingType.value",
+        o.parts_flag          AS "orderCondition.partsFlag",
+        o.app_abnormaly_flag  AS "orderCondition.appAbnormalyFlag",
+        o.operation_app_flag  AS "orderCondition.operationAppFlag",
+        o.reply_flag_customer AS "orderCondition.replyFlagCustomer",
+        o.reply_flag          AS "orderCondition.replyFlag",
+        o.reply_flag_kefu     AS "orderCondition.replyFlagKefu",
+        o.grade_flag          AS "orderCondition.gradeFlag",
+        o.create_date         AS "orderCondition.createDate",
+        s.accept_date         AS "orderStatus.acceptDate",
+        s.plan_date           AS "orderStatus.planDate",
+        o.urgent_level_id     AS "orderCondition.urgentLevel.id",
+        s.reminder_status     AS "orderStatus.reminderStatus",
+        s.complain_flag     AS "orderStatus.complainFlag",
+        o.order_service_type AS "orderCondition.orderServiceType",
+        o.order_id
+    </sql>
+    <!-- 选择的区域 -->
+    <sql id="selectedAreaFilter">
+        <if test="area != null and area.id != null and area.id > 0">
+            <choose>
+                <when test="areaLevel == 0">
+                    AND o.province_id = #{area.id}
+                </when>
+                <when test="areaLevel == 1">
+                    AND o.city_id = #{area.id}
+                </when>
+                <when test="areaLevel == 2">
+                    AND o.area_id = #{area.id}
+                </when>
+                <when test="areaLevel == 3">
+                    <if test="area.parent != null and area.parent.id != null and area.parent.id > 0">
+                        and o.area_id = #{area.parent.id}
+                    </if>
+                    AND o.sub_area_id = #{area.id}
+                </when>
+                <otherwise>
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+    <!-- 用户负责区域 -->
+    <sql id="RegionFilter">
+        <choose>
+            <when test="regionFilterType == 'province'.toString() and provinceList != null and provinceList.size > 0">
+                <choose>
+                    <when test="provinceList.size == 1">
+                        and o.province_id = #{provinceList[0]}
+                    </when>
+                    <otherwise>
+                        AND o.province_id IN <foreach collection="provinceList" item="provinceId" index="index" open="(" close=")" separator=",">${provinceId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'city'.toString() and cityList != null and cityList.size > 0">
+                <choose>
+                    <when test="cityList.size == 1">
+                        and o.city_id = #{cityList[0]}
+                    </when>
+                    <otherwise>
+                        AND o.city_id IN <foreach collection="cityList" item="cityId" index="index" open="(" close=")" separator=",">${cityId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'area'.toString() and areaList != null and areaList.size > 0">
+                <choose>
+                    <when test="areaList.size == 1">
+                        and o.area_id = #{areaList[0]}
+                    </when>
+                    <otherwise>
+                        AND o.area_id IN <foreach collection="areaList" item="areaId" index="index" open="(" close=")" separator=",">${areaId}</foreach>
+                    </otherwise>
+                </choose>
+            </when>
+        </choose>
+    </sql>
+    <!-- 用户负责所有区域 -->
+    <sql id="allUserRegion">
+        <if test="regionFilterCount > 1">
+            <trim prefix="AND" prefixOverrides="AND|OR">
+                AND (
+                <if test="areaList != null">
+                    <choose>
+                        <when test="areaList.size == 1">
+                            o.area_id = #{areaList[0]}
+                        </when>
+                        <otherwise>
+                            o.area_id IN
+                            <foreach collection="areaList" item="areaItem" index="index" open="(" close=")"
+                                     separator=",">${areaItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="cityList != null">
+                    <choose>
+                        <when test="cityList.size == 1">
+                            or o.city_id = #{cityList[0]}
+                        </when>
+                        <otherwise>
+                            or o.city_id IN
+                            <foreach collection="cityList" item="cityItem" index="index" open="(" close=")"
+                                     separator=",">${cityItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="provinceList != null">
+                    <choose>
+                        <when test="provinceList.size == 1">
+                            or o.province_id = #{provinceList[0]}
+                        </when>
+                        <otherwise>
+                            or o.province_id IN
+                            <foreach collection="provinceList" item="provinceItem" index="index" open="(" close=")"
+                                     separator=",">${provinceItem}</foreach>
+                        </otherwise>
+                    </choose>
+                </if>
+                )
+            </trim>
+        </if>
+    </sql>
+    <!-- 以上是公共部分 -->
+
+    <!-- 待派单/待接单 -->
+    <sql id="planingSql">
+        /*#mycat:db_type=master*/
+        SELECT
+        <include refid="commonFields"/>
+        ,o.status
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 待接/待派单的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 79
+                    AND o.sub_status = 0
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 待接/待派单的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 79
+                    AND o.sub_status = 0
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuPlaningOrderList" parameterType="OrderSearchModel" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="planingSql" />
+                order by o.status desc, o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="planingSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="planingSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="planingSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.status desc, u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="planingSql"/>
+                        order by o.status desc, o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 未预约 -->
+    <sql id="NoAppointmentSql">
+        SELECT
+        <include refid="commonFields"/>
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 未预约的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 79
+                    AND o.sub_status = 10
+                    <![CDATA[AND o.pending_type_date <= #{now}]]>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 未预约的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 79
+                    AND o.sub_status = 10
+                    <![CDATA[AND o.pending_type_date <= #{now}]]>
+                    <if test="pendingType != null and pendingType.value != ''.toString() ">
+                        AND o.pending_type = convert(#{pendingType.value},SIGNED)
+                    </if>
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <!-- 回收，接单2小时没有预约时间和联系用户 -->
+                    <if test="isBackApprove == 1">
+                        <![CDATA[
+                        AND o.status = 40
+                        AND o.operation_app_flag = 1
+                        AND o.appointment_date is null
+                        AND exists(
+                            select 1
+                            from sd_order_status s
+                            where
+                                o.order_id = s.order_id
+                                AND s.first_contact_date is null
+                                AND s.plan_date < date_sub(now(), interval 2 hour)
+                        ) ]]>
+                    </if>
+                    <if test="partsFlag == 1">
+                        AND o.parts_flag = 1
+                    </if>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <!-- 异常 -->
+                    <if test="appAbnormalyFlag == 1">
+                        AND o.app_abnormaly_flag = 1
+                    </if>
+                    <!-- 套组 -->
+                    <if test="hasSet == 1">
+                        AND o.has_set = 1
+                    </if>
+                    <!-- 安维提交上门服务 -->
+                    <if test="appSubmitService == 1">
+                        AND o.app_submit_service = 1
+                    </if>
+                    <!-- 下单人 -->
+                    <if test="creator != null and creator != ''.toString()">
+                        AND exists(
+                        select 1
+                        from sys_user u
+                        where u.name like CONCAT('%',#{creator}, '%')
+                        )
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                        <!-- and o.product_ids like CONCAT('%,',#{productId}, ',%') -->
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                        <!-- and o.service_types like CONCAT('%,',#{serviceTypeId}, ',%') -->
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="appointmentTimeoutFlag != null and appointmentTimeoutFlag == 1">
+                        and s.plan_date > #{planDateBegin}
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuNoAppointmentOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="NoAppointmentSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="NoAppointmentSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="NoAppointmentSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="NoAppointmentSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="NoAppointmentSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <!-- 预约到期 -->
+    <sql id="arriveAppointmentSql">
+        /*#mycat:db_type=master*/
+        SELECT
+        <include refid="commonFields"/>
+        ,o.urgent_level_id
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 预约到期的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 79
+                    AND o.sub_status between 20 and 50
+                    AND o.pending_type_date between #{startOfToday} and #{now}
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 待接/待派单的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 79
+                    AND o.sub_status between 20 and 50
+                    AND o.pending_type_date between #{startOfToday} and #{now}
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <if test="pendingType != null and pendingType.value != ''.toString() ">
+                        AND o.pending_type = convert(#{pendingType.value},SIGNED)
+                    </if>
+                    <if test="reminderFlag != null and reminderFlag == 1 ">
+                        AND <![CDATA[ s.reminder_status > 0 ]]>
+                    </if>
+                    <if test="partsFlag == 1">
+                        AND o.parts_flag = 1
+                    </if>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <!-- 异常 -->
+                    <if test="appAbnormalyFlag == 1">
+                        AND o.app_abnormaly_flag = 1
+                    </if>
+                    <!-- 套组 -->
+                    <if test="hasSet == 1">
+                        AND o.has_set = 1
+                    </if>
+                    <!-- 安维提交上门服务 -->
+                    <if test="appSubmitService == 1">
+                        AND o.app_submit_service = 1
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <!-- 回收，接单2小时没有预约时间和联系用户 -->
+                    <if test="isBackApprove == 1">
+                        AND o.status = 40
+                        AND o.operation_app_flag = 1
+                        AND o.appointment_date is null
+                        <![CDATA[
+                        AND exists(
+                            select 1
+                            from sd_order_status s
+                            where
+                                o.order_id = s.order_id
+                                AND s.first_contact_date is null
+                                AND s.plan_date < date_sub(now(), interval 2 hour)
+                        )]]>
+                    </if>
+                    <!-- 下单人 -->
+                    <if test="creator != null and creator != ''.toString()">
+                        AND exists(
+                        select 1
+                        from sys_user u
+                        where u.name like CONCAT('%',#{creator}, '%')
+                        )
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                        <!-- and o.product_ids like CONCAT('%,',#{productId}, ',%') -->
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                        <!-- and o.service_types like CONCAT('%,',#{serviceTypeId}, ',%') -->
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuArriveAppointmentOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="arriveAppointmentSql" />
+                order by o.urgent_level_id DESC, o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="arriveAppointmentSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="arriveAppointmentSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="arriveAppointmentSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.urgent_level_id DESC, u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="arriveAppointmentSql"/>
+                        order by o.urgent_level_id DESC, o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 预约超期 -->
+    <sql id="passAppointmentSql">
+        SELECT
+        <include refid="commonFields"/>
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 预约超期的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = #{status.intValue}
+                    </if>
+                    AND o.status between 20 AND 59
+                    AND o.sub_status between 20 AND 50
+                    <![CDATA[AND o.pending_type_date <= #{startOfToday}]]>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 预约超期的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = #{status.intValue}
+                    </if>
+                    AND o.status between 20 AND 59
+                    AND o.sub_status between 20 AND 50
+                    <![CDATA[AND o.pending_type_date <= #{startOfToday}]]>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <!-- 回收，接单2小时没有预约时间和联系用户 -->
+                    <if test="isBackApprove == 1">
+                        <![CDATA[
+                        AND o.status = 40 AND o.operation_app_flag = 1
+                        AND o.appointment_date is null
+                        AND exists(select 1 from sd_order_status s
+                            where o.order_id = s.order_id AND s.first_contact_date is null
+                                  AND s.plan_date < date_sub(now(), interval 2 hour)
+                        ) ]]>
+                    </if>
+                    <if test="partsFlag == 1">
+                        AND o.parts_flag = 1
+                    </if>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <!-- 异常 -->
+                    <if test="appAbnormalyFlag == 1">
+                        AND o.app_abnormaly_flag = 1
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuPassAppointmentOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="passAppointmentSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="passAppointmentSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="passAppointmentSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="passAppointmentSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="passAppointmentSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 停滞 -->
+    <sql id="pendingSql">
+        SELECT
+        <include refid="commonFields"/>
+        ,o.sub_status          AS "orderCondition.subStatus"
+        ,o.reservation_times   AS "orderCondition.reservationTimes"
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 停滞的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = #{status.intValue}
+                    </if>
+                    AND o.status between 20 AND 55
+                    AND o.sub_status between 10 AND 70
+                    <![CDATA[AND o.pending_type_date > #{now} ]]>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 停滞的关键条件 -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = #{status.intValue}
+                    </if>
+                    AND o.status between 20 AND 55
+                    AND o.sub_status between 10 AND 70
+                    <![CDATA[AND o.pending_type_date > #{now} ]]>
+                    <!-- 预约日期 -->
+                    <choose>
+                        <when test="completeBegin != null and completeEnd != null ">
+                            and o.appointment_date between #{completeBegin} and #{completeEnd}
+                        </when>
+                        <when test="completeBegin != null ">
+                            <![CDATA[ AND o.appointment_date >= #{completeBegin} ]]>
+                        </when>
+                        <when test="completeEnd != null ">
+                            <![CDATA[ AND o.appointment_date <= #{completeEnd} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <if test="pendingType != null and pendingType.value != ''.toString() ">
+                        AND o.pending_type = convert(#{pendingType.value},SIGNED)
+                    </if>
+                    <if test="appointmentStatusFlag != null and appointmentStatusFlag != 0">
+                        <choose>
+                            <when test="appointmentStatusFlag == 1">
+                                AND o.pending_type = 0
+                            </when>
+                            <when test="appointmentStatusFlag == 2">
+                                <![CDATA[  AND o.pending_type > 0 AND o.appointment_date >= #{startOfToday} AND o.appointment_date <= #{now} ]]>
+                            </when>
+                            <when test="appointmentStatusFlag == 3">
+                                <![CDATA[  AND o.pending_type > 0 AND o.appointment_date < #{startOfToday} ]]>
+                            </when>
+                        </choose>
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuPendingOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="pendingSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="pendingSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="pendingSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="pendingSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="pendingSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 待回访 -->
+    <sql id="servicedSql">
+        SELECT
+        <include refid="commonFields"/>
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 待回访的关键条件（不含60、70的工单） -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 55
+                    AND o.sub_status = 70
+                    <![CDATA[AND o.pending_type_date <= #{now} ]]>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 待回访的关键条件（不含60、70的工单） -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 55
+                    AND o.sub_status = 70
+                    <![CDATA[AND o.pending_type_date <= #{now} ]]>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <!-- 回收，接单2小时没有预约时间和联系用户 -->
+                    <if test="isBackApprove == 1">
+                        <![CDATA[
+                        AND o.status = 40 AND o.operation_app_flag = 1
+                        AND o.appointment_date is null
+                        AND exists(select 1 from sd_order_status s
+                            where o.order_id = s.order_id AND s.first_contact_date is null
+                                  AND s.plan_date < date_sub(now(), interval 2 hour)
+                        ) ]]>
+                    </if>
+                    <if test="partsFlag == 1">
+                        AND o.parts_flag = 1
+                    </if>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <!-- 异常 -->
+                    <if test="appAbnormalyFlag == 1">
+                        AND o.app_abnormaly_flag = 1
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuServicedOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="servicedSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="servicedSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="servicedSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="servicedSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="servicedSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 回访失败 -->
+    <sql id="followUpFailSql">
+        SELECT
+        <include refid="commonFields"/>
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 回访失败的关键条件（不含60、70的工单） -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 55
+                    AND o.sub_status = 75
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 回访失败的关键条件（不含60、70的工单） -->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 55
+                    AND o.sub_status = 75
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <!-- 回收，接单2小时没有预约时间和联系用户 -->
+                    <if test="isBackApprove == 1">
+                        <![CDATA[
+                        AND o.status = 40 AND o.operation_app_flag = 1
+                        AND o.appointment_date is null
+                        AND exists(select 1 from sd_order_status s
+                            where o.order_id = s.order_id AND s.first_contact_date is null
+                                  AND s.plan_date < date_sub(now(), interval 2 hour)
+                        ) ]]>
+                    </if>
+                    <if test="partsFlag == 1">
+                        AND o.parts_flag = 1
+                    </if>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <!-- 异常 -->
+                    <if test="appAbnormalyFlag == 1">
+                        AND o.app_abnormaly_flag = 1
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuFollowUpFailOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="followUpFailSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="followUpFailSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="followUpFailSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="followUpFailSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="followUpFailSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 未完成 -->
+    <sql id="uncompletedSql">
+        SELECT
+        <include refid="commonFields"/>
+        ,o.sub_status          AS "orderCondition.subStatus"
+        ,o.pending_type_date   AS "orderCondition.pendingTypeDate"
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 未完成的关键条件 （不包含60、70的工单）-->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = convert(#{status.value},SIGNED)
+                    </if>
+                    AND o.status between 20 AND 55
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 未完成的关键条件 （不包含60、70的工单）-->
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND o.status = #{status.intValue}
+                    </if>
+                    AND o.status between 20 AND 55
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <!-- 回收，接单2小时没有预约时间和联系用户 -->
+                    <if test="isBackApprove == 1">
+                        <![CDATA[
+                        AND o.status = 40 AND o.operation_app_flag = 1
+                        AND o.appointment_date is null
+                        AND exists(select 1 from sd_order_status s
+                            where o.order_id = s.order_id AND s.first_contact_date is null
+                                  AND s.plan_date < date_sub(now(), interval 2 hour)
+                        ) ]]>
+                    </if>
+                    <if test="partsFlag == 1">
+                        AND o.parts_flag = 1
+                    </if>
+                    <if test="reminderFlag != null and reminderFlag == 1 ">
+                        AND <![CDATA[ s.reminder_status > 0 ]]>
+                    </if>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <!-- 异常 -->
+                    <if test="appAbnormalyFlag == 1">
+                        AND o.app_abnormaly_flag = 1
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuUncompletedOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="uncompletedSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="uncompletedSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="uncompletedSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="uncompletedSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="uncompletedSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 所有 -->
+    <sql id="allSql">
+        SELECT
+        <include refid="commonFields"/>
+        ,o.pending_flag        AS "orderCondition.pendingFlag"
+        ,o.charge_flag         AS "orderCondition.chargeFlag"
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责所有区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 完成日期 -->
+                    <choose>
+                        <when test="completeBegin != null and completeEnd != null ">
+                            and o.close_date between #{completeBegin} and #{completeEnd}
+                        </when>
+                        <when test="completeBegin != null ">
+                            <![CDATA[ AND o.close_date >= #{completeBegin} ]]>
+                        </when>
+                        <when test="completeEnd != null ">
+                            <![CDATA[ AND o.close_date <= #{completeEnd} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <!-- 状态 -->
+                    <choose>
+                        <when test="status != null and status.value != null and status.value != ''.toString()">
+                            AND o.status = convert(#{status.value},SIGNED)
+                        </when>
+                        <when test="statusRange != null and (statusRange.start > 0 or statusRange.end > 0)">
+                            <choose>
+                                <when test="statusRange.start > 0 and statusRange.end > 0">
+                                    AND o.status betwen #{statusRange.start} and #{statusRange.end}
+                                </when>
+                                <when test="statusRange.start>0">
+                                    <![CDATA[ AND o.status >= #{statusRange.start} ]]>
+                                </when>
+                                <when test="statusRange.end > 0">
+                                    <![CDATA[ AND o.status <= #{statusRange.end} ]]>
+                                </when>
+                                <otherwise></otherwise>
+                            </choose>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND c.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND c.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <if test="pendingType != null and pendingType.value != ''.toString() ">
+                        AND o.pending_type = convert(#{pendingType.value},SIGNED)
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="partsFlag == 1">
+                        AND o.parts_flag = 1
+                    </if>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <!-- 异常 -->
+                    <if test="appAbnormalyFlag == 1">
+                        AND o.app_abnormaly_flag = 1
+                    </if>
+                    <!-- 自动客评 -->
+                    <if test="autoGradeFlag == 1">
+                        AND o.grade_flag in (2,3,4)
+                    </if>
+                    <!-- 套组 -->
+                    <if test="hasSet == 1">
+                        AND o.has_set = 1
+                    </if>
+                    <!-- 安维提交上门服务 -->
+                    <if test="appSubmitService == 1">
+                        AND o.app_submit_service = 1
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name = #{userName}
+                        <!--        AND o.user_name like CONCAT(#{userName},'%') -->
+                    </if>
+                    <if test="appointmentFlag == 1">
+                        AND o.appointment_date is not null
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                        <!-- and o.product_ids like CONCAT('%,',#{productId}, ',%') -->
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                        <!-- and o.service_types like CONCAT('%,',#{serviceTypeId}, ',%') -->
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from
+                        sd_feedback fd
+                        inner join
+                        sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuAllOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="allSql" />
+                order by o.order_id
+            </when>
+            <when test="regionFilterCount > 1">
+                select *
+                from (
+                <trim prefixOverrides="union all">
+                    <if test="provinceList != null and provinceList.size >0">
+                        <bind name="regionFilterType" value="'province'"/>
+                        union all
+                        <include refid="allSql" />
+                    </if>
+                    <if test="cityList != null and cityList.size >0">
+                        <bind name="regionFilterType" value="'city'"/>
+                        union all
+                        <include refid="allSql" />
+                    </if>
+                    <if test="areaList != null and areaList.size >0">
+                        <bind name="regionFilterType" value="'area'"/>
+                        union all
+                        <include refid="allSql"/>
+                    </if>
+                </trim>
+                ) u
+                order by u.order_id
+            </when>
+            <otherwise>
+                <choose>
+                    <when test="provinceList != null and provinceList.size >0">
+                        <bind name="regionFilterType" value="'province'"/>
+                    </when>
+                    <when test="cityList != null and cityList.size >0">
+                        <bind name="regionFilterType" value="'city'"/>
+                    </when>
+                    <when test="areaList != null and areaList.size >0">
+                        <bind name="regionFilterType" value="'area'"/>
+                    </when>
+                    <otherwise></otherwise>
+                </choose>
+                <include refid="allSql"/>
+                order by o.order_id
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 完成 -->
+    <sql id="completedSql">
+        SELECT
+        <include refid="commonFields"/>
+        ,o.pending_flag        AS "orderCondition.pendingFlag"
+        ,o.charge_flag         AS "orderCondition.chargeFlag"
+        ,s.charge_date         AS "orderStatus.chargeDate"
+        ,o.charge_flag
+        ,s.charge_date
+        ,o.close_date
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 完成的关键条件 -->
+                    AND o.status between 80 and 85
+                    AND o.grade_flag between 1 and 4
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 完成日期 -->
+                    <choose>
+                        <when test="completeBegin != null and completeEnd != null ">
+                            and o.close_date between #{completeBegin} and #{completeEnd}
+                        </when>
+                        <when test="completeBegin != null ">
+                            <![CDATA[ AND o.close_date >= #{completeBegin} ]]>
+                        </when>
+                        <when test="completeEnd != null ">
+                            <![CDATA[ AND o.close_date <= #{completeEnd} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 完成的关键条件 -->
+                    AND o.status between 80 and 85
+                    AND o.grade_flag between 1 and 4
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 自动完工 -->
+                    <choose>
+                        <when test="orderAutoComplete == 0"></when>
+                        <when test="orderAutoComplete == 2">AND o.grade_flag = 2</when>
+                        <when test="orderAutoComplete == 3">AND o.grade_flag = 3</when>
+                        <when test="orderAutoComplete == 4">AND o.grade_flag = 4</when>
+                        <when test="orderAutoComplete == 5">AND o.grade_flag between 2 and 4</when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <!-- all -->
+                        <when test="urgentLevel.id == 1">
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="replyFlagKefu == 1">
+                        AND o.reply_flag = 1
+                    </if>
+                    <if test="replyFlagCustomer == 2">
+                        AND o.reply_flag = 2
+                    </if>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND o.feedback_id > 0
+                        and (
+                        o.feedback_title like CONCAT('%',#{remarks}, '%')
+                        or exists(
+                        select 1
+                        from sd_feedback fd
+                        inner join sd_feedbackitem fdi
+                        on  fdi.feedback_id = fd.id
+                        where
+                        o.order_id = fd.order_id
+                        and fdi.remarks like CONCAT('%',#{remarks}, '%')
+                        )
+                        )
+                    </if>
+                    <if test="messageType != null and messageType > 0">
+                        <choose>
+                            <when test="messageType == 1">
+                                and o.reply_flag = 2
+                            </when>
+                            <when test="messageType == 2">
+                                and o.reply_flag_customer = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuCompletedOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="completedSql" />
+                order by o.charge_flag DESC,s.charge_date,o.close_date,o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="completedSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="completedSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="completedSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.charge_flag DESC,u.charge_date,u.close_date,u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="completedSql"/>
+                        order by o.charge_flag DESC,s.charge_date,o.close_date,o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+   <!--天猫求助-->
+    <sql id="tmallAnomalySql">
+        SELECT
+        o.id,
+        o.quarter,
+        o.order_id,
+        o.order_no,
+        o.area_name,
+        o.anomaly_recourse_id,
+        o.question_type as "questionType.value",
+        o.status,
+        o.submit_date,
+        o.recourse_json,
+        o.replier_id,
+        o.replier_name,
+        o.reply_date,
+        o.reply_content
+        FROM sd_tmall_anomaly_recourse o
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <if test="quarter != null and quarter != ''.toString()">
+                AND o.quarter = #{quarter}
+            </if>
+            <choose>
+                <when test="orderNoSearchType == 1">
+                    AND o.order_no = #{orderNo}
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <choose>
+                        <when test="submitStartDate != null and submitEndDate != null">
+                            and o.submit_date between #{submitStartDate} and #{submitEndDate}
+                        </when>
+                        <when test="submitStartDate != null">
+                            <![CDATA[ and o.submit_date >= #{submitStartDate} ]]>
+                        </when>
+                        <when test="submitEndDate != null">
+                            <![CDATA[ and o.submit_date <= #{submitEndDate} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <include refid="RegionFilter" />
+                    <if test="questionType != null and questionType != ''.toString()">
+                        and o.question_type = #{questionType}
+                    </if>
+                    <if test="status != null and status >=0">
+                        and o.status = #{status}
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuTmallAnomalyList"
+            parameterType="com.wolfking.jeesite.ms.tmall.sd.entity.ViewModel.TmallAnomalyRecourseSearchVM"
+            resultType="com.wolfking.jeesite.ms.tmall.sd.entity.TmallAnomalyRecourse">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="tmallAnomalySql" />
+                order by o.submit_date
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="tmallAnomalySql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="tmallAnomalySql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="tmallAnomalySql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.submit_date
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="tmallAnomalySql"/>
+                        order by o.submit_date
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--天猫预警-->
+    <sql id="TmallServiceMonitorSql">
+        SELECT
+        o.id,
+        o.order_id,
+        o.order_no,
+        o.monitor_id,
+        o.area_name,
+        o.level,
+        o.gmt_date,
+        o.status,
+        o.content,
+        o.replier_id,
+        o.quarter,
+        o.replier_name,
+        o.reply_date,
+        o.reply_content,
+        o.rule_id,
+        o.service_code,
+        o.create_date
+        FROM sd_tmall_service_monitor o
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <if test="quarter != null and quarter != ''.toString()">
+                AND o.quarter = #{quarter}
+            </if>
+            <choose>
+                <when test="orderNoSearchType == 1">
+                    AND o.order_no = #{orderNo}
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <include refid="RegionFilter" />
+                    <if test="level !=null and level>0">
+                        AND o.level = #{level}
+                    </if>
+                    <if test="status !=null and status>0">
+                        AND o.status = #{status}
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuTmallServiceMonitorList"
+            parameterType="com.wolfking.jeesite.ms.tmall.sd.entity.ViewModel.TmallServiceMonitorSearchVM"
+            resultType="com.wolfking.jeesite.ms.tmall.sd.entity.TmallServiceMonitor">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="TmallServiceMonitorSql" />
+                ORDER BY o.status, o.reply_date desc
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="TmallServiceMonitorSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="TmallServiceMonitorSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="TmallServiceMonitorSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        ORDER BY u.status, u.reply_date desc
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="TmallServiceMonitorSql"/>
+                        ORDER BY o.status, o.reply_date desc
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 待突击 -->
+    <sql id="rushingSql">
+        SELECT
+        <include refid="commonFields"/>
+        ,o.rush_order_flag     AS "orderCondition.rushOrderFlag"
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!--突击已完成，并且未客评-->
+                    and o.status between 20 and 55
+                    and o.rush_order_flag = 2
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!--突击已完成，并且未客评-->
+                    and o.status between 20 and 55
+                    and o.rush_order_flag = 2
+                    <!-- 客户单号 -->
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuRushingOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="rushingSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="rushingSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="rushingSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="rushingSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="rushingSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 投诉订单列表 -->
+    <sql id="complainSql">
+        SELECT
+        <include refid="commonFields"/>
+        ,o.sub_status          AS "orderCondition.subStatus"
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    <!-- 投诉 -->
+                    and s.complain_flag between 1 and 4
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    <!-- 投诉 -->
+                    and s.complain_flag between 1 and 4
+                    <!-- 客户单号 -->
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findKefuComplainOrderList" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="complainSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="complainSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="complainSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="complainSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="complainSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 催单 -->
+    <sql id="reminderSql">
+        /*#mycat:db_type=master*/
+        SELECT
+        <include refid="commonFields"/>
+        ,o.sub_status          AS "orderCondition.subStatus"
+        FROM sd_order_condition o
+        INNER join sd_order_head c on o.order_id = c.id
+        <if test="dataSource != null and dataSource > 0">
+            and c.data_source = #{dataSource}
+            <if test="shopId != null and shopId != ''.toString()">
+                AND c.shop_id = #{shopId}
+            </if>
+        </if>
+        INNER JOIN sd_order_status s on o.order_id = s.order_id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND o.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND o.service_phone = #{phone1}
+                    </if>
+                    AND o.status between 20 AND 79
+                    <!-- 催单关键条件:待回复 -->
+                    and s.reminder_status = 1
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                </when>
+                <otherwise>
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 选择的查询区域 -->
+                    <include refid="selectedAreaFilter" />
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter" />
+                    AND o.status between 20 AND 79
+                    <!-- 催单关键条件:待回复 -->
+                    and s.reminder_status = 1
+                    <!-- 客户单号 -->
+                    <if test="parentBizOrderId != null and parentBizOrderId != ''">
+                        AND c.parent_biz_order_id = #{parentBizOrderId}
+                    </if>
+                    <!-- 客户 -->
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        AND o.customer_id = #{customer.id}
+                    </if>
+                    <!-- 安维 -->
+                    <if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+                        and o.servicepoint_id = #{servicePoint.id}
+                    </if>
+                    <if test="engineer != null and engineer.id != null and engineer.id > 0">
+                        AND o.engineer_id = #{engineer.id}
+                    </if>
+                    <!-- 加急 -->
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                            <!-- not search -->
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND o.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND o.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="userName!=null and userName!=''.toString()">
+                        AND o.user_name like CONCAT(#{userName},'%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND o.address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="serviceAddress != null and serviceAddress!=''.toString() ">
+                        AND o.service_address like CONCAT('%',#{serviceAddress}, '%')
+                    </if>
+                    <if test="productId !=null and productId>0">
+                        and find_in_set(#{productId},o.product_ids)
+                    </if>
+                    <if test="serviceTypeId !=null and serviceTypeId>0">
+                        and find_in_set(#{serviceTypeId},o.service_types)
+                    </if>
+                    <choose>
+                        <when test="quarter != null and quarter != ''.toString()">
+                            AND o.quarter = #{quarter}
+                        </when>
+                        <when test="quarters != null and quarters.size > 0">
+                            AND o.quarter in
+                            <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                                #{quarters[${index}]}
+                            </foreach>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findReminderOrderLit" parameterType="OrderSearchModel" resultType="Order">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="reminderSql" />
+                order by o.order_id
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="reminderSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="reminderSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="reminderSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="reminderSql"/>
+                        order by o.order_id
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 历史派单列表 -->
+    <sql id="historyplanSql">
+        SELECT
+        o.quarter,
+        o.order_id,
+        o.order_no,
+        o.status,
+        o.user_name,
+        o.service_phone,
+        o.service_address,
+        o.area_id,
+        o.area_name,
+        o.sub_area_id,
+        o.servicepoint_id,
+        o.create_date,
+        o.product_category_id,
+        c.orderitem_json
+        FROM sd_order_condition o
+        inner join sd_order_head c on o.order_id = c.id
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+        </if>
+        <where>
+            <!-- 选择的查询区域 -->
+            <include refid="selectedAreaFilter" />
+            <!-- 账号负责区域 -->
+            <include refid="RegionFilter" />
+            and o.servicepoint_id > 0
+            <if test="beginDate != null and endDate != null">
+                AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND o.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND o.quarter in
+                    <foreach collection="quarters" item="quarterItem" index="index" open="(" close=")" separator=",">
+                        #{quarters[${index}]}
+                    </foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findHistoryPlaningOrderList" parameterType="OrderSearchModel" resultMap="historyPlanOrderMap">
+        <choose>
+            <when test="regionFilterCount == 0">
+                <!-- 无区域限制 -->
+                <include refid="historyplanSql" />
+                order by o.order_id desc
+            </when>
+            <otherwise>
+                <!-- 按用户区域 -->
+                <choose>
+                    <when test="regionFilterCount > 1">
+                        select *
+                        from (
+                        <trim prefixOverrides="union all">
+                            <if test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                                union all
+                                <include refid="historyplanSql" />
+                            </if>
+                            <if test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                                union all
+                                <include refid="historyplanSql" />
+                            </if>
+                            <if test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                                union all
+                                <include refid="historyplanSql"/>
+                            </if>
+                        </trim>
+                        ) u
+                        order by u.order_id desc
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="provinceList != null and provinceList.size >0">
+                                <bind name="regionFilterType" value="'province'"/>
+                            </when>
+                            <when test="cityList != null and cityList.size >0">
+                                <bind name="regionFilterType" value="'city'"/>
+                            </when>
+                            <when test="areaList != null and areaList.size >0">
+                                <bind name="regionFilterType" value="'area'"/>
+                            </when>
+                            <otherwise></otherwise>
+                        </choose>
+                        <include refid="historyplanSql"/>
+                        order by o.order_id desc
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getBalanceInfoByServicePointIds" resultType="ServicePointFinance">
+        SELECT
+        msf.id,
+        msf.balance,
+        msf.last_pay_date,
+        msf.last_pay_amount
+        FROM md_servicepoint_finance msf
+        <where>
+            <choose>
+                <when test="servicePointIds.size == 1">
+                    AND msf.id = #{servicePointIds[0]}
+                </when>
+                <otherwise>
+                    AND msf.id IN
+                    <foreach item="servicePointId" index="index" collection="servicePointIds" open="(" separator=","
+                             close=")">
+                        #{servicePointId}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <!-- 获取工单的投诉状态 -->
+    <select id="getComplainStatusByOrderIds" resultType="LongTwoTuple">
+        SELECT
+        order_id AS "aElement",
+        min(status) AS "bElement"
+        FROM sd_order_complain soc
+        <where>
+            soc.quarter = #{quarter}
+            <choose>
+                <when test="orderIds.size == 1">
+                    AND soc.order_id = #{orderIds[0]}
+                </when>
+                <otherwise>
+                    AND soc.order_id IN
+                    <foreach item="orderId" index="index" collection="orderIds" open="(" separator="," close=")">
+                        #{orderId}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </where>
+        GROUP BY soc.order_id
+    </select>
+
+</mapper>

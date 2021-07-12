@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderServicepointReceivableDao">
+
+	<resultMap id="OrderServicepointReceivableMap" type="OrderServicepointReceivable">
+		<result column="item_no" property="itemNo" />
+		<result column="form_no" property="formNo" />
+		<result column="amount" property="amount" />
+		<result column="remark" property="remark" />
+		<result column="del_flag" property="delFlag" />
+		<association property="servicePoint"  column="osr_servicePoint" javaType="com.kkl.kklplus.entity.md.MDServicePoint" >
+			<result property="id" column="service_point_id"/>
+		</association>
+	</resultMap>
+
+	<sql id="OrderServicepointReceivableColumns">
+        service_point_id,
+        item_no,
+        form_no,
+        amount,
+        remark,
+        del_flag
+    </sql>
+
+	<select id="getByOrderId" resultMap="OrderServicepointReceivableMap">
+		select
+			<include refid="OrderServicepointReceivableColumns" />
+		from
+			sd_order_servicepoint_receivable
+		<where>
+			order_id = #{orderId}
+			<if test="servicePointId != null">
+				and service_point_id = #{servicePointId}
+			</if>
+			<if test="itemNo != null">
+				and item_no = #{itemNo}
+			</if>
+			and quarter = #{quarter}
+		</where>
+		order by service_point_id,item_no
+	</select>
+
+	<select id="getByItemNo" resultMap="OrderServicepointReceivableMap">
+		select
+		<include refid="OrderServicepointReceivableColumns" />
+		from
+		sd_order_servicepoint_receivable
+		<where>
+			order_id = #{orderId}
+			and item_no = #{itemNo}
+			and quarter = #{quarter}
+		</where>
+	</select>
+
+	<insert id="insert">
+		insert into sd_order_servicepoint_receivable(
+			order_id,
+			quarter,
+			service_point_id,
+			item_no,
+			form_no,
+			amount,
+			remark,
+			create_by,
+			create_at
+		) values(
+			#{orderId},
+			#{quarter},
+			#{servicePoint.id},
+			#{itemNo},
+        	#{formNo},
+        	#{amount},
+        	#{remark},
+        	#{createBy.id},
+        	#{createAt}
+		)
+	</insert>
+
+	<update id="updateByItemAndServicePoint">
+		update
+			sd_order_servicepoint_receivable
+		<set>
+			amount = #{amount},
+			<if test="formNo != null">
+				form_no = #{formNo},
+			</if>
+			<if test="remark != null">
+				remark = #{remark},
+			</if>
+			update_by = #{updateBy},
+			update_at = #{updateAt}
+		</set>
+		where
+			order_id = #{orderId}
+			and service_point_id = #{servicePointId}
+			and item_no = #{itemNo}
+			and quarter = #{quarter}
+	</update>
+
+	<update id="switchEnabled">
+		update
+			sd_order_servicepoint_receivable
+		<set>
+			del_flag = #{delFlag},
+			update_by = #{updateBy},
+			update_at = #{updateAt}
+		</set>
+		where
+			order_id = #{orderId}
+			and service_point_id = #{servicePointId}
+			and item_no = #{itemNo}
+			and quarter = #{quarter}
+	</update>
+
+</mapper>

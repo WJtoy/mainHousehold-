@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.TimeLinessPriceDao">
+    <!--
+    <sql id="columns">
+            a.id,
+            a.product_category_id as "category.id",
+            a.amount,
+            a.create_date,
+            a.remarks
+    </sql>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_product_time_liness(
+			product_category_id,
+			time_liness_level,
+			amount,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{category.id},
+			#{timeLinessLevel.value},
+			#{amount},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_product_time_liness
+        SET
+            amount = #{amount},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_product_time_liness
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="get" resultType="TimeLinessPrice">
+        SELECT
+               <include refid="columns"/>
+        FROM
+               md_product_time_liness a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="getPrices" resultType="TimeLinessPrice">
+        SELECT
+            a.id,
+            a.product_category_id as "category.id",
+            a.time_liness_level as "timeLinessLevel.value",
+            a.amount,
+            a.create_date,
+            a.remarks
+        FROM
+            md_product_time_liness a
+        WHERE
+            a.product_category_id = #{categoryId}
+            AND a.del_flag = 0
+    </select>
+
+    <select id="findAllList" resultType="TimeLinessPrice">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_product_time_liness a
+        WHERE
+            a.del_flag = 0
+        ORDER BY a.product_category_id,a.amount desc
+    </select>
+
+    <select id="findList" resultType="TimeLinessPrice">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            md_product_time_liness a
+        <where>
+            a.del_flag = 0
+            <if test="category != null and category.id != null and category.id > 0 ">
+                AND product_category_id #{category.id}
+            </if>
+        </where>
+        ORDER BY a.product_category_id,a.amount desc
+    </select>
+
+    <delete id="deleteByCategoryId">
+        delete from md_product_time_liness  where product_category_id = #{categoryId}
+    </delete>
+       -->
+</mapper>

@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp" %>
+<html>
+<head>
+
+    <title>师傅管理</title>
+    <meta name="decorator" content="default"/>
+    <%@ include file="/WEB-INF/views/include/head.jsp" %>
+    <script src="${ctxStatic}/layui/layui.js"></script>
+    <link rel="stylesheet" type="text/css" href="${ctxStatic}/layui/css/layui.css">
+    <c:set var="currentuser" value="${fns:getUser() }" />
+    <style type="text/css">
+        .x{
+            width: 50%;
+            float: left;
+        }
+        .line-row{
+            margin-left: -90px;
+        }
+        .line-address{
+            background-color: rgba(246, 246, 246, 1);
+            color: rgba(102, 102, 102, 1);
+            font-size: 14px;
+            font-family: Roboto;
+            border: 1px dashed #ccc;
+            margin: 0 0 15px 98px;
+            padding: 18px;
+            line-height: 28px;
+            width: 82%;
+            border-radius: 4px;
+        }
+        .hide_input{
+            color: #F55B71;
+            width: 70%;
+            border: 0px;
+            background: #F6F6F6 100%;
+            /*margin-top: 5px;*/
+            /*margin-left: -20px;*/
+        }
+        .prohibit{
+            pointer-events: none;
+        }
+        table{
+            width: 780px;
+            height: 140px;
+        }
+        .receipt{
+            height: 30px;
+        }
+        .type2{
+            width: 60px;
+            text-align: center;
+        }
+        .type3{
+            width: 60px;
+            text-align: center;
+        }
+        #editBtn{
+            position: fixed;
+            left: 0px;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background: #fff;
+            z-index: 10;
+            padding-left: 190px;
+            border-top: 1px solid #e5e5e5;
+        }
+        .line_{
+            border-bottom: 3.5px solid #0096DA;
+            width: 65px;
+            border-radius: 10px;
+        }
+        .table_line{
+            /*position: absolute;*/
+            /*z-index: 1;*/
+            width: 99%;
+            height: auto;
+            padding: 0px;
+            margin: 0px 0px 15px 0px;
+        }
+        #receiving_info{
+            text-align: center;
+            margin-left: 80px;
+            margin-bottom: 20px;
+        }
+        #addressInfo{
+            width: 600px;
+            height: 50px;
+            left: 620px;
+            top: 567px;
+            color: rgba(153, 153, 153, 1);
+            font-size: 14px;
+            text-align: left;
+            font-family: SourceHanSansSC-regular;
+            padding: 10px;
+        }
+        .service_area{
+            height: 150px;
+            overflow: auto;
+        }
+    </style>
+    <script type="text/javascript">
+        var orderdetail_index = parent.layer.getFrameIndex(window.name);
+        var tree;
+        var areas = [];
+        var clickTag = 0;
+        $(document).ready(function () {
+            var $btnSubmit = $("#btnSubmit");
+            // layui.use(['form','element'], function() {
+            //     var form = layui.form,
+            //         $ = layui.$,
+            //         element = layui.element;
+
+            // layui监管收件单选
+            // form.on("radio(addressFlag)", function (data) {
+            $('input[type=radio][name="engineerAddress.addressFlag"]').change(function (){
+                var addressFlag = $("input[name='engineerAddress.addressFlag']:checked").val();// 1：网点地址 2：个人地址 3：自定义
+                var fullAddress = $("#fullAddress").val();
+                var areaName = $("#areaName").val();
+                var address = $("#address").val();
+
+                // 自定义
+                if (addressFlag == 3) {
+                    $("#engineerAddressButton").removeClass("prohibit");
+                    $("#engineerAddress").attr("readOnly",false);
+                }
+                if (addressFlag == 1) {
+                    // var serviceFullAddress = $("#serviceFullAddress").val();
+                    var serviceFullAddress = $("#subAddress").val();
+                    $("#engineerAddressName").attr("value", $("#servicePoint_address_fullName").val());
+                    $("#engineerAddressId").attr("value", $("#servicePoint_address_id").val())
+                    if (serviceFullAddress != "") {
+                        $("#engineerAddress").attr("value", serviceFullAddress);
+                    }
+                    $("#engineerAddressButton").addClass("prohibit");
+                    $("#engineerAddress").attr("readOnly","true");
+                }
+                if (addressFlag == 2) {
+                    if (areaName != '' && address != '') {
+                        var areaId = $("#areaId").val();
+                        $("#engineerAddressName").attr("value", areaName);
+                        $("#engineerAddressId").attr("value", areaId);
+                        $("#engineerAddress").attr("value", address);
+                        $("#engineerAddressButton").addClass("prohibit");
+                        $("#engineerAddress").attr("readOnly","true");
+                    } else {
+                        setTimeout(function(){
+                            $("input[type='radio'][name='engineerAddress.addressFlag']:eq(2)").prop("checked",true);
+                            $("#engineerAddressButton").removeClass("prohibit");
+                            $("#engineerAddress").attr("readOnly",false);
+                            // form.render();
+                        },1000);
+                        layui.use('layer', function() {
+                            var layer = layui.layer;
+                            layer.alert('您未填写师傅地址', {
+                                icon: 2,
+                                skin: 'layer-ext-moon'
+                            })
+                            return false;
+                        });
+                    }
+                }
+            });
+            // form.render();
+            // });
+            $("#inputForm").validate({
+                rules: {
+                    contactInfo: {
+                        remote: "${ctx}/md/servicepoint/checkEngineerMobile?id=${engineer.id}"
+                        <%--remote: "${ctx}/md/engineer/checkLoginName?expectId=${engineer.id}"--%>
+                    }
+                },
+                messages: {
+                    contactInfo: {
+                        remote: "该手机号用户已存在，请确认输入是否正确"
+                    }
+                },
+                highlight : function(element) {
+                    $(element).closest('.control-group').addClass('has-error');
+                },
+                success : function(label) {
+                    label.closest('.form-group').removeClass('has-error');
+                    label.remove();
+                },
+                onfocusout: function(element){
+                    $(element).valid();//失去焦点时再验证
+                },
+                errorContainer: "#messageBox",
+                errorPlacement: function (error, element) {
+                    $btnSubmit.removeAttr('disabled');
+                    if(element.context.name == 'area.fullName' ){
+                        element.parent('div').parent('div').append(error);
+                    }else if (element.context.name == 'engineerAddressArea.fullName'){
+                        element.parent('div').parent('div').append(error);
+                    }else{
+                        element.parent('div').append(error);
+                    }
+
+                },
+                submitHandler: function (form) {
+
+                    if(clickTag == 1){
+                        return false;
+                    }
+                    if($btnSubmit.prop("disabled") == true){
+                        return false;
+                    }
+                    areas = $('input[name="county"]:checked').map(function() {
+                        return $(this).val();
+                    });
+                    if(areas.length == 0){
+                        clickTag = 0;
+                        layerError("请选择师傅负责的区域","错误提示");
+                        return false;
+                    }
+                    $btnSubmit.attr("disabled",true);
+                    $("#areas").val(areas.get().join(","));
+                    var masterConfirm = $("#masterConfirm").val();
+                    if (masterConfirm == "1") {
+                        top.layer.confirm('保存后，原主帐号转为子帐号，确认保存师傅信息吗？', {icon: 3, title:'系统确认'}, function(index){
+                            top.layer.close(index);//关闭本身
+                            submit(form);
+                        },function(index){
+                            $btnSubmit.removeAttr('disabled');
+                        });
+                        return false;
+                    } else {
+                        var area = $("#engineerAddressName").val();
+                        $("#addressAreaName").attr("value", area);
+                        submit(form);
+                    }
+                    // $btnSubmit.attr("disabled", "disabled");
+                },
+            });
+
+            function submit(form){
+                layui.use('layer', function(){
+                    var layer = layui.layer;
+
+                    clickTag = 1;
+                    var loadingIndex;
+
+                    var options = {
+                        url: "${ctx}/md/engineerForSP/saveEngineer",
+                        type: 'post',
+                        dataType: 'json',
+                        data:$(form).serialize(),
+                        beforeSubmit: function(formData, jqForm, options){
+                            loadingIndex = layer.msg('正在提交，请稍等...', {
+                                icon: 16,
+                                time: 0,
+                                shade: 0.3
+                            });
+                            return true;
+                        },// 提交前的回调函数
+                        success:function (data) {
+
+                            // 提交后的回调函数
+                            if(loadingIndex) {
+                                layer.close(loadingIndex);
+                            }
+                            if(ajaxLogout(data)){
+                                setTimeout(function () {
+                                    clickTag = 0;
+                                    $btnSubmit.removeAttr('disabled');
+                                }, 2000);
+                                return false;
+                            }
+                            if (data.success) {
+                                layerMsg(data.message);
+                                setTimeout(function () {
+                                    cancel();
+                                }, 2000);
+                                var pframe = getActiveTabIframe();//定义在jeesite.min.js中
+                                if(pframe){
+                                    pframe.repage();
+                                }
+                            } else {
+                                setTimeout(function () {
+                                    clickTag = 0;
+                                    $btnSubmit.removeAttr('disabled');
+                                }, 2000);
+                                layerError("数据保存错误:" + data.message, "错误提示");
+                            }
+                            return false;
+                        },
+                        error: function (data) {
+                            setTimeout(function () {
+                                clickTag = 0;
+                                $btnSubmit.removeAttr('disabled');
+                            }, 2000);
+                            ajaxLogout(data,null,"数据保存错误，请重试!");
+                        },
+                    };
+                    $("#inputForm").ajaxSubmit(options);
+                });
+            }
+
+            $("input:radio[name='masterFlag']").change(function (){
+                //check primary
+                var masterFlag = $("input[name='masterFlag']:checked").val();
+                if(masterFlag == "0"){
+                    $("#masterConfirm").val("0");
+                    $("#tip_masterFlag").hide();// 隐藏子账号提示信息
+                    // $("#second").show();// 安维
+                    // $("#master").show();// 主账号
+                    // $("#second_servicePoint").hide();// 网点
+                    return false;
+                } else {
+                    // $("#second").hide();// 安维地址隐藏
+                    // $("#master").hide();// 主账号地址隐藏
+                    // $("#second_servicePoint").show();// 网点地址显示
+                }
+                var data ={};
+                data.servicePointId = $("#servicePointId").val();
+                data.expectType = "engineer";
+                <c:choose><c:when test="${engineer.id == null}">data.expectId = 0;</c:when><c:otherwise>data.expectId = ${engineer.id};</c:otherwise></c:choose>
+                $.ajax(
+                    {
+                        cache : false,
+                        type : "POST",
+                        url : "${ctx}/md/engineerForSP/checkPrimary",
+                        data : data,
+                        success : function(data)
+                        {
+                            // 检查网点编号是否有多个主帐号
+                            top.$.jBox.closeTip();
+                            if (data.success==false)
+                            {
+                                // $("#second").hide();// 安维地址隐藏
+                                // $("#master").hide();// 主账号地址隐藏
+                                // $("#second_servicePoint").show();// 网点地址显示
+                                $("#tip_masterFlag").show();
+                                $("#masterConfirm").val("1");
+                            } else
+                            {
+                                $("#tip_masterFlag").hide();
+                                $("#masterConfirm").val("0");
+                            }
+                        },
+                        error : function(xhr, ajaxOptions, thrownError)
+                        {
+                            top.$.jBox.closeTip();
+                            top.$.jBox.error(thrownError.toString());
+                        }
+                    });//end ajax
+            });
+
+
+
+        });
+
+        function pointSelect_callback(data){
+            $("[id^='servicePoint.servicePointNo']").val(data.servicePointNo);
+            if (data.appFlag == 0) {
+                $("input[type='radio'][name='appFlag']").attr("disabled", "disabled");
+                $("input[type='radio'][name='appFlag']").attr("title", "网点不具有手机接单功能");
+            } else {
+                $("input[type='radio'][name='appFlag']").removeAttr("disabled");
+                $("input[type='radio'][name='appFlag']").removeAttr("title");
+            }
+            var eid = $("#id").val();
+            loadArea(data.id,eid);
+        }
+
+        function getCheckedAreas(){
+            areas = [];
+            var nodes = tree.getCheckedNodes(true);
+            for (var i = 0; i < nodes.length; i++) {
+                if(nodes[i].level ==3) {
+                    var area = {};
+                    area.id = nodes[i].id;
+                    area.type = nodes[i].level + 1;
+                    areas.push(area);
+                }
+            }
+        }
+
+        function refresh(addressId, userName, contactInfo, addressInfo, address){
+            var oldAddress = $("#addressInfo").val();
+            if (oldAddress != '') {
+                addressInfo = addressInfo.replace(address,'');
+            }
+
+            var engineerAddressInfo = userName +" "+contactInfo + " 【地址：" + addressInfo +"】";
+            $("#addressInfo").val(engineerAddressInfo);
+            $("#newAddressId").val(addressId);
+        }
+
+        function editAddressInfo(id) {
+            if (id == '') {
+                id = $("#newAddressId").val();
+            }
+            var text = "编辑地址";
+            var url = "${ctx}/md/engineerAddress/addressForm?id=" + id + "&parentIndex=" + (orderdetail_index || '');
+            top.layer.open({
+                type: 2,
+                id:"engineerAddress",
+                zIndex:19891015,
+                title:text,
+                content: url,
+                area: ['820px', '550px'],
+                shade: 0.3,
+                maxmin: false,
+                success: function(layero,index){
+                    // 获取子页面的iframe
+                    var iframeWin = top[layero.find('iframe')[0]['name']];
+                    var addressFlag = $("#engineerAddressFlag").val();
+                    var areaName = $("#areaName").val();// 个人地址
+                    var address = $("#address").val();// 个人详细地址
+                    var areaId = $("#areaId").val();// 个人地址Id
+                    var servicePointAddressId = $("#servicePoint_address_id").val();// 网点地址id
+                    var servicePointAddressFullName = $("#servicePoint_address_fullName").val();// 区域全称
+                    var serviceFullAddress = $("#serviceFullAddress").val();// 详细地址
+                    var subAddress = $("#subAddress").val();
+                    var name = $("#name").val();
+                    var contactInfo = $("#contactInfo").val();
+
+                    if(iframeWin != null){
+                        var json = {
+                            addressFlag : addressFlag,
+                            areaId : areaId,
+                            areaName : areaName,
+                            address : address,
+                            servicePointAddressId : servicePointAddressId,
+                            servicePointAddressFullName : servicePointAddressFullName,
+                            serviceFullAddress : serviceFullAddress,
+                            engineerId : $("#id").val(),
+                            servicePointId : $("#servicePointId").val(),
+                            name : name,
+                            contactInfo : contactInfo,
+                            subAddress : subAddress
+                        };
+                        iframeWin.child(json);
+                    }
+                },
+                end:function(){
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<input type="hidden" id="newAddressId">
+<sys:message content="${message}"/>
+
+<form:form id="inputForm" modelAttribute="engineer" action="" method="post" class="form-horizontal" style="margin-top: 15px;height: auto;overflow: hidden;">
+    <form:hidden path="id"/>
+    <form:hidden path="delFlag"/>
+    <form:hidden path="orgMasterFlag" />
+    <form:hidden path="grade" />
+    <form:hidden path="accountId" />
+    <form:hidden path="forTmall"/>
+    <input type="hidden" name="engineerAddress.areaName" id="addressAreaName">
+    <%--<input type="hidden" id="engineerAddressId">--%>
+    <div>
+        <input type="hidden" id="masterConfirm" name = "masterConfirm" value="0" />
+        <legend>师傅信息
+            <div style="float:right;margin-top: 4px;">
+                <label>派单
+                    <label name="planCount" htmlEscape="false" style="border-style: none;background: #fff;width: 55px;color: #0096DA;">${engineer.planCount}</label>
+                </label>
+                <label>完成
+                    <label name="orderCount" htmlEscape="false" style="border-style: none;background: #fff;width: 55px;color: #5AC85D">${engineer.orderCount}</label>
+                </label>
+                <label>违约
+                    <label name="breakCount" htmlEscape="false" style="border-style: none;background: #fff;width: 55px;color: #F64165">${engineer.breakCount}</label>
+                </label>
+            </div>
+            <div class="line_"></div>
+        </legend>
+
+        <div class="">
+            <div class="line-row">
+                <div class="control-group x">
+                    <label class="control-label"><span class=" red">*</span>网点名称:</label>
+                    <div class="controls">
+                        <%--<c:choose>--%>
+                            <%--<c:when test="${currentuser.isSystemUser() or currentuser.isSaleman()}">--%>
+                                <%--<md:pointselectForEngineerAddress id="servicePoint" name="servicePoint.id" value="${engineer.servicePoint.id}" labelName="servicePointNo.name" labelValue="${engineer.servicePoint.name}" address="servicePoint.address"--%>
+                                                                  <%--width="1200" height="780" callbackmethod="pointSelect_callback" title="安维网点" areaId="" cssClass="required" addressValue="${engineer.servicePoint.address}" primaryAddress="primaryAddress"  primaryAddressValue="${engineer.address}"/>--%>
+                            <%--</c:when>--%>
+                            <%--<c:otherwise>--%>
+                                <%--<form:input path="servicePoint.name" readonly="true" htmlEscape="false" class="input-small" style="width: 245px"/>--%>
+                                <%--<form:hidden path="servicePoint.id" />--%>
+                            <%--</c:otherwise>--%>
+                        <%--</c:choose>--%>
+                        <c:choose>
+                            <c:when test="${engineer != null && engineer.id != 0 && engineer.servicePoint != null && engineer.servicePoint.id != null}">
+                                <form:input id="servicePointName" path="servicePoint.name" readonly="true" htmlEscape="false" class="input-small" style="width: 245px"/>
+                                <form:hidden id="servicePointId" path="servicePoint.id" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:choose>
+                                    <c:when test="${currentuser.isSystemUser() or currentuser.isSaleman()}">
+                                        <md:pointselectForEngineerAddress id="servicePoint" name="servicePoint.id" value="${engineer.servicePoint.id}" labelName="servicePointNo.name" labelValue="${engineer.servicePoint.name}" address="servicePoint.address"
+                                                                          width="1200" height="780" callbackmethod="pointSelect_callback" title="安维网点" areaId="" cssClass="required" addressValue="${engineer.servicePoint.address}" primaryAddress="primaryAddress"  primaryAddressValue="${engineer.address}"/>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <form:input id="servicePointName" path="servicePoint.name" readonly="true" htmlEscape="false" class="input-small" style="width: 245px"/>
+                                        <form:hidden id="servicePointId" path="servicePoint.id" />
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+
+                <div class="control-group x">
+                    <label class="control-label">网点编号:</label>
+                    <div class="controls">
+                        <form:input path="servicePoint.servicePointNo" readonly="true" htmlEscape="false" class="input-small required" style="width:215px"/>
+                    </div>
+                </div>
+
+                <div class="control-group x">
+                    <label class="control-label"><span class=" red">*</span>姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名:</label>
+                    <div class="controls">
+                        <c:choose>
+                            <c:when test="${currentuser.isSystemUser() or currentuser.isSaleman()}">
+                                <form:input path="name" htmlEscape="false" maxlength="20" class="required" style="width:245px"/>
+                            </c:when>
+                            <c:otherwise>
+                                <form:input path="name" readonly="${empty engineer.id?'false':'true'}" maxlength="20" htmlEscape="false" class="required" style="width:245px"/>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+                <div class="control-group x">
+                    <label class="control-label"><span class=" red">*</span>手&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;机:</label>
+                    <div class="controls">
+                        <c:choose>
+                            <c:when test="${currentuser.isSystemUser() or currentuser.isSaleman()}">
+                                <form:input path="contactInfo" htmlEscape="false" maxlength="11" class="input-y required mobile" style="width:215px"/>
+                            </c:when>
+                            <c:otherwise>
+                                <form:input path="contactInfo" readonly="${empty engineer.id?'false':'true'}" maxlength="11" htmlEscape="false" class="input-y required mobile" style="width:215px"/>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+                <div class="control-group x">
+                    <label class="control-label">Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Q:</label>
+                    <div class="controls">
+                        <form:input path="qq" htmlEscape="false" class="qq" maxlength="11" style="width:245px"/>
+                    </div>
+                </div>
+                <div class="control-group x">
+                    <label class="control-label"><span class="red">*</span>等&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;级:</label>
+                    <div class="controls">
+                        <div style="width:230px">
+                            <form:select path="level.value" class="input-small required" style="height: 30px;width: 230px;">&ndash;%&gt;
+                            <form:options items="${fns:getDictInclueListFromMS('ServicePointLevel','1,2,3,4,5')}" itemLabel="label" itemValue="value" htmlEscape="false"/>
+                            </form:select>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row-fluid">
+                    <div class="span4" style="width: auto;max-width:440px">
+                        <div class="control-group">
+                            <label class="control-label"><span class=" red">*</span>地&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;址:</label>
+                            <div class="controls" style="width: auto;max-width:440px" >
+                                <sys:areaselect name="area.id" id="area" value="${engineer.area.id}"
+                                                labelValue="${engineer.area.fullName}" labelName="area.fullName" title=""
+                                                mustSelectCounty="true" cssClass="required">
+                                </sys:areaselect>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span7" style="margin-left:5px;width:40%">
+                        <div class="control-group">
+                            <div class="controls" style="padding-left:0px;margin-left:0px;display:inherit;">
+                                <form:input id="address" path="address" htmlEscape="false" maxlength="100" style="width:390px;" placeholder="请输入详细地址"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group x">
+                    <label class="control-label">账号类型:</label>
+                    <div class="controls">
+                            <%--<form:radiobuttons path="masterFlag" disabled="${currentuser.isEngineer()?'true':'false'}" items="${fns:getDictListFromMS('yes_no')}" itemLabel="label" itemValue="value" htmlEscape="false" class="required"/>&lt;%&ndash;切换为微服务&ndash;%&gt;--%>
+                        <input type="radio" name="masterFlag" value="1"/>主账号
+                        <input type="radio" name="masterFlag" value="0"/>子账号
+                        <div id="tip_masterFlag"  style="display: none;position: fixed;" class="red">该网点已有主帐号，保存时，将该帐号设定为主帐号；原主帐号变更为子帐号</div>
+                    </div>
+                </div>
+                <div class="control-group x">
+                    <label class="control-label">手机接单:</label>
+                    <div class="controls">
+                        <c:choose>
+                            <c:when test="${currentuser.isSystemUser()}">
+                                <form:radiobuttons path="appFlag" items="${fns:getDictListFromMS('yes_no')}" itemLabel="label" itemValue="value" htmlEscape="false" class="required"/>
+                            </c:when>
+                            <c:otherwise>
+                                <form:radiobuttons path="appFlag" disabled="true" items="${fns:getDictListFromMS('yes_no')}" itemLabel="label" itemValue="value" htmlEscape="false" class="required"/>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <%--<div class="layui-form" style="margin-top: 15px;">--%>
+        <div style="margin-top: 15px;">
+            <input style="display: none" id="primary_address_id" value="">
+            <input style="display: none" id="primary_address_fullName" value="">
+            <input style="display: none" id="anwei_address_id" value="">
+
+            <input style="display: none" id="servicePoint_address_id" value="">
+            <input style="display: none" id="servicePoint_address_fullName" value="">
+            <input style="display: none" id="serviceFullAddress" value="">
+            <input style="display: none" id="fullAddress" value="">
+
+            <input type="hidden" id="subAddress" value="">
+            <div class="sj-content" style="margin-top: 45px;">
+                <legend>收货信息<div class="line_"></div></legend>
+
+                <div class="line-row">
+                    <c:choose>
+                        <%--                        <c:when test="${engineer != null && engineer.id != 0 && engineer.servicePoint != null && engineer.servicePoint.id != null}">--%>
+                    <c:when test="${engineer != null && not empty engineer.id}">
+                        <div id="receiving_info">
+                            <span style="display: block;float: left;margin-left: 35px;">收货信息：</span>
+                            <textarea style="width: 565px;height: 55px;" readonly="readonly" id="addressInfo"></textarea>
+                            <input type="button" class="btn btn-primary" value="编 辑" style="margin-left: 5px;margin-top: -46px;width: 64px;height: 32px;background: #0096DA 100%;border-radius: 4px;" onclick="editAddressInfo('${engineer.engineerAddress.id}')">
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                    <div class="line-address">
+                            <%--<div id="second_servicePoint" class="receipt" style="display: none">--%>
+                        <div id="second_servicePoint" class="receipt">
+                            <input type="radio" name="engineerAddress.addressFlag" value="1" title="使用网点地址">使用网点地址
+                                <%--<input style="display: none" value="" id="servicePoint_address" class="hide_input">--%>
+                            <input value="" id="servicePoint_address" class="hide_input" style="text-overflow: ellipsis;">
+                        </div>
+                        <div id="second" class="receipt">
+                            <input type="radio" name="engineerAddress.addressFlag" value="2" title="使用个人地址">使用个人地址
+                                <%--<input style="display: none" value="" id="anwei_address" class="hide_input">--%>
+                            <input value="" id="anwei_address" class="hide_input" style="text-overflow: ellipsis;">
+                        </div>
+
+                        <div class="receipt">
+                            <input type="radio" name="engineerAddress.addressFlag" value="3" title="自定义">自定义
+                        </div>
+                    </div>
+
+                    <div class="control-group x">
+                        <label class="control-label"><span class=" red">*</span>姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名:</label>
+                        <div class="controls">
+                            <c:choose>
+                                <c:when test="${currentuser.isSystemUser() or currentuser.isSaleman()}">
+                                    <form:input id="e_userName" path="engineerAddress.userName" htmlEscape="false" maxlength="20" class="required" style="width:245px"/>
+                                </c:when>
+                                <c:otherwise>
+                                    <form:input id="e_userName" path="engineerAddress.userName" readonly="${empty engineer.id?'false':'true'}" maxlength="20" htmlEscape="false" class="required"/>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                    <div class="control-group x">
+                        <label class="control-label"><span class=" red">*</span>联系电话:</label>
+                        <div class="controls">
+                            <c:choose>
+                                <c:when test="${currentuser.isSystemUser() or currentuser.isSaleman()}">
+                                    <form:input id="e_contactInfo" path="engineerAddress.contactInfo" htmlEscape="false" maxlength="11" class="input-y required mobile" style="width:215px"/>
+                                </c:when>
+                                <c:otherwise>
+                                    <form:input id="e_contactInfo" path="engineerAddress.contactInfo" readonly="${empty engineer.id?'false':'true'}" maxlength="11" htmlEscape="false" class="input-y required mobile" style="width:215px"/>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                    <div class="row-fluid">
+                        <div class="span4" style="width: auto;max-width:440px">
+                            <div class="control-group">
+                                <label class="control-label"><span class=" red">*</span>收件地址:</label>
+                                <div class="controls" style="width: auto;max-width:440px" >
+                                    <sys:areaselect name="engineerAddress.areaId" id="engineerAddress" value="${engineer.engineerAddress.areaId}"
+                                                    labelValue="${engineerAddressArea.fullName}" labelName="engineerAddressArea.fullName" title=""
+                                                    mustSelectCounty="true" cssClass="required">
+                                    </sys:areaselect>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="span7" style="margin-left:5px;width:40%">
+                            <div class="control-group">
+                                <div class="controls" style="padding-left:0px;margin-left:0px;display:inherit;">
+                                    <form:input path="engineerAddress.address" id="engineerAddress" htmlEscape="false" maxlength="100" style="width:390px;" placeholder="详细地址，如XX大厦1层101室"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </c:otherwise>
+                </c:choose>
+
+
+
+            </div>
+
+            <div style="margin-top: 10px;">
+                <legend >服务区域<div class="line_"></div></legend>
+                <div class="service_area">
+                    <table class="layui-table table_line">
+                        <tbody id="areasTable"></tbody>
+                    </table>
+                </div>
+
+                <input type="hidden" id="areas" name="areas" />
+
+
+            </div>
+
+            <div id="editBtn">
+                <shiro:hasPermission name="md:engineerForSP:edit">
+                    <input id="btnSubmit" class="btn btn-primary" type="button" lay-submit lay-filter="formSave" value="保 存" onclick="$('#inputForm').submit()" style="margin-left: 410px;margin-top: 10px;width: 85px;height: 37px;background: #0096DA;border-radius: 4px;"/>&nbsp;</shiro:hasPermission>
+                <input id="btnCancel" class="btn" type="button" value="关 闭" style="margin-top:10px;width: 85px;height: 37px;border-radius: 4px;"onclick="cancel()"/>
+            </div>
+
+        </div>
+    </div>
+
+</form:form>
+<%--<input type="button" style="display: none" id="reload" onclick="refresh()">--%>
+<input id="engineerAddressFlag" type="hidden" value="">
+<script class="removedscript" type="text/javascript">
+    var this_index = top.layer.index;
+    // 区域
+    var tree;
+
+    // 装载区域
+    function loadArea(sid,eid){
+        var loadingIndex = top.layer.msg('正在装载区域，请稍等...', {
+            icon: 16,
+            time: 0,//不定时关闭
+            shade: 0.3
+        });
+        var content = [];
+        var ids;
+        var areaIds = [];
+        //ajax获取数据源后存入content数据中。
+        $.ajax({
+            cache : false,
+            type : "GET",
+            url : "${ctx}/md/engineerForSP/loadEngineerAreas",
+            data : {sid:sid,eid:eid},
+            success : function(data)
+            {
+                top.layer.close(loadingIndex);
+                if (data.success==false)
+                {
+                    layerError(data.message,"错误提示");
+                    return false;
+                } else
+                {
+                    ids = data.data.areaIds || [];
+                    areaIds = ids;
+
+                    $("#areasTable").html("");
+                    // 不采用树结构
+                    content = data.data.serviceAreas;
+                    var city = content.filter(e => e.type==3);// 市
+
+                    // var countyTd = $("<td style='width: 75%;line-height: 25px;'></td>");
+                    var tr = $("<tr></tr>");
+                    var newTr;
+                    var td = "<td style='width: 75%;line-height: 25px;'></td>";
+                    var countyTd = $(td).get(0);
+                    var count = 0;
+
+                    var countyTR;
+
+                    var parentArr = [];
+                    var newCountyTd;
+                    // layui.use('form', function() {
+                    //     var form = layui.form,
+                    //         $ = layui.$;
+
+                    $.each(content, function(index, item){
+                        if (item.type != 1) {
+                            var td = "";
+                            if (item.type == 2) {
+                                td = "<td class='type"+item.type+"' rowspan='"+city.length+"'>" + item.name + "</td>";
+                            } else {
+                                td = "<td class='type"+item.type+"'>" + item.name + "</td>";
+                            }
+
+                            if (item.type == 3) {
+                                if (city.length > 1) {
+                                    if (count == 0) {
+                                        tr.attr("id", item.id);
+                                        tr.append(td);
+                                        count++;
+                                    } else {
+                                        newTr = $("<tr id='"+item.id+"'></tr>");
+                                        newTr.append(td);
+                                    }
+                                } else {
+                                    tr.attr("id", item.id);
+                                    tr.append(td);
+                                }
+                            } else {// 省
+                                if (item.type == 4) {
+                                    var divInput = "<div style='width: 98px;float: left;'><input type='checkbox' value='"+item.id+"' name='county'/>"+item.name+"</div>";
+                                    var element= $(divInput).get(0);
+                                    if (parentArr.length == 0) {
+                                        parentArr.push(item.pId);
+                                    }
+                                    if (parentArr.indexOf(item.pId) == -1) {
+                                        var td =  "<td style='width: 75%;line-height: 25px;'></td>";
+                                        newCountyTd = $(td).get(0);
+                                        newCountyTd.append(element);
+                                        parentArr.push(item.pId);
+                                    } else {
+                                        countyTd.append(element);
+                                        parentArr.push(item.pId);
+                                    }
+
+                                    // 匹配区县的上级id
+                                    countyTR = document.getElementById(item.pId);
+                                    if (countyTR != null) {
+                                        if (newCountyTd != undefined) {
+                                            countyTR.append(newCountyTd);
+                                            countyTd = newCountyTd;
+                                        } else {
+                                            countyTR.append(countyTd);
+                                        }
+                                    } else {
+                                        tr.append(countyTd);
+                                    }
+
+                                } else {
+                                    tr.append(td);
+                                }
+                            }
+                            if (newTr != undefined && newTr.children().length>0) {
+                                if (item.type==4) {
+                                    $("#areasTable").append(countyTR);
+                                } else {
+                                    $("#areasTable").append(newTr);
+                                }
+                            } else {
+                                $("#areasTable").append(tr);
+                            }
+                        }
+                        if (newTr != undefined && newTr.children().length>0) {
+                            $("#areasTable").append(newTr);
+                        } else {
+                            $("#areasTable").append(tr);
+                        }
+                    });
+                    eachData(areaIds);
+                    // form.render();
+                    // });
+                }
+            },
+            error : function(xhr, ajaxOptions, thrownError)
+            {
+                top.layer.close(loadingIndex);
+                layerError(thrownError.toString(),"错误提示");
+            }
+        });//end ajax
+    }
+
+    // 处理服务区域数据
+    function eachData(data) {
+        if (data.length > 0) {
+            for(var i in data){
+                var id = data[i];
+                $(":checkbox[name='county'][value="+id+"]").attr("checked","checked");
+            }
+        }
+    }
+
+    // 前版本处理树结构
+    function expandNodes(plus){
+        if (!tree){return false;}
+        if(plus=='+'){
+            tree.expandAll(true);
+        }else if(plus == '-'){
+            tree.expandAll(false);
+        }
+        return false;
+    }
+
+    // 关闭页面
+    function cancel() {
+        top.layer.close(this_index);// 关闭本身
+        var pframe = getActiveTabIframe();//定义在jeesite.min.js中
+        if(pframe){
+            pframe.repage();
+        }
+    }
+
+    // 初始化
+    $(document).ready(function() {
+        onFunction();
+        var masterFlag = ${engineer.masterFlag};
+
+        if (${engineer != null}) {
+            $("input[type='radio'][name='masterFlag'][value="+masterFlag+"]").attr("checked","checked");
+        } else {
+            $("input[type='radio'][name='masterFlag'][value='0']").attr("checked","checked");
+        }
+
+        <c:choose>
+        <c:when test="${engineer != null && engineer.id != 0 && engineer.servicePoint != null && engineer.servicePoint.id != null}">
+        loadArea('${engineer.servicePoint.id}','${engineer.id==null?0:engineer.id}');
+
+        if (${engineer.engineerAddress.id != null}) {
+            $("#engineerAddressId").val(${engineer.engineerAddress.id});
+
+            var userName = '${engineer.engineerAddress.userName}';
+            var contactInfo = '${engineer.engineerAddress.contactInfo}';
+            var addressInfo = '${engineer.engineerAddress.address}';
+            var engineerAddressInfo = userName +" "+contactInfo + " 【地址：" + addressInfo +"】";
+            $("#addressInfo").val(engineerAddressInfo);
+        }
+
+        // 设置网点的区域id
+        $("#servicePoint_address_id").attr("value", "${engineer.servicePoint.area.id}");
+        // 设置网点的详细地址
+        $("#serviceFullAddress").attr("value", "${engineer.servicePoint.address}");
+        // 设置网点区域全称
+        $("#servicePoint_address_fullName").attr("value", "${engineer.servicePoint.area.fullName}");
+
+        $("#subAddress").attr("value", "${engineer.servicePoint.subAddress}");
+        </c:when>
+        <c:otherwise>
+        $("input[type='radio'][name='engineerAddress.addressFlag']:eq(2)").attr("checked","checked");// 自定义
+        </c:otherwise>
+        </c:choose>
+
+        if ($("#servicePointId").val() == "") {
+            $("input[type='radio'][name='masterFlag']").attr("disabled", true);
+        }
+        if ($("#servicePointId").val() == "") {
+            $("input[type='radio'][name='engineerAddress.addressFlag']").attr("disabled", true);
+        }
+    });
+
+    <c:if test ="${not empty engineer.servicePoint.id}">
+        $("#servicePoint_address").attr("value", "【${engineer.servicePoint.address}】");
+        // 设置网点的详细地址
+        $("#serviceFullAddress").attr("value", "${engineer.servicePoint.address}");
+        // 设置网点的区域id
+        $("#servicePoint_address_id").attr("value", "${engineer.servicePoint.area.id}");
+        // 设置网点区域全称
+        $("#servicePoint_address_fullName").attr("value", "${engineer.servicePoint.area.fullName}");
+        $("#subAddress").attr("value", "${engineer.servicePoint.subAddress}");
+        // 显示网点单选框后的input
+        $("#servicePoint_address").show();
+
+        <c:choose>
+            <c:when test="${engineer.servicePoint.appFlag eq 0}">
+                $("input[type='radio'][name='appFlag']").attr("disabled", "disabled");
+                $("input[type='radio'][name='appFlag']").attr("title", "网点不具有手机接单功能");
+            </c:when>
+            <c:otherwise>
+                $("input[type='radio'][name='appFlag']").removeAttr("disabled");
+                $("input[type='radio'][name='appFlag']").removeAttr("title");
+            </c:otherwise>
+        </c:choose>
+    </c:if>
+
+    function onFunction(){
+        // 安维地址监听
+        $("#address").on("keyup", function() {
+            var area = $("#areaName").val();
+            if (area != "") {
+                var anweiAddress = "【" + area + (this.value) + "】";
+                $("#anwei_address").attr("value", anweiAddress)
+                $("#anwei_address").show();
+            }
+        });
+        $("#address").on("blur", function() {
+            var area = $("#areaName").val();
+            if (area != "") {
+                var anweiAddress = "【" + area + (this.value) + "】";
+                $("#anwei_address").attr("value", anweiAddress)
+                $("#anwei_address").show();
+            }
+        });
+    }
+
+</script>
+</body>
+</html>

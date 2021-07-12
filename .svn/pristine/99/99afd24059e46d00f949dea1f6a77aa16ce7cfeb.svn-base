@@ -1,0 +1,212 @@
+package com.wolfking.jeesite.modules.md.service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.netflix.discovery.converters.Auto;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.common.service.LongIDCrudService;
+import com.wolfking.jeesite.modules.md.dao.EngineerDao;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.sys.entity.Area;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.service.AreaService;
+import com.wolfking.jeesite.modules.sys.service.SystemService;
+import com.wolfking.jeesite.ms.providermd.service.MSEngineerService;
+import com.wolfking.jeesite.ms.providermd.service.MSServicePointService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+
+/**
+ * 服务网点
+ * Ryan Lu
+ */
+@Slf4j
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class EngineerService extends LongIDCrudService<EngineerDao, Engineer> {
+
+    @Resource
+    private EngineerDao engineerDao;
+
+    @Autowired
+    private SystemService systemService;
+
+    @Autowired
+    private AreaService areaService;
+
+    @Autowired
+    private MSEngineerService msEngineerService;
+
+    @Autowired
+    private MSServicePointService msServicePointService;
+
+    public Page<Engineer> getEngineersForKefu(Page<Engineer> page, Engineer engineer) {
+        engineer.setPage(page);
+        /*
+        // mark on 2019-10-26
+        // engineer微服务
+        List<Engineer> engineers = engineerDao.getEngineersForKefu(engineer);
+        page.setList(engineers);
+        return page;
+        */
+
+        // add on 2019-10-26 begin
+        Page<Engineer> engineerPage = msEngineerService.findEngineerForKeFu(page, engineer);
+        return engineerPage;
+        // add on 2019-10-26 end
+    }
+    /**
+     * 获取所有能手机派单的主账号安维列表  // add on 2019-9-30
+     * @param engineer
+     * @return
+     */
+    public List<Long> findMasterEngineer(Engineer engineer) {
+        //return engineerDao.findMasterEngineer(engineer);  //mark on 2019-10-26
+
+        List<Long> list = Lists.newArrayList();
+
+        Page<Engineer> engineerPage = new Page<>();
+        engineerPage.setPageSize(1000);
+        engineer.setPage(engineerPage);
+        Page<Long> engineerIdPage = msEngineerService.findAppFlagEngineer(engineerPage, engineer);
+        //log.warn("总页数：{}",engineerIdPage.getTotalPage());
+        //log.warn("记录：{}",engineerIdPage.getList());
+        if (engineerIdPage.getList()!= null && !engineerIdPage.getList().isEmpty()) {
+            list.addAll(engineerIdPage.getList());
+        }
+
+        for(int i=2; i< engineerIdPage.getTotalPage()+1;i++) {
+            Page<Engineer> engineerPage1 = new Page<>();
+            engineerPage1.setPageSize(1000);
+            engineerPage1.setPageNo(i);
+            engineer.setPage(engineerPage1);
+
+            Page<Long> engineerIdPage1 = msEngineerService.findAppFlagEngineer(engineerPage1, engineer);
+            //log.warn("记录数{}",engineerIdPage1.getList());
+            if (engineerIdPage1.getList()!= null && !engineerIdPage1.getList().isEmpty()) {
+                list.addAll(engineerIdPage1.getList());
+            }
+        }
+        //log.warn("{}", list);
+
+        return list;
+    }
+
+    public List<Long> findPagingIdWithNameOrPhone(Engineer engineer) {
+        List<Long> list = Lists.newArrayList();
+
+        Page<Engineer> engineerPage = new Page<>();
+        engineerPage.setPageSize(200);
+        engineer.setPage(engineerPage);
+        Page<Long> engineerIdPage = msEngineerService.findPagingIdWithNameOrPhone(engineerPage, engineer);
+        if (engineerIdPage.getList()!= null && !engineerIdPage.getList().isEmpty()) {
+            list.addAll(engineerIdPage.getList());
+        }
+
+        for(int i=2; i< engineerIdPage.getTotalPage()+1;i++) {
+            Page<Engineer> engineerPage1 = new Page<>();
+            engineerPage1.setPageSize(200);
+            engineerPage1.setPageNo(i);
+            engineer.setPage(engineerPage1);
+
+            Page<Long> engineerIdPage1 = msEngineerService.findPagingIdWithNameOrPhone(engineerPage1, engineer);
+            if (engineerIdPage1.getList()!= null && !engineerIdPage1.getList().isEmpty()) {
+                list.addAll(engineerIdPage1.getList());
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * 根据id获取安维人员信息
+     * @param id
+     * @return
+     */
+    public Engineer getEngineer(Long id) {
+        Engineer engineer = msEngineerService.getById(id);
+        engineer = getExtraInfoForEngineer(engineer);
+        return engineer;
+    }
+
+    /**
+     * 根据id获取安维人员信息
+     * @param id
+     * @return
+     */
+    public Engineer getEngineerFromCache(Long id) {
+        Engineer engineer = msEngineerService.getByIdFromCache(id);
+        engineer = getExtraInfoForEngineer(engineer);
+        return engineer;
+    }
+
+    /**
+     * 获取安维人员的附加信息
+     * @param engineer
+     * @return
+     */
+    public Engineer getExtraInfoForEngineer(Engineer engineer) {
+        Long servicePointId = null;
+        Long engineerId = null;
+        Long areaId = null;
+        if (engineer != null) {
+            servicePointId = engineer.getServicePoint() != null && engineer.getServicePoint().getId() !=null? engineer.getServicePoint().getId():null;
+            engineerId = engineer.getId();
+            areaId = engineer.getArea() != null && engineer.getArea().getId() != null? engineer.getArea().getId():null;
+        }
+        ServicePoint servicePoint = msServicePointService.getCacheById(servicePointId);
+        if (servicePoint != null) {
+            if (engineer.getServicePoint() == null) {
+                engineer.setServicePoint(new ServicePoint(servicePointId));
+            }
+            engineer.getServicePoint().setName(servicePoint.getName());
+            engineer.getServicePoint().setServicePointNo(servicePoint.getServicePointNo());
+        }
+
+        User user = systemService.getUserByEngineerId(engineerId);
+        if (user != null) {
+            engineer.setAccountId(user.getId());
+            engineer.setAppLoged(user.getAppLoged());
+        }
+
+        Area area = areaId==null?null:areaService.getFromCache(areaId);
+        if (area != null) {
+            if (engineer.getArea()==null) {
+                engineer.setArea(new Area(area.getId()));
+            }
+            engineer.getArea().setName(area.getName());
+            engineer.getArea().setFullName(area.getFullName());
+        }
+        return engineer;
+    }
+
+    public List<Engineer> findEngineerListFromCache(List<Long> engineerIds) {
+        List<Engineer> engineerList = msEngineerService.findEngineersByIds(engineerIds, Arrays.asList("id","name","masterFlag","appFlag"));
+        if (engineerList != null && !engineerList.isEmpty()) {
+            engineerList.stream().forEach(engineer -> {
+                User user = systemService.getUserByEngineerId(engineer.getId());
+                if (user != null) {
+                    engineer.setAppLoged(user.getAppLoged());
+                }
+            });
+        }
+        return engineerList;
+    }
+
+    public Map<Long,Engineer> findEngineerListFromCacheToMap(List<Long> engineerIds) {
+        List<Engineer> engineerList =  findEngineerListFromCache(engineerIds);
+        return engineerList != null && !engineerList.isEmpty()?engineerList.stream().collect(Collectors.toMap(Engineer::getId, Function.identity())): Maps.newHashMap();
+    }
+}

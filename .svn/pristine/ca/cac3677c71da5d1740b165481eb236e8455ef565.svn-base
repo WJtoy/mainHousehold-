@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.ServicePointPayableMonthlyDetailDao">
+
+	<insert id="incrAmountForCharge" parameterType="ServicePointPayableMonthlyDetail">
+		INSERT INTO fi_servicepoint_payable_monthly_detail (
+				id,
+				total_id,
+				servicepoint_id,
+				payment_type,
+				`year`,
+				product_category_id,
+				${monthField}
+		) VALUES (
+				#{id},
+				#{totalId},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year},
+				#{productCategoryId},
+				#{amount}
+		)
+		ON DUPLICATE KEY
+		UPDATE ${monthField} = ${monthField} + #{amount}
+	</insert>
+
+	<select id="getNeedPayListForUpdateBalanceDetail10Pay" resultType="com.kkl.kklplus.entity.fi.servicepoint.ServicePointPayableMonthlyDetail">
+		SELECT
+				payable.id,
+				payable.product_category_id,
+				payable.${monthField} - IFNULL(paid.${monthField}, 0) AS "amount"
+		FROM
+				fi_servicepoint_payable_monthly_detail payable FORCE INDEX (idx_total_id)
+		LEFT JOIN
+				fi_servicepoint_paid_monthly_detail paid FORCE INDEX (PRIMARY) ON payable.id = paid.id
+		WHERE
+				payable.total_id = #{totalId} AND payable.${monthField} - IFNULL(paid.${monthField}, 0) != 0
+		ORDER BY
+		        amount
+	</select>
+
+
+	<select id="getNeedPayListForUpdateBalanceDetail20Pay" resultType="com.kkl.kklplus.entity.fi.servicepoint.ServicePointPayableMonthlyDetail">
+		SELECT
+				payable.product_category_id,
+				SUM(payable.m1+payable.m2+payable.m3+payable.m4+payable.m5+payable.m6+payable.m7+payable.m8+payable.m9+payable.m10+payable.m11+payable.m12) -
+				IFNULL(SUM(paid.m1+paid.m2+paid.m3+paid.m4+paid.m5+paid.m6+paid.m7+paid.m8+paid.m9+paid.m10+paid.m11+paid.m12), 0) AS "amount"
+		FROM
+				fi_servicepoint_payable_monthly_detail payable
+		LEFT JOIN
+				fi_servicepoint_paid_monthly_detail paid ON payable.id = paid.id
+		WHERE
+				payable.servicepoint_id = #{servicepointId} AND payable.payment_type = 20
+		GROUP BY
+				payable.product_category_id
+        HAVING
+                amount != 0
+        ORDER BY
+                amount
+	</select>
+</mapper>

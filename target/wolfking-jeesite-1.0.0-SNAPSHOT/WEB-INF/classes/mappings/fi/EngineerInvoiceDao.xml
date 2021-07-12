@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerInvoiceDao">
+	
+	<insert id="insert">
+		INSERT INTO fi_engineerinvoice(
+			id,
+			order_id,
+			order_no,
+			service_point_id,
+			engineer_id,
+			product_id,
+			service_type_id,
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			insurance_charge,
+			other_charge,
+			insurance_no,
+			service_times,
+			payment_type,
+			invoice_date,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{orderNo},
+			#{servicePoint.id},
+			#{engineer.id},
+			#{product.id},
+			#{serviceType.id},
+			#{serviceCharge},
+			#{expressCharge},
+			#{travelCharge},
+			#{materialCharge},
+			#{insuranceCharge},
+			#{otherCharge},
+			#{insuranceNo},
+			#{serviceTimes},
+			#{paymentType},
+			#{invoiceDate},
+			#{createBy.id},
+			#{createDate},
+			#{remarks},
+			#{quarter}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fi_engineerinvoice SET
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}, 
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE fi_engineerinvoice SET
+			del_flag = #{DEL_FLAG_DELETE},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+
+	<select id="get" resultType="EngineerInvoice">
+		SELECT
+			id,
+			order_id,
+			order_no,
+			service_point_id as 'servicePoint.id',
+			engineer_id	as 'engineer.id',
+			product_id as 'product.id',
+			service_type_id as 'serviceType.id',
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			insurance_charge,
+			other_charge,
+			insurance_no,
+			service_times,
+			payment_type,
+			status,
+			invoice_date,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_engineerinvoice
+		WHERE
+			id = #{id}
+		AND del_flag = 0
+	</select>
+
+	<select id="findList" parameterType="EngineerInvoice" resultType="EngineerInvoice">
+		SELECT
+			id,
+			order_id,
+			order_no,
+			service_point_id as 'servicePoint.id',
+			engineer_id	as 'engineer.id',
+			product_id as 'product.id',
+			service_type_id as 'serviceType.id',
+			service_charge,
+			express_charge,
+			travel_charge,
+			material_charge,
+			insurance_charge,
+			other_charge,
+			insurance_no,
+			service_times,
+			payment_type,
+			status,
+			invoice_date,
+			create_by,
+			create_date,
+			remarks,
+			quarter
+		FROM
+			fi_engineerinvoice
+		<where>
+			<if test="orderId !=null">
+				AND order_id=#{orderId}
+			</if>
+			AND del_flag = 0
+		</where>
+	</select>
+	
+</mapper>

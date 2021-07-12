@@ -1,0 +1,88 @@
+/**
+ * Copyright &copy; 2012-2016 <a href="https://github.com/thinkgem/jeesite">JeeSite</a> All rights reserved.
+ */
+package com.wolfking.jeesite.modules.servicepoint.ms.md;
+
+import com.kkl.kklplus.entity.common.NameValuePair;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.md.entity.ServicePrice;
+import com.wolfking.jeesite.modules.md.service.ServicePointService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 网点工单
+ */
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class SpServicePointService {
+
+
+    @Autowired
+    private ServicePointService servicePointService;
+
+    /**
+     * 获得网点下某个安维人员信息
+     *
+     * @param servicePointId 网点id
+     * @param engineerId     安维id
+     */
+    public Engineer getEngineerFromCache(Long servicePointId, Long engineerId) {
+        return servicePointService.getEngineerFromCache(servicePointId, engineerId);
+    }
+
+    /**
+     * 获得网点下安维列表
+     *
+     * @param servicePointId 网点Id
+     */
+    public List<Engineer> getEngineerListOfServicePoint(Long servicePointId) {
+        return servicePointService.getEngineerListOfServicePoint(servicePointId);
+    }
+
+    public Engineer getEngineer(Long id) {
+        return servicePointService.getEngineer(id);
+    }
+
+    /**
+     * 按id获得网点信息
+     * 优先从缓存中取
+     */
+    public ServicePoint getFromCache(Long id) {
+        return servicePointService.getFromCache(id);
+    }
+
+    /**
+     * 按需读取网点价格
+     *
+     * @param servicePointId 网点id
+     * @param products       NameValuePair<产品id,服务项目id>
+     */
+    public Map<String, ServicePrice> getPriceMapByProductsFromCache(Long servicePointId, List<NameValuePair<Long, Long>> products) {
+        return servicePointService.getPriceMapByProductsFromCache(servicePointId, products);
+    }
+
+    /**
+     * 按区县/街道/品类 分页查询可派单列表(以完成单数量倒序排序)
+     * 只查询level 1 ~ 5的,且status=10
+     */
+    public Page<ServicePoint> findServicePointListForPlanNew(Page<ServicePoint> page, ServicePoint entity) {
+        return servicePointService.findServicePointListForPlanNew(page, entity);
+    }
+
+    /**
+     * 分页查询
+     * 先从数据库返回id,再根据id从缓存中读取，缓存不存在则再从数据库读取并更新至缓存
+     */
+    public Page<Engineer> findPage(Page<Engineer> page, Engineer entity) {
+        return servicePointService.findPage(page, entity);
+    }
+
+}

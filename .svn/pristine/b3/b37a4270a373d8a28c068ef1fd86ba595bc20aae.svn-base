@@ -1,0 +1,400 @@
+package com.wolfking.jeesite.test.sd;
+
+import com.google.common.collect.Lists;
+import com.wolfking.jeesite.modules.fi.entity.CustomerCurrency;
+import com.wolfking.jeesite.modules.fi.service.ChargeServiceNew;
+import com.wolfking.jeesite.modules.fi.service.CustomerCurrencyService;
+import com.wolfking.jeesite.modules.mq.dto.MQCreateOrderPushMessage;
+import com.wolfking.jeesite.modules.mq.sender.CreateOrderPushMessageSender;
+import com.wolfking.jeesite.modules.mq.service.OrderCreateMessageService;
+import com.wolfking.jeesite.modules.sd.dao.OrderDao;
+import com.wolfking.jeesite.modules.sd.entity.*;
+import com.wolfking.jeesite.modules.sd.service.OrderService;
+import com.wolfking.jeesite.modules.sd.utils.OrderUtils;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * 订单数据处理.
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@Slf4j
+public class OrderUpdate {
+
+    @Autowired
+    private OrderService orderService;
+    @Autowired
+    private OrderDao    orderDao;
+
+    @Autowired
+    private ChargeServiceNew chargeServiceNew;
+
+
+    @Autowired
+    private OrderCreateMessageService createMessageService;
+
+    @Autowired
+    private CreateOrderPushMessageSender createOrderPushMessageSender;
+
+    @Autowired
+    private CustomerCurrencyService customerCurrencyService;
+
+    @Test
+    public void customerChageOnlineFail(){
+        String tradeNo = "R2018020600053";
+        CustomerCurrency customerCurrency = customerCurrencyService.getByCurrencyNo(tradeNo, CustomerCurrency.ACTION_TYPE_TEMPRECHARGE);
+        if (customerCurrency == null) {//流水单不存在
+            System.out.println("支付宝异步页面：充值失败，读取单据错误");
+        } else if (customerCurrency.getActionType().intValue() == CustomerCurrency.ACTION_TYPE_CHARGEONLINE
+                || customerCurrency.getActionType().intValue() == CustomerCurrency.ACTION_TYPE_TEMPRECHARGE2) {
+            //已处理
+            System.out.println("支付宝异步页面：已成功，此次是重复通知");
+        } else if (customerCurrency.getActionType().intValue() == CustomerCurrency.ACTION_TYPE_TEMPRECHARGE) {
+            // 1.更新原记录状态
+            // 2.新增真正的充值记录
+            // 3.更新客户账户余额
+            customerCurrencyService.updateEntity(customerCurrency);
+
+            System.out.println("支付宝异步页面：充值成功");
+        } else {
+
+            System.out.println("支付宝异步页面：充值失败");
+        }
+    }
+    /**
+     * 重置客服
+     2019/08/29 ryan
+    @Test
+    public void resetKefu() throws InterruptedException {
+
+        List<Map<String, Object>> list = orderDao.getResetOrderList();
+
+        System.out.println("order count:" + list.size());
+        if(list != null && list.size()>0) {
+            Long orderId;
+            Long cId;
+            Long areaId;
+            String orderNo;
+            User kefu;
+            System.out.println(StringUtils.leftPad("",100,">"));
+            for (int i = 0, len = list.size(); i < len; i++) {
+                orderId = (Long) list.get(i).get("order_id");
+                orderNo = (String) list.get(i).get("order_no");
+                cId = (Long) list.get(i).get("customer_id");
+                areaId = (Long) list.get(i).get("area_id");
+                System.out.println(String.format(">>>order:%s ,cid:%s ,area:%s",orderId,cId,areaId));
+                if(cId==null || cId.longValue()<=0){
+                    System.out.println("> 客户ID错误");
+                }else if(areaId == null || areaId.longValue()<=0){
+                    System.out.println("> 区域ID错误");
+                }else{
+                    try {
+                        kefu = orderService.getRandomKefu(cId,areaId);
+                        if(kefu==null){
+                            System.out.println("> 未发现客服");
+                        }else{
+                            System.out.println("> 新客服:".concat(kefu.getName()).concat(",id:").concat(kefu.getId().toString()));
+                            orderService.resetKefu(orderId,kefu.getId());
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+
+                //Thread.sleep(500);
+            }
+            System.out.println(StringUtils.leftPad("",100,">"));
+        }
+
+    }*/
+
+    @Test
+    public void reCreateOrderProcessLog(){
+//        List<OrderCreateBody> list =  createMessageService.getResendList(60L);
+//        MQCreateOrderPushMessage.CreateOrderPushMessage.Builder builder;
+//        if(list != null && list.size()>0){
+//            OrderCreateBody model;
+//            builder = MQCreateOrderPushMessage.CreateOrderPushMessage.newBuilder();
+//            try {
+//                for (int i = 0, size = list.size(); i < size; i++) {
+//                    model = list.get(i);
+//                    log.error(">>> " + model.getOrderId());
+//                    builder.setId(model.getId())
+//                            .setOrderId(model.getOrderId())
+//                            .setQuarter(model.getQuarter())
+//                            .setTriggerBy(MQCreateOrderPushMessage.TriggerBy.newBuilder()
+//                                    .setId(model.getTriggerBy().getId())
+//                                    .setName(model.getTriggerBy().getName())
+//                                    .build())
+//                            .setTriggerDate(model.getTriggerDate().getTime());
+//                    createOrderPushMessageSender.send(builder.build());
+//                    try {
+//                        Thread.sleep(200);
+//                    } catch (Exception e) {
+//                    }
+//                }
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+//        }
+    }
+
+    //重新统计下单时的统计报表数据
+    //1.客户日下单报表
+    //2.业务业绩报表
+    //3.区域下单报表
+    //4.客服每日报表
+    @Test
+    public void reSetOrderCreateReportByOrderIds(){
+        String quarter = "20182";
+        List<Long> ids = Lists.newArrayList();
+        ids.add(1006498489624444928l);
+
+        List<OrderCondition> list = createMessageService.getReportResendMessageByOrderIds(quarter,ids);
+        MQCreateOrderPushMessage.CreateOrderPushMessage orderPushMessage;
+        OrderCondition model;
+        try {
+            for (int i = 0, size = list.size(); i < size; i++) {
+                model = list.get(i);
+                log.error(">>> " + model.getOrderId());
+                orderPushMessage = MQCreateOrderPushMessage.CreateOrderPushMessage.newBuilder()
+                        .setOrderId(model.getOrderId())
+                        .setQuarter(model.getQuarter())
+                        .setTriggerBy(MQCreateOrderPushMessage.TriggerBy.newBuilder()
+                                .setId(model.getCreateBy().getId())
+                                .setName(model.getCreateBy().getName())
+                                .build())
+                        .setTriggerDate(model.getCreateDate().getTime())
+                        .build();
+                createOrderPushMessageSender.send(orderPushMessage);
+                try {
+                    Thread.sleep(200);
+                } catch (Exception e) {
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    /**
+     * 测试获得随机客户
+     */
+    public void testGetRandomKefu() {
+        //1.有客户
+        //'15','mike','兰州市','479','1058'
+        User kefu = orderService.getRandomKefu(1058l,479l,1L,0);
+        Assert.assertNotNull(kefu);
+        System.out.println("kefu:" + kefu.getId() + " name:" + kefu.getName());
+        //2.无客户，有区域
+        //'74','普通客服','高明区','3219'
+        kefu = orderService.getRandomKefu(2l,3219l,1L,0);
+        Assert.assertNotNull(kefu);
+        System.out.println("kefu:" + kefu.getId() + " name:" + kefu.getName());
+        //3.无客服
+        kefu = orderService.getRandomKefu(3l,4528l,1L,0);
+        Assert.assertNotNull(kefu);
+    }
+
+    /**
+     * 自动对账队列处理失败，手动对账
+     * fi部分处理改成消息队列处理，要链接生产的消息队列
+
+    @Test
+    public void manuAutoCharge(){
+        Date startDate = null;
+        Date endDate = null;
+        List<OrderCharge> list = null;
+        try {
+            startDate = DateUtils.parse("2018-06-23 00:00:00", "yyyy-MM-dd HH:mm:ss");
+            endDate = DateUtils.parse("2018-06-23 23:59:59.999", "yyyy-MM-dd HH:mm:ss.SSS");
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return;
+        }
+        list = orderChargeService.selectRetryList(startDate,endDate,100);
+        Assert.assertNotNull(list);
+        //Assert.assertEquals(list.size() , 1);
+        Assert.assertNotEquals(list.size(),0);
+        for(OrderCharge order:list) {
+            order.setRetryTimes(1);
+            order.setRemarks("");
+            try {
+               chargeServiceNew.createCharge(order.getOrderId(), order.getTriggerBy());
+               order.setStatus(30);
+               orderChargeService.save(order);
+               System.out.println(">>>PASS>>>" + order.getId().toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+                order.setStatus(40);
+                order.setRemarks(e.getMessage());
+                orderChargeService.save(order);
+                System.out.println(">>>FAIL>>>" + order.getId().toString());
+            }
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+     */
+
+    /**
+     * 补时效上线前sd_order_servicepoint_fee
+     */
+    @Test
+    public void reCreateOrderServicePointFee(){
+        List<HashMap<String, Object>> list = orderDao.getReCreateOrderServicePointFee("20181","2018-01-01");
+        Long orderId;
+        String quarter = new String("");
+        Order order;
+        OrderServicePointFee spFee;
+        List<OrderDetail> details;
+        List<OrderPlan> plans;
+        OrderPlan plan;
+        OrderDetail servicePointFeeSum;
+        Set<Long> sids;
+        for (HashMap<String, Object> map : list){
+            try {
+                Thread.sleep(200);
+            }catch (Exception e){
+
+            }
+            orderId = Long.parseLong(map.get("order_id").toString());
+            quarter = (String)map.get("quarter");
+            log.info(">>>orderId:{} quarter:{}",orderId,quarter);
+            //order = orderService.getOrderById(orderId,quarter, OrderUtils.OrderDataLevel.DETAIL)
+            plans = orderService.getOrderPlanList(orderId,quarter,1);
+            details = orderService.getOrderDetails(orderId,quarter,false);
+            if(details == null || details.size() == 0){
+                for(int i=0,size=plans.size();i<size;i++){
+                    plan = plans.get(i);
+                    spFee = orderDao.getOrderServicePointFee(quarter,orderId,plan.getServicePoint().getId());
+                    if(spFee == null) {
+                        spFee = new OrderServicePointFee();
+                        spFee.setOrderId(orderId);
+                        spFee.setQuarter(quarter);
+                        spFee.setServicePoint(plan.getServicePoint());
+                        orderDao.insertOrderServicePointFee(spFee);
+                    }
+                }
+            }else{
+                for(int i=0,size=plans.size();i<size;i++){
+                    plan = plans.get(i);
+                    sids = details.stream().map(t->t.getServicePoint().getId()).distinct().collect(Collectors.toSet());
+                //for(int j=0,jsize=sids.size();j<jsize;j++) {
+                    final Long sid = plan.getServicePoint().getId();
+                    servicePointFeeSum = details.stream().filter(t -> t.getServicePoint().getId().longValue() == sid.longValue() && t.getDelFlag() == OrderDetail.DEL_FLAG_NORMAL)
+                            .reduce(new OrderDetail(), (item1, item2) -> {
+                                return new OrderDetail(
+                                        item1.getEngineerServiceCharge() + item2.getEngineerServiceCharge(),
+                                        item1.getEngineerTravelCharge() + item2.getEngineerTravelCharge(),
+                                        item1.getEngineerExpressCharge() + item2.getEngineerExpressCharge(),
+                                        item1.getEngineerMaterialCharge() + item2.getEngineerMaterialCharge(),
+                                        item1.getEngineerOtherCharge() + item2.getEngineerOtherCharge()
+                                );
+                            });
+                    spFee = orderDao.getOrderServicePointFee(quarter,orderId,sid);
+                    if(spFee == null) {
+                        spFee = new OrderServicePointFee();
+                        spFee.setOrderId(orderId);
+                        spFee.setQuarter(quarter);
+                        spFee.setServicePoint(plan.getServicePoint());
+                        if (servicePointFeeSum != null) {
+                            spFee.setServiceCharge(servicePointFeeSum.getEngineerServiceCharge());
+                            spFee.setTravelCharge(servicePointFeeSum.getEngineerTravelCharge());
+                            spFee.setExpressCharge(servicePointFeeSum.getEngineerExpressCharge());
+                            spFee.setMaterialCharge(servicePointFeeSum.getEngineerMaterialCharge());
+                            spFee.setOtherCharge(servicePointFeeSum.getEngineerOtherCharge());
+                            spFee.setOrderCharge(spFee.getServiceCharge() + spFee.getTravelCharge() + spFee.getExpressCharge() + spFee.getMaterialCharge() + spFee.getOtherCharge());
+                        }
+                        if (sids.contains(sid)) {
+                            spFee.setDelFlag(0);
+                        } else {
+                            spFee.setDelFlag(1);
+                        }
+                        orderDao.insertOrderServicePointFee(spFee);
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    /**
+     * 检查订单费用是否一致
+     */
+    @Test
+    public void checkOrderFeeAndServiceAmount(){
+        List<Long> ids = Lists.newArrayList(995865557423230976l,996229851184762880l,996709234630729728l);
+        Long orderId;
+        String quarter =    "20182";
+        Order order;
+        Boolean result;
+        /*
+        for(int i=0,size=ids.size();i<size;i++){
+            orderId = ids.get(i);
+            order = orderService.getOrderById(orderId,quarter, OrderUtils.OrderDataLevel.DETAIL,true);
+            result = orderService.checkOrderFeeAndServiceAmount(order,true);
+            log.info(">>>order:{} result:{}",orderId,result);
+            try{
+                Thread.sleep(300);
+            }catch (Exception e){}
+        }*/
+        orderId = 1276804286139076629l;
+        order = orderService.getOrderById(orderId, "", OrderUtils.OrderDataLevel.DETAIL, true, true);
+        result = orderService.checkOrderFeeAndServiceAmount(order,false);
+        log.error(">>>order:{} result:{}",orderId,result);
+    }
+
+    /**
+     * 检查是否可以自动完工
+     */
+    @Test
+    public void checkAutoComplete(){
+        List<Long> ids = Lists.newArrayList(995865557423230976l,996229851184762880l,996709234630729728l);
+        Long orderId;
+        String quarter =    "20182";
+        Order order;
+        String msg = new String("");
+        for(int i=0,size=ids.size();i<size;i++){
+            orderId = ids.get(i);
+            order = orderService.getOrderById(orderId,quarter, OrderUtils.OrderDataLevel.DETAIL,true);
+            msg = orderService.checkAutoComplete(order);
+            log.info(">>>order:{} return message:{}",orderId,msg);
+            try{
+                Thread.sleep(300);
+            }catch (Exception e){}
+        }
+    }
+
+    @Test
+    public void reSendOrderCreatePushMessage(){
+        MQCreateOrderPushMessage.CreateOrderPushMessage orderPushMessage = MQCreateOrderPushMessage.CreateOrderPushMessage.newBuilder()
+                .setOrderId(1023809726888423424l)
+                .setQuarter("20183")
+                .setTriggerBy(MQCreateOrderPushMessage.TriggerBy.newBuilder()
+                        .setId(20846)
+                        .setName("602成都前锋")
+                        .build())
+                .setTriggerDate(1532930235000l)
+                .build();
+            createOrderPushMessageSender.send(orderPushMessage);
+    }
+}

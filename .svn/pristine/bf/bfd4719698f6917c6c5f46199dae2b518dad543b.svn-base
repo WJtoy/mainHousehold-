@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.ServicePointPayableMonthlyDao">
+
+	<select id="findAllList" resultType="ServicePointPayableMonthly">
+		SELECT
+			id,
+			servicepoint_id as 'servicePoint.id',
+			payment_type,
+			YEAR,
+			m1,
+			m2,
+			m3,
+			m4,
+			m5,
+			m6,
+			m7,
+			m8,
+			m9,
+			m10,
+			m11,
+			m12
+		FROM
+			fi_servicepoint_payable_monthly
+		LIMIT 10000;
+	</select>
+	
+	<select id="getGroupedListForUpdateRptBalance" resultType="ServicePointPayableMonthly">
+		SELECT
+			servicepoint_id as 'servicePoint.id',payment_type
+		FROM
+			fi_servicepoint_payable_monthly
+		GROUP BY
+			servicepoint_id, payment_type
+	</select>
+
+	<select id="getOneId" resultType="Long">
+		SELECT
+			id
+		FROM
+			fi_servicepoint_payable_monthly
+		WHERE
+			servicepoint_id = #{servicePointId}
+		AND `year` = #{year}
+		AND payment_type = #{paymentType}
+		LIMIT 1;
+	</select>
+
+	<insert id="insertDefaults" parameterType="ServicePointPayableMonthly">
+		INSERT INTO
+				fi_servicepoint_payable_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+		INSERT INTO
+				fi_servicepoint_paid_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+		INSERT INTO
+				fi_servicepoint_invoice_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+		INSERT INTO
+				rpt_servicepoint_balance_monthly
+			(
+				id,
+				servicepoint_id,
+				payment_type,
+				`year`
+			)
+		VALUES
+			(
+				#{id},
+				#{servicePoint.id},
+				#{paymentType},
+				#{year}
+			);
+	</insert>
+
+	<!--<update id="incrAmount" parameterType="ServicePointPayableMonthly">-->
+		<!--UPDATE-->
+			<!--fi_servicepoint_payable_monthly-->
+		<!--SET-->
+			<!--${monthField} = ${monthField} + #{amount}-->
+		<!--WHERE-->
+			<!--servicepoint_id = #{servicePoint.id} AND `year` = #{year} AND payment_type = #{paymentType};-->
+		<!--UPDATE-->
+			<!--rpt_servicepoint_balance_monthly-->
+		<!--SET-->
+			<!--${monthField} = ${monthField} + #{amount}-->
+		<!--WHERE-->
+			<!--servicepoint_id = #{servicePoint.id} AND `year` = #{year} AND payment_type = #{paymentType};-->
+	<!--</update>-->
+
+	<update id="incrAmountForCharge" parameterType="ServicePointPayableMonthly">
+		UPDATE
+			fi_servicepoint_payable_monthly
+		SET
+			${monthField} = ${monthField} + #{amount}
+		WHERE
+			id = #{id}
+	</update>
+
+	<!-- 补10月网点按品类应付数据 -->
+	<select id="getPayableMonthByYearMonth" resultType="Long">
+		SELECT DISTINCT servicepoint_id FROM fi_servicepoint_payable_monthly WHERE YEAR = #{year} AND m${month} != 0 ORDER BY servicepoint_id
+	</select>
+</mapper>

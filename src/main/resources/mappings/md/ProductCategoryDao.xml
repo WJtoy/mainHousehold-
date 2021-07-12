@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ProductCategoryDao">
+    <!--
+    <sql id="productCategoryColumns">
+            a.id,
+            a.code,
+            a.name,
+            a.remarks
+    </sql>
+
+    <sql id="productCategoryJoins">
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" >
+        INSERT INTO md_productCategory(
+			code,
+			name,
+			create_by,
+			create_date,
+			remarks
+		) VALUES (
+			#{code},
+			#{name},
+			#{createBy.id},
+			#{createDate},
+			#{remarks}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_productCategory
+        SET
+            code = #{code},
+            name = #{name},
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_productCategory
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <select id="get" resultType="ProductCategory">
+        SELECT
+                <include refid="productCategoryColumns"/>
+        FROM
+                md_productCategory a
+        WHERE
+                a.id = #{id}
+          AND   a.del_flag = 0
+    </select>
+
+    <select id="getIdByCode" resultType="Long">
+        SELECT
+                id
+        FROM
+                md_productCategory
+        WHERE
+                code = #{code}
+                <if test="id != null">
+                    AND   id != #{id}
+                </if>
+          AND   del_flag = 0
+        LIMIT 1
+    </select>
+
+    <select id="getIdByName" resultType="Long">
+        SELECT
+                id
+        FROM
+                md_productCategory
+        WHERE
+                name = #{name}
+                <if test="id != null">
+                    AND   id != #{id}
+                </if>
+        AND   del_flag = 0
+        LIMIT 1
+    </select>
+
+    <select id="findAllList" resultType="ProductCategory">
+        SELECT
+                <include refid="productCategoryColumns"/>
+        FROM
+                md_productCategory a
+        WHERE
+                a.del_flag = 0
+        ORDER BY
+                a.code
+    </select>
+
+    <select id="findList" resultType="ProductCategory">
+        SELECT
+                <include refid="productCategoryColumns"/>
+        FROM
+                md_productCategory a
+        <where>
+            <if test="code != null and code !=''">
+              AND   a.code LIKE CONCAT('%', #{code}, '%')
+            </if>
+            <if test="name != null and name !=''">
+              AND   a.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+              AND   a.del_flag = 0
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.code
+            </otherwise>
+        </choose>
+    </select>
+    -->
+</mapper>

@@ -1,0 +1,1506 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.finance.sd.dao.FiCustomerOrderDao">
+
+    <!-- 客户待发配件的工单列表 -->
+    <select id="getWaitingPartsOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        soc.parts_apply_date,
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    <![CDATA[ AND soc.status >= 10 AND soc.status < 80 ]]>
+                    <![CDATA[
+                        AND soc.parts_flag = 1
+                        AND EXISTS (
+                            SELECT 1
+                            FROM sd_materialmaster m
+                            WHERE m.order_id = soc.order_id
+                                  AND m.applytype = 2
+                                  AND m.status <= 2
+                                  AND m.del_flag = 0
+                        )
+                    ]]>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString()">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND soc.status = convert(#{status.value},SIGNED)
+                    </if>
+                    <![CDATA[ AND soc.status >= 10 AND soc.status < 80 ]]>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <![CDATA[
+                        AND soc.parts_flag = 1
+                        AND EXISTS (
+                            SELECT 1
+                            FROM sd_materialmaster m
+                            WHERE m.order_id = soc.order_id
+                                  AND m.applytype = 2
+                                  AND m.status <= 2
+                                  AND m.del_flag = 0
+                        )
+                    ]]>
+
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!--  AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id )  -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="replyFlagKefu != null and replyFlagKefu == 1">
+                        AND soc.reply_flag_kefu = #{replyFlagKefu}
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner},'%')
+                    </if>
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND soc.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND soc.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.parts_apply_date
+    </select>
+
+    <!-- 客户处理中工单列表 -->
+    <select id="getProcessingOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <!-- 上门电话 -->
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    <![CDATA[ AND soc.status < 80 ]]>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND soc.status = convert(#{status.value},SIGNED)
+                    </if>
+                    <![CDATA[ AND soc.status < 80 ]]>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString() and phone2.length == 11">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="reminderFlag != null and reminderFlag == 1 ">
+                        AND <![CDATA[ sos.reminder_status > 0 ]]>
+                    </if>
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND soc.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND soc.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <if test="pendingType != null and pendingType.value != ''.toString() ">
+                        AND soc.pending_type = convert(#{pendingType.value},SIGNED)
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!-- AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id ) -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner},'%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id DESC
+    </select>
+
+    <!-- 客户已完成工单列表 -->
+    <select id="getCompletedOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        soc.close_date        AS "orderCondition.closeDate",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        soc.close_date,
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    <!-- AND soc.status = 80 -->
+                    AND soc.grade_flag > 0
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <choose>
+                        <when test="completeBegin != null and completeEnd != null">
+                            AND soc.close_date between #{completeBegin} and #{completeEnd}
+                        </when>
+                        <when test="completeBegin != null ">
+                            <![CDATA[ AND soc.close_date >= #{completeBegin} ]]>
+                        </when>
+                        <when test="completeEnd != null ">
+                            <![CDATA[ AND soc.close_date <= #{completeEnd} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <!-- AND soc.status = 80 -->
+                    AND soc.grade_flag > 0
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString()">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND soc.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND soc.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="partsFlag != null and partsFlag == 1">
+                        AND soc.parts_flag = #{partsFlag}
+                    </if>
+                    <if test="reminderFlag != null and reminderFlag == 1 ">
+                        AND <![CDATA[ sos.reminder_status > 0 ]]>
+                    </if>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!--  AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id ) -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="replyFlagKefu != null and replyFlagKefu == 1">
+                        AND soc.reply_flag_kefu = #{replyFlagKefu}
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner}, '%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.close_date DESC
+    </select>
+
+    <!-- 客户已取消工单列表 -->
+    <select id="getCanceledOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        soc.close_date        AS "orderCondition.closeDate",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    AND soc.status = 100
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <choose>
+                        <when test="completeBegin != null and completeEnd != null">
+                            AND sos.cancel_approve_date between #{completeBegin} and #{completeEnd}
+                        </when>
+                        <when test="completeBegin != null ">
+                            <![CDATA[ AND sos.cancel_approve_date >= #{completeBegin} ]]>
+                        </when>
+                        <when test="completeEnd != null ">
+                            <![CDATA[ AND sos.cancel_approve_date <= #{completeEnd} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    AND soc.status = 100
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString()">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="partsFlag != null and partsFlag == 1">
+                        AND soc.parts_flag = #{partsFlag}
+                    </if>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <if test="replyFlagKefu != null and replyFlagKefu == 1">
+                        AND soc.reply_flag_kefu = #{replyFlagKefu}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!-- AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id ) -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner},'%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id DESC
+    </select>
+
+    <!-- 客户已退单工单列表 -->
+    <select id="getReturnedOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        soc.close_date        AS "orderCondition.closeDate",
+        sos.reminder_status   AS "orderStatus.reminderStatus",
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    AND soc.status = 90
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    AND soc.status = 90
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString()">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <choose>
+                        <when test="completeBegin != null and completeEnd != null">
+                            AND sos.cancel_approve_date between #{completeBegin} and #{completeEnd}
+                        </when>
+                        <when test="completeBegin != null ">
+                            <![CDATA[ AND sos.cancel_approve >= #{completeBegin} ]]>
+                        </when>
+                        <when test="completeEnd != null ">
+                            <![CDATA[ AND sos.cancel_approve <= #{completeEnd} ]]>
+                        </when>
+                        <otherwise></otherwise>
+                    </choose>
+                    <if test="partsFlag != null and partsFlag == 1">
+                        AND soc.parts_flag = #{partsFlag}
+                    </if>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <if test="replyFlagKefu != null and replyFlagKefu == 1">
+                        AND soc.reply_flag_kefu = #{replyFlagKefu}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!-- AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id )  -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner},'%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id DESC
+    </select>
+
+    <!-- 客户所有工单列表 -->
+    <select id="getAllOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString() and phone2.length == 11">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND soc.status = convert(#{status.value},SIGNED)
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND soc.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND soc.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="partsFlag != null and partsFlag == 1">
+                        AND soc.parts_flag = #{partsFlag}
+                    </if>
+                    <if test="appAbnormalyFlag != null and appAbnormalyFlag == 1">
+                        AND soc.app_abnormaly_flag = #{appAbnormalyFlag}
+                    </if>
+                    <if test="messageType != null and messageType >0">
+                        <choose>
+                            <when test="messageType == 1 ">
+                                and soc.reply_flag = 1
+                            </when>
+                            <when test="messageType == 2 ">
+                                and soc.reply_flag_kefu = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="replyFlagKefu != null and replyFlagKefu == 1">
+                        AND soc.reply_flag_kefu = #{replyFlagKefu}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!-- AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id ) -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner},'%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id DESC
+    </select>
+
+    <!-- 新客户所有工单列表 关联sd_order_head -->
+    <select id="getNewAllOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString() and phone2.length == 11">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND soc.status = convert(#{status.value},SIGNED)
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND soc.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND soc.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="partsFlag != null and partsFlag == 1">
+                        AND soc.parts_flag = #{partsFlag}
+                    </if>
+                    <if test="appAbnormalyFlag != null and appAbnormalyFlag == 1">
+                        AND soc.app_abnormaly_flag = #{appAbnormalyFlag}
+                    </if>
+                    <if test="messageType != null and messageType >0">
+                        <choose>
+                            <when test="messageType == 1 ">
+                                and soc.reply_flag = 1
+                            </when>
+                            <when test="messageType == 2 ">
+                                and soc.reply_flag_kefu = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="replyFlagKefu != null and replyFlagKefu == 1">
+                        AND soc.reply_flag_kefu = #{replyFlagKefu}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner},'%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id DESC
+    </select>
+
+    <!-- 客户投诉工单列表 -->
+    <select id="getComplainedOrderList" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    <![CDATA[ AND sos.complain_flag > 0 ]]>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <!-- 下单电话 -->
+                    <if test="phone2 != null and phone2 != ''.toString() and phone2.length == 11">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <if test="beginAt != null and endAt != null">
+                        AND sos.complain_at BETWEEN #{beginAt} AND #{endAt}
+                    </if>
+                    <![CDATA[ AND sos.complain_flag > 0 ]]>
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND sos.complain_status = convert(#{status.value},SIGNED)
+                    </if>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND soc.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND soc.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="messageType != null and messageType >0">
+                        <choose>
+                            <when test="messageType == 1 ">
+                                and soc.reply_flag = 1
+                            </when>
+                            <when test="messageType == 2 ">
+                                and soc.reply_flag_kefu = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND sos.complain_by like CONCAT('%',#{creator},'%')
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!-- AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id ) -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY soc.order_id DESC
+    </select>
+
+
+    <!-- 客户所有催单工单列表 -->
+    <select id="getReminderOrderLit" resultType="Order">
+        SELECT
+        soc.order_id as id,
+        soc.order_no,
+        sos.reminder_create_at,
+        soc.quarter,
+        so.data_source        AS "dataSource.value",
+        so.parent_biz_order_id,
+        so.shop_id            AS "b2bShop.shopId",
+        soc.order_service_type AS "orderCondition.orderServiceType",
+        soc.reply_flag_kefu   AS "orderCondition.replyFlagKefu",
+        soc.urgent_level_id   AS "orderCondition.urgentLevel.id",
+        soc.create_date       AS "orderCondition.createDate",
+        soc.status            AS "orderCondition.status.value",
+        soc.pending_type      AS "orderCondition.pendingType.value",
+        soc.user_name         AS "orderCondition.userName",
+        soc.service_phone     AS "orderCondition.servicePhone",
+        soc.phone2            AS "orderCondition.phone2",
+        soc.area_id           AS "orderCondition.area.id",
+        soc.area_name         AS "orderCondition.area.name",
+        soc.service_address   AS "orderCondition.serviceAddress",
+        soc.service_times     AS "orderCondition.serviceTimes",
+        so.description,
+        so.write_off,
+        so.orderitem_json     AS "itemsPb",
+        soc.finish_photo_qty  AS "orderCondition.finishPhotoQty",
+        sof.expect_charge     AS "orderFee.expectCharge",
+        sof.order_charge      AS "orderFee.orderCharge",
+        soc.parts_flag        AS "orderCondition.partsFlag",
+        soc.feedback_flag     AS "orderCondition.feedbackFlag",
+        soc.reply_flag        AS "orderCondition.replyFlag",
+        soc.feedback_id       AS "orderCondition.feedbackId",
+        soc.feedback_title    AS "orderCondition.feedbackTitle",
+        soc.customer_owner    AS "orderCondition.customerOwner",
+        sos.reminder_status     AS "orderStatus.reminderStatus",
+        sos.reminder_create_at  AS "orderStatus.reminderCreateAt",
+        sos.complain_flag     AS "orderStatus.complainFlag"
+        FROM  sd_order_condition soc
+        INNER JOIN sd_order_status sos on soc.order_id = sos.order_id
+        INNER JOIN sd_order_head so ON so.id = soc.order_id
+        INNER JOIN sd_order_fee sof ON sof.order_id = soc.order_id
+        <if test="creator != null and creator != ''.toString()">
+            LEFT JOIN sys_user suc ON suc.id = soc.create_by
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{phone1}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    AND sos.reminder_status = 2
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                    </if>
+                    <if test="beginDate != null and endDate != null">
+                        AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    <if test="phone2 != null and phone2 != ''.toString() and phone2.length == 11">
+                        AND soc.phone1 = #{phone2}
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0 ">
+                        AND soc.customer_id = #{customer.id}
+                    </if>
+                    <if test="createBy != null and createBy.id != null">
+                        AND soc.create_by = #{createBy.id}
+                    </if>
+                    <if test="status != null and status.value != null and status.value != ''.toString()">
+                        AND soc.status = convert(#{status.value},SIGNED)
+                    </if>
+                    <if test="beginAt != null and endAt != null">
+                        AND sos.reminder_create_at BETWEEN #{beginAt} AND #{endAt}
+                    </if>
+                    AND sos.reminder_status = 2
+                    <if test="partsFlag != null and partsFlag == 1">
+                        AND soc.parts_flag = #{partsFlag}
+                    </if>
+                    <choose>
+                        <when test="urgentLevel == null or urgentLevel.id == null or urgentLevel.id == 0">
+                        </when>
+                        <when test="urgentLevel.id == 1"><!-- all -->
+                            AND soc.urgent_level_id > 0
+                        </when>
+                        <otherwise>
+                            AND soc.urgent_level_id = #{urgentLevel.id}
+                        </otherwise>
+                    </choose>
+                    <if test="customerOrderNo != null and customerOrderNo != ''.toString()">
+                        AND so.parent_biz_order_id = #{customerOrderNo}
+                    </if>
+                    <if test="dataSource != null and dataSource > 0">
+                        AND so.data_source = #{dataSource}
+                        <if test="shopId != null and shopId != ''.toString()">
+                            AND so.shop_id = #{shopId}
+                        </if>
+                    </if>
+                    <if test="area != null and area.id != null and areaLevel != 2">
+                        <!-- AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id ) -->
+                        <choose>
+                            <when test="areaLevel == 0">
+                                AND soc.province_id = #{area.id}
+                            </when>
+                            <when test="areaLevel == 1">
+                                AND soc.city_id = #{area.id}
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="messageType != null and messageType >0">
+                        <choose>
+                            <when test="messageType == 1 ">
+                                and soc.reply_flag = 1
+                            </when>
+                            <when test="messageType == 2 ">
+                                and soc.reply_flag_kefu = 1
+                            </when>
+                        </choose>
+                    </if>
+                    <if test="replyFlagKefu != null and replyFlagKefu == 1">
+                        AND soc.reply_flag_kefu = #{replyFlagKefu}
+                    </if>
+                    <if test="appAbnormalyFlag != null and appAbnormalyFlag == 1">
+                        AND soc.app_abnormaly_flag = #{appAbnormalyFlag}
+                    </if>
+                    <if test="productId != null and productId != 0">
+                        AND locate(',${productId},',soc.product_ids)>0
+                    </if>
+                    <if test="serviceTypeId != null and serviceTypeId != 0">
+                        AND locate(',${serviceTypeId},',soc.service_types)>0
+                    </if>
+                    <if test="userName!=null and userName!=''.toString() ">
+                        AND soc.user_name like CONCAT(#{userName}, '%')
+                    </if>
+                    <if test="address != null and address!=''.toString() ">
+                        AND soc.service_address like CONCAT('%',#{address}, '%')
+                    </if>
+                    <if test="creator != null and creator != ''.toString()">
+                        AND suc.name LIKE CONCAT(#{creator},'%')
+                    </if>
+                    <if test="customerOwner != null and customerOwner != ''.toString()">
+                        AND soc.customer_owner LIKE CONCAT(#{customerOwner},'%')
+                    </if>
+                    <if test="remarks != null and remarks!=''.toString() ">
+                        AND soc.feedback_title LIKE CONCAT('%',#{remarks}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY sos.reminder_create_at
+    </select>
+
+
+    <!-- 查询待审核工单列表-->
+    <select id="getWaitingApproveOrderList" resultType="OrderCondition">
+        SELECT
+        soc.order_id,
+        soc.quarter,
+        soc.status      AS "status.value",
+        soc.charge_flag
+        FROM sd_order_condition soc
+        <if test="salesId !=null and salesId > 0">
+            INNER JOIN md_customer_sales cs ON cs.customer_id = soc.customer_id
+        </if>
+        <where>
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND soc.quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            AND soc.status = 10
+            <if test="customer != null and customer.id != null and customer.id >0 ">
+                AND soc.customer_id = #{customer.id}
+            </if>
+            <if test="salesId !=null and salesId >0">
+                AND cs.sales_id = #{salesId}
+            </if>
+            <!-- 子帐号查询 -->
+            <if test="createBy != null ">
+                AND soc.create_by = #{createBy.id}
+            </if>
+            <if test="beginDate != null and endDate != null">
+                AND soc.create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            <if test="userName!=null and userName!=''.toString() ">
+                AND soc.user_name like CONCAT(#{userName}, '%')
+            </if>
+            <if test="area != null and area.id != null ">
+                <choose>
+                    <when test="areaLevel == 2">
+                        AND soc.area_id = #{area.id}
+                    </when>
+                    <when test="areaLevel == 0">
+                        AND soc.province_id = #{area.id}
+                    </when>
+                    <when test="areaLevel == 1">
+                        AND soc.city_id = #{area.id}
+                    </when>
+                    <!--
+                    <otherwise>
+                        AND exists ( select 1 from sys_area a where a.parent_ids like concat('0,%',',',#{area.id},',%') and a.type = 4 and a.id = soc.area_id )
+                    </otherwise>
+                    -->
+                </choose>
+            </if>
+        </where>
+        ORDER BY soc.order_id DESC
+    </select>
+
+
+    <!-- 获取工单的投诉状态 -->
+    <select id="getComplainStatusByOrderIds" resultType="LongTwoTuple">
+        SELECT
+        order_id    AS "aElement",
+        min(status) AS "bElement"
+        FROM  sd_order_complain soc
+        <where>
+            soc.quarter = #{quarter}
+            <choose>
+                <when test="orderIds.size == 1">
+                    AND soc.order_id = #{orderIds[0]}
+                </when>
+                <otherwise>
+                    AND soc.order_id IN
+                    <foreach item="orderId" index="index" collection="orderIds" open="(" separator="," close=")">
+                        #{orderId}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </where>
+        GROUP BY soc.order_id
+    </select>
+
+    <select id="getOrderListByIds" resultType="com.wolfking.jeesite.modules.sd.entity.Order">
+        <foreach collection="quarters.entrySet()" index="key" item="value" separator=" union all ">
+            select
+                so.id,
+                so.data_source        AS "dataSource.value",
+                so.parent_biz_order_id,
+                so.shop_id            AS "b2bShop.shopId",
+                so.description,
+                so.write_off
+            from sd_order_head so
+            where
+                so.quarter = #{key}
+                and so.id in <foreach collection="value"  item="id" separator="," open="(" close=")"> #{id}</foreach>
+        </foreach>
+    </select>
+
+</mapper>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.AreaTimeLinessDao">
+    <sql id="timeLinessColumns">
+            a.id,
+            a.area_id as "area.id",
+            a.is_open,
+            a.create_by as "createBy.id",
+            a.create_date,
+            a.update_by as "updateBy.id",
+            a.update_date
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_area_time_liness(
+			area_id,
+			is_open,
+			create_by,
+			create_date
+		) VALUES (
+			#{area.id},
+			#{isOpen},
+			#{createBy.id},
+			#{createDate}
+		)
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_area_time_liness
+        SET
+            is_open = #{isOpen},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <select id="get" resultType="Brand">
+        SELECT
+                <include refid="timeLinessColumns"/>
+        FROM
+              md_area_time_liness a
+        WHERE
+              a.id = #{id}
+    </select>
+
+
+    <select id="findAllList" resultType="AreaTimeLiness">
+        SELECT
+                <include refid="timeLinessColumns"/>
+        FROM
+                md_area_time_liness a
+        ORDER BY
+                a.id
+        LIMIT 2000
+    </select>
+
+    <!--
+    // mark on 2020-7-31
+    <select id="findList" resultType="AreaTimeLiness">
+        SELECT
+              	a.id AS 'area.id',
+                a.name AS 'area.name',
+                t.id,
+                t.is_open,
+                t.create_by,
+                t.create_date,
+                t.update_by,
+                t.update_date
+        FROM  sys_area a
+        LEFT JOIN  md_area_time_liness t
+        ON     a.id = t.area_id
+        <where>
+                a.del_flag = 0
+            AND a.parent_id = #{area.parent.id}
+        </where>
+        ORDER BY  t.is_open
+        LIMIT 100
+    </select>
+    -->
+
+</mapper>

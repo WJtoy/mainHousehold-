@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.KeFuRegionDao">
+    <!-- 分页查询用户客服信息 -->
+    <select id="findList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+        SELECT
+        a.id,
+        a.office_id AS "office.id",
+        a.login_name,
+        a.name,
+        a.mobile,
+        a.user_type,
+        a.sub_flag,
+        a.status_flag,
+        a.manager_flag
+        FROM sys_user a
+        <if test="role != null and role.id != null and role.id != ''.toString()">
+            JOIN sys_user_role ur ON ur.user_id = a.id AND ur.role_id = #{role.id}
+        </if>
+        WHERE
+        a.user_type = #{userType}
+        and a.del_flag = #{DEL_FLAG_NORMAL}
+        <!-- 如果不是超级管理员，则不显示超级管理员用户 -->
+        <if test="!currentUser.admin">
+            AND a.id != 1
+        </if>
+        <if test="office != null and office.id != null and office.id != -1 and office.id != ''.toString()">
+            AND a.office_id in
+            <foreach collection="officeIds" item="oid" open="(" close=")" separator=",">
+                ${oid}
+            </foreach>
+        </if>
+        <if test="loginName != null and loginName != ''.toString()">
+            AND a.login_name like CONCAT('%',#{loginName}, '%')
+        </if>
+        <if test="name != null and name != ''.toString()">
+            AND a.name like CONCAT('%',#{name}, '%')
+        </if>
+        <if test="statusFlag != null and statusFlag != -1">
+            AND a.status_flag = #{statusFlag}
+        </if>
+        <if test="managerFlag != null and managerFlag != -1">
+            AND a.manager_flag = #{managerFlag}
+        </if>
+        order by a.office_id, a.manager_flag DESC
+        limit 1000
+    </select>
+
+
+</mapper>

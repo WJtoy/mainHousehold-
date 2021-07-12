@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ServiceTypeDao">
+    <!-- 获取网点的基础资料 -->
+    <!--
+    <resultMap id="ServiceTypeResult" type="ServiceType">
+
+        <id column="id" property="id"/>
+        <result column="code" property="code"/>
+        <result column="name" property="name"/>
+        <result column="open_for_customer" property="openForCustomer"/>
+        <result column="price" property="price"/>
+        <result column="discount_price" property="discountPrice"/>
+        <result column="blocked_price" property="blockedPrice"/>
+        <result column="engineer_price" property="engineerPrice"/>
+        <result column="engineer_discount_price" property="engineerDiscountPrice"/>
+        <result column="sort" property="sort"/>
+        <result column="unit" property="unit"/>
+        <result column="order_service_type" property="orderServiceType"/>
+        <result column="auto_grade_flag" property="autoGradeFlag" />
+        <result column="auto_charge_flag" property="autoChargeFlag" />
+        <result column="remarks" property="remarks"/>
+        <result column="del_flag" property="delFlag"/>
+        <result column="create_by" property="createBy.id"/>
+        <result column="create_date" property="createDate"/>
+        <result column="update_by" property="updateBy.id"/>
+        <result column="update_date" property="updateDate"/>
+        <association property="warrantyStatus"  column="warranty_status" javaType="Dict" >
+            <result property="value" column="warranty_status"/>
+            <result property="label" column="warranty_status_label"/>
+        </association>
+
+    </resultMap>
+    <sql id="serviceTypeColumns">
+        a.id,
+        a.code,
+        a.name,
+        a.open_for_customer,
+        a.warranty_status,
+        a.price,
+        a.discount_price,
+        a.blocked_price,
+        a.engineer_price,
+        a.engineer_discount_price,
+        a.sort,
+        a.unit,
+        a.order_service_type,
+        a.auto_grade_flag,
+        a.auto_charge_flag,
+        a.create_by,
+        a.create_date,
+        a.update_by,
+        a.update_date,
+        a.remarks,
+        a.del_flag
+    </sql>
+
+    <select id="get" resultMap="ServiceTypeResult">
+        select <include refid="serviceTypeColumns"/>
+        from md_service_type a
+        where a.id = #{id}
+        and a.del_flag = 0
+    </select>
+
+    <select id="findListServiceName" parameterType="String" resultMap="ServiceTypeResult">
+        select <include refid="serviceTypeColumns"/>
+        from md_service_type a
+        where a.code =#{code}
+             and a.del_flag =0
+        order by a.code
+    </select>
+
+    <select id="findAllList" resultMap="ServiceTypeResult">
+        select <include refid="serviceTypeColumns"/>
+        from md_service_type a
+        where a.del_flag = 0
+        order by a.sort,a.code
+    </select>
+
+    <select id="findList" resultMap="ServiceTypeResult">
+        select <include refid="serviceTypeColumns"/>
+        from md_service_type a
+        where a.del_flag = 0
+        <if test="name != null and name !=''.toString()">
+            and a.name like
+            <if test="dbName == 'oracle'.toString()">'%'||#{name}||'%'</if>
+            <if test="dbName == 'mssql'.toString()">'%'+#{name}+'%'</if>
+            <if test="dbName == 'mysql'.toString()">CONCAT('%', #{name}, '%')</if>
+        </if>
+        <if test="code != null and code !=''.toString()">
+            and a.code like
+            <if test="dbName == 'oracle'.toString()">'%'||#{code}||'%'</if>
+            <if test="dbName == 'mssql'.toString()">'%'+#{code}+'%'</if>
+            <if test="dbName == 'mysql'.toString()">CONCAT('%', #{code}, '%')</if>
+        </if>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''.toString()">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.sort,a.code
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_service_type(
+            code,
+            name,
+            open_for_customer,
+            warranty_status,
+            price,
+            discount_price,
+            blocked_price,
+            engineer_price,
+            engineer_discount_price,
+            sort,
+            unit,
+            order_service_type,
+            auto_grade_flag,
+            auto_charge_flag,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            remarks,
+            del_flag
+        ) VALUES (
+            #{code},
+            #{name},
+            #{openForCustomer},
+            #{warrantyStatus.value},
+            #{price},
+            #{discountPrice},
+            #{blockedPrice},
+            #{engineerPrice},
+            #{engineerDiscountPrice},
+            #{sort},
+            #{unit},
+            #{orderServiceType},
+            #{autoGradeFlag},
+            #{autoChargeFlag},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{remarks},
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE md_service_type SET
+            code =#{code},
+            name =#{name},
+            open_for_customer=#{openForCustomer},
+            warranty_status = #{warrantyStatus.value},
+            price=#{price},
+            discount_price=#{discountPrice},
+            blocked_price=#{blockedPrice},
+            engineer_price=#{engineerPrice},
+            engineer_discount_price=#{engineerDiscountPrice},
+            sort=#{sort},
+            unit=#{unit},
+            order_service_type=#{orderServiceType},
+            auto_grade_flag = #{autoGradeFlag},
+            auto_charge_flag = #{autoChargeFlag},
+            update_by=#{updateBy.id},
+            update_date= now(),
+            remarks=#{remarks},
+            del_flag=#{delFlag}
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="delete">
+        UPDATE md_service_type SET
+        del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+    -->
+</mapper>

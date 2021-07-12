@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ProductDao">
+    <!--<sql id="productColumns">
+        a.id,
+        &lt;!&ndash;
+        p.id AS "category.id",
+        p.name AS "category.name",
+        &ndash;&gt;
+        product_category_id AS "category.id",
+        a.name,
+        a.pinyin,
+        a.brand,
+        a.model,
+        a.set_flag,
+        a.product_ids,
+        a.sort,
+        a.approve_flag,
+        a.remarks
+    </sql>
+
+    <sql id="productJoinProductCategory">
+        LEFT JOIN md_productcategory AS p ON a.product_category_id=p.id
+    </sql>
+
+    <sql id="productJoinCustomerMapping">
+        INNER JOIN md_customer_product AS mcp ON a.id=mcp.product_id
+    </sql>
+
+    <sql id="productJoinMaterialMapping">
+        INNER JOIN md_product_material AS mpm ON a.id=mpm.product_id
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO md_product(
+            product_category_id,
+            name,
+            pinyin,
+            brand,
+            model,
+            set_flag,
+            product_ids,
+            sort,
+            create_by,
+            create_date,
+            remarks
+        ) VALUES (
+            #{category.id},
+            #{name},
+            #{pinYin},
+            #{brand},
+            #{model},
+            #{setFlag},
+            #{productIds},
+            #{sort},
+            #{createBy.id},
+            #{createDate},
+            #{remarks}
+        )
+    </insert>
+
+    <insert id="insertProductMaterial">
+        <foreach collection="materialList" item="material" index="index"
+                 open="" close="" separator="">
+            INSERT INTO md_product_material (
+                product_id,
+                material_id
+            )
+            VALUES (
+                #{productId},
+                #{material.id}
+            );
+        </foreach>
+    </insert>
+
+    <update id="update">
+        UPDATE
+            md_product
+        SET
+            product_category_id = #{category.id},
+            name = #{name},
+            pinyin = #{pinYin},
+            brand = #{brand},
+            model = #{model},
+            set_flag = #{setFlag},
+            product_ids = #{productIds},
+            sort = #{sort},
+            approve_flag = 0,
+            remarks = #{remarks},
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <update id="updateSort">
+        UPDATE
+            md_product
+        SET
+            sort = #{sort}
+        WHERE
+            id = #{id}
+    </update>
+
+    <update id="approveProduct">
+        UPDATE
+            md_product
+        SET
+            approve_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE
+            md_product
+        SET
+            del_flag = 1,
+            update_by = #{updateBy.id},
+            update_date = #{updateDate}
+        WHERE
+            id = #{id}
+    </delete>
+
+    <delete id="deleteProductMaterialByProductId">
+        DELETE FROM
+            md_product_material
+        WHERE
+            product_id = #{id}
+    </delete>
+
+    <select id="getProductMaterialIdList" resultType="ProductMaterial">
+        SELECT
+            product_id,
+            material_id
+        FROM
+            md_product_material
+        LIMIT 5000
+    </select>
+
+    <select id="get" resultType="Product">
+      SELECT
+              <include refid="productColumns"/>
+      FROM
+              md_product a
+              &lt;!&ndash;<include refid="productJoinProductCategory"/>&ndash;&gt;
+      WHERE
+              a.id = #{id}
+        AND   a.del_flag = 0
+    </select>
+
+    <select id="getIdByName" resultType="Long">
+      SELECT
+              id
+      FROM
+              md_product
+      WHERE
+              name = #{name}
+              <if test="id != null">
+              AND   id != #{id}
+              </if>
+        AND   del_flag = 0
+      LIMIT 1
+    </select>
+
+    <select id="findAllList" resultType="Product">
+        SELECT
+          <include refid="productColumns"/>
+        FROM
+          md_product a
+          &lt;!&ndash;<include refid="productJoinProductCategory"/>&ndash;&gt;
+        WHERE
+              a.del_flag = 0
+          AND a.approve_flag = 1
+        ORDER BY
+        a.sort
+        LIMIT   5000
+    </select>
+
+    <select id="findList" resultType="Product">
+        SELECT
+              <include refid="productColumns"/>
+        FROM
+              md_product a
+              &lt;!&ndash;<include refid="productJoinProductCategory"/>&ndash;&gt;
+        <if test="customerId != null">
+            <include refid="productJoinCustomerMapping"/>
+            AND mcp.customer_id = #{customerId}
+        </if>
+        <where>
+            <if test="category != null and category.id != null">
+              AND a.product_category_id = #{category.id}
+            </if>
+            <if test="name != null and name != ''">
+              AND a.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="brand != null and brand != ''">
+                AND a.brand LIKE CONCAT('%', #{brand}, '%')
+            </if>
+            <if test="model != null and model != ''">
+                AND a.model LIKE CONCAT('%', #{model}, '%')
+            </if>
+            <if test="approveFlag != null">
+                AND a.approve_flag = #{approveFlag}
+            </if>
+                AND a.del_flag = 0
+        </where>
+        ORDER BY
+              a.sort
+    </select>
+
+    <select id="findListForPrice" resultType="Product">
+        SELECT
+                id,
+                name
+        FROM
+                md_product
+        <where>
+            <if test="id != null">
+            AND id = #{id}
+            </if>
+            AND del_flag = 0
+            AND approve_flag = 1
+        </where>
+        ORDER BY
+                sort
+    </select>
+
+    <select id="getSingleProductList" resultType="Product">
+        SELECT
+              a.id,
+              a.name
+        FROM
+              md_product a
+        WHERE
+              a.set_flag = 0
+          AND a.approve_flag = 1
+          AND a.del_flag = 0
+        ORDER BY
+              a.sort
+        LIMIT 1000
+    </select>
+
+    <select id="getIdByProductCategoryId" resultType="Long">
+        SELECT
+                id
+        FROM
+                md_product
+        WHERE
+                product_category_id = #{value}
+          AND
+                del_flag = 0
+        LIMIT 1
+    </select>
+
+    <select id="getProductByMaterialId" resultType="Map">
+        SELECT
+                a.id,
+                a.name
+        FROM
+                md_product a
+                <include refid="productJoinMaterialMapping"/>
+            AND mpm.material_id = #{value}
+            AND a.del_flag = 0
+        LIMIT 1
+    </select>
+
+    <select id="getProductMaterialByMaterialId" resultType="Long">
+        select product_id
+        from md_product_material
+        where material_id = #{value}
+        limit 1
+    </select>
+
+    <select id="getSetProductByProductId" resultType="Map">
+        SELECT
+                id,
+                name
+        FROM
+                md_product
+        WHERE
+                set_flag = 1
+          AND   del_flag = 0
+          AND   (product_ids = #{value}
+            OR  product_ids LIKE CONCAT('%,', #{value}, ',%')
+            OR  product_ids LIKE CONCAT('%,', #{value}, '%')
+            OR  product_ids LIKE CONCAT('%', #{value}, ',%'))
+        LIMIT 1
+    </select>
+
+    <select id="getIdsByCustomerId" resultType="Map">
+        SELECT
+                mcp.product_id,
+                mp.sort
+        FROM
+                md_customer_product mcp
+          INNER JOIN
+                md_product mp
+          ON
+                mcp.product_id = mp.id
+          AND
+                mcp.customer_id = #{customerId}
+          AND
+                mp.del_flag = 0
+    </select>
+
+    <select id="getIdsByServicePointId" resultType="Map">
+        SELECT
+                mep.product_id,
+                mp.sort
+        FROM
+                md_engineer_product mep
+          INNER JOIN
+                md_product mp
+          ON
+                mep.product_id = mp.id
+          AND
+                mep.servicepoint_id = #{servicePointId}
+          AND
+                mp.del_flag = 0
+    </select>-->
+
+</mapper>

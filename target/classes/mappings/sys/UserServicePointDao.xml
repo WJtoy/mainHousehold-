@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.UserServicePointDao">
+
+    <!-- 分页查询用户客服信息 -->
+    <select id="findList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+        SELECT
+        a.id,
+        a.office_id AS "office.id",
+        a.login_name,
+        a.name,
+        a.mobile,
+        a.user_type,
+        a.sub_flag,
+        a.status_flag,
+        a.manager_flag
+        FROM sys_user a
+        <if test="role != null and role.id != null and role.id != ''.toString()">
+            JOIN sys_user_role ur ON ur.user_id = a.id AND ur.role_id = #{role.id}
+        </if>
+        WHERE
+        a.user_type = #{userType}
+        and a.del_flag = #{DEL_FLAG_NORMAL}
+        and a.sub_flag = #{subFlag}
+        <!-- 如果不是超级管理员，则不显示超级管理员用户 -->
+        <if test="!currentUser.admin">
+            AND a.id != 1
+        </if>
+        <if test="loginName != null and loginName != ''.toString()">
+            AND a.login_name like CONCAT(#{loginName}, '%')
+        </if>
+        <if test="name != null and name != ''.toString()">
+            AND a.name like CONCAT(#{name}, '%')
+        </if>
+        <if test="statusFlag != null and statusFlag != -1">
+            AND a.status_flag = #{statusFlag}
+        </if>
+        <!-- 数据范围过滤 -->
+        ${sqlMap.dsf}
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''.toString()">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.name
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

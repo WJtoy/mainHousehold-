@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.finance.md.dao.FiCustomerCurrencyDao">
+
+    <insert id="insert">
+        INSERT INTO fi_customercurrency(
+        id,
+        customer_id,
+        currency_type,
+        currency_no,
+        before_balance,
+        balance,
+        amount,
+        payment_type,
+        action_type,
+        create_by,
+        create_date,
+        update_by,
+        update_date,
+        remarks,
+        quarter
+        ) VALUES (
+        #{id},
+        #{customer.id},
+        #{currencyType},
+        #{currencyNo},
+        #{beforeBalance},
+        #{balance},
+        #{amount},
+        #{paymentType},
+        #{actionType},
+        #{createBy.id},
+        #{createDate},
+        <choose>
+            <when test="updateBy==null || updateBy.id == null">
+                #{createBy.id},
+            </when>
+            <otherwise>
+                #{updateBy.id},
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="updateDate==null">
+                null,
+            </when>
+            <otherwise>
+                #{updateDate},
+            </otherwise>
+        </choose>
+        #{remarks},
+        #{quarter}
+        )
+    </insert>
+
+</mapper>

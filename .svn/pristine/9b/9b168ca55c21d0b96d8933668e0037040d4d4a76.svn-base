@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderCrushDao">
+	<!-- 突击单 -->
+	<resultMap id="CrushPlanOrderMap" type="HistoryPlanOrderModel">
+		<id property="orderId" column="order_id"/>
+		<result property="orderNo" column="order_no" />
+		<result property="quarter" column="quarter" />
+		<result property="userName" column="user_name" />
+		<result property="userPhone" column="service_phone" />
+		<result property="userAddress" column="service_address" />
+		<result property="createDate" column="create_date" />
+		<result property="productCategoryId" column="product_category_id" />
+		<result property="servicePointId" column="servicepoint_id" />
+		<result property="statusValue" column="status" />
+		<result property="itemJson" column="orderitem_json" />
+		<association property="area"  column="order_area" javaType="Area" >
+			<id property="id" column="area_id"/>
+			<result property="name" column="area_name"/>
+		</association>
+		<association property="subArea"  column="order_subArea" javaType="Area" >
+			<id property="id" column="sub_area_id"/>
+		</association>
+	</resultMap>
+
+	<insert id="insertOrderCrush" useGeneratedKeys="true" keyProperty="id">
+		insert into sd_order_crush
+		(
+			quarter,order_id,order_no,product_category_id,customer_id,item_no,
+			province_id,city_id,area_id,crush_no,status,
+			user_name,user_phone,user_address,
+			create_remark,create_by,create_name,create_date,last_flag
+		)
+		values
+		(
+			#{quarter},#{orderId},#{orderNo},#{productCategoryId},#{customer.id},#{itemNo},
+			#{province.id},#{city.id},#{area.id},#{crushNo},#{status},
+			#{userName},#{userPhone},#{userAddress},
+			#{createRemark},#{createBy.id},#{createBy.name},#{createDate},1
+		)
+	</insert>
+
+	<select id="getOrderCrushNoDetailById" resultType="OrderCrush">
+        select id,quarter,order_id,order_no,item_no,product_category_id,area_id as "area.id",crush_no,status,
+        user_name,user_phone,user_address,
+		create_by as "createBy.id",create_name as "createBy.name",create_date,create_remark,
+		close_by as "closeBy.id",close_name as "closeBy.name",close_date,close_remark
+		from sd_order_crush
+		where quarter = #{quarter}
+			and id = #{id}
+		limit 1
+    </select>
+
+	<select id="getOrderCrushById" resultType="OrderCrush">
+        select id,quarter,order_id,order_no,item_no,product_category_id,area_id as "area.id",crush_no,status,
+        user_name,user_phone,user_address,
+		create_by as "createBy.id",create_name as "createBy.name",create_date,create_remark,
+		close_by as "closeBy.id",close_name as "closeBy.name",close_date,close_remark
+		from sd_order_crush
+		where quarter = #{quarter}
+			and id = #{id}
+		limit 1
+    </select>
+
+	<sql id="selectPageColumns">
+		SELECT
+			o.id,
+			o.quarter,
+			o.order_id,
+			o.order_no,
+			o.product_category_id,
+			o.crush_no,
+			o.item_no,
+			o.status,
+		    o.user_name,
+		    o.user_phone,
+		    o.user_address,
+		    o.create_by as "createBy.id",
+		    o.create_name as "createBy.name",
+		    o.create_date,
+		    o.create_remark,
+		    o.close_by as "closeBy.id",
+		    o.close_name as "closeBy.name",
+		    o.close_date,
+		    o.close_remark
+		FROM sd_order_crush o
+	</sql>
+
+	<!-- 选择的区域 -->
+	<sql id="selectedAreaFilter">
+		<if test="area != null and area.id != null and area.id > 0">
+			<choose>
+				<when test="areaLevel == 0">
+					AND o.province_id = #{area.id}
+				</when>
+				<when test="areaLevel == 1">
+					AND o.city_id = #{area.id}
+				</when>
+				<when test="areaLevel == 2">
+					AND o.area_id = #{area.id}
+				</when>
+				<when test="areaLevel == 3">
+					<if test="area.parent != null and area.parent.id != null and area.parent.id > 0">
+						and o.area_id = #{area.parent.id}
+					</if>
+					AND o.sub_area_id = #{area.id}
+				</when>
+				<otherwise>
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	<!-- 用户负责区域 -->
+	<sql id="RegionFilter">
+		<choose>
+			<when test="regionFilterType == 'province'.toString() and provinceList != null and provinceList.size > 0">
+				<choose>
+					<when test="provinceList.size == 1">
+						and o.province_id = #{provinceList[0]}
+					</when>
+					<otherwise>
+						AND o.province_id IN <foreach collection="provinceList" item="provinceId" index="index" open="(" close=")" separator=",">${provinceId}</foreach>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="regionFilterType == 'city'.toString() and cityList != null and cityList.size > 0">
+				<choose>
+					<when test="cityList.size == 1">
+						and o.city_id = #{cityList[0]}
+					</when>
+					<otherwise>
+						AND o.city_id IN <foreach collection="cityList" item="cityId" index="index" open="(" close=")" separator=",">${cityId}</foreach>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="regionFilterType == 'area'.toString() and areaList != null and areaList.size > 0">
+				<choose>
+					<when test="areaList.size == 1">
+						and o.area_id = #{areaList[0]}
+					</when>
+					<otherwise>
+						AND o.area_id IN <foreach collection="areaList" item="areaId" index="index" open="(" close=")" separator=",">${areaId}</foreach>
+					</otherwise>
+				</choose>
+			</when>
+		</choose>
+	</sql>
+	<!-- 用户负责所有区域 -->
+	<sql id="allUserRegion">
+		<if test="regionFilterCount > 1">
+			<trim prefix="AND" prefixOverrides="AND|OR">
+				AND (
+				<if test="areaList != null">
+					<choose>
+						<when test="areaList.size == 1">
+							o.area_id = #{areaList[0]}
+						</when>
+						<otherwise>
+							o.area_id IN
+							<foreach collection="areaList" item="areaItem" index="index" open="(" close=")"
+									 separator=",">${areaItem}</foreach>
+						</otherwise>
+					</choose>
+				</if>
+				<if test="cityList != null">
+					<choose>
+						<when test="cityList.size == 1">
+							or o.city_id = #{cityList[0]}
+						</when>
+						<otherwise>
+							or o.city_id IN
+							<foreach collection="cityList" item="cityItem" index="index" open="(" close=")"
+									 separator=",">${cityItem}</foreach>
+						</otherwise>
+					</choose>
+				</if>
+				<if test="provinceList != null">
+					<choose>
+						<when test="provinceList.size == 1">
+							or o.province_id = #{provinceList[0]}
+						</when>
+						<otherwise>
+							or o.province_id IN
+							<foreach collection="provinceList" item="provinceItem" index="index" open="(" close=")"
+									 separator=",">${provinceItem}</foreach>
+						</otherwise>
+					</choose>
+				</if>
+				)
+			</trim>
+		</if>
+	</sql>
+	<!-- 客户类型 -->
+	<sql id="customerTypeFilter">
+		<if test="customerType != null">
+			inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = o.customer_id
+		</if>
+	</sql>
+
+	<sql id="pageSql">
+		<include refid="selectPageColumns"/>
+		<if test="createBy != null and createBy.id != null and createBy.id != 0">
+			INNER JOIN md_productcategory_user mpu
+			ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+			<choose>
+				<when test="customerType != null and customerType == 1">
+					inner join sys_user_customer uc
+					on uc.user_id = #{createBy.id} and o.customer_id = uc.customer_id
+				</when>
+				<when test="customerType != null">
+					inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = o.customer_id
+				</when>
+			</choose>
+		</if>
+		<where>
+			<choose>
+				<when test="orderNoSearchType == 1 or crushNoSearchType == 1">
+					<if test="orderNoSearchType == 1">
+						AND o.order_no = #{orderNo}
+					</if>
+					<if test="crushNoSearchType == 1">
+						AND o.crush_no = #{crushNo}
+					</if>
+					<!-- 账号负责区域 -->
+					<include refid="RegionFilter" />
+					<if test="status != null">
+						and o.status = #{status}
+					</if>
+					<if test="quarter != null and quarter != ''.trim()">
+						AND o.quarter = #{quarter}
+					</if>
+				</when>
+				<otherwise>
+					<if test="beginDate != null and endDate != null">
+						AND o.create_date BETWEEN #{beginDate} AND #{endDate}
+					</if>
+					<!-- 选择的查询区域 -->
+					<include refid="selectedAreaFilter" />
+					<!-- 账号负责区域 -->
+					<include refid="RegionFilter" />
+					<if test="status != null">
+						AND o.status = #{status}
+					</if>
+					<if test="productCategoryId != null and productCategoryId > 0">
+						and o.product_category_id = #{productCategoryId}
+					</if>
+					<if test="closeBy != null and closeBy != ''.toString()">
+						and o.close_name LIKE CONCAT('%', #{closeBy}, '%')
+					</if>
+					<if test="quarters != null and quarters.size > 0">
+						AND o.quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+					</if>
+				</otherwise>
+			</choose>
+		</where>
+	</sql>
+
+	<select id="findPageList" resultType="OrderCrush">
+		<choose>
+			<when test="regionFilterCount == 0">
+				<!-- 无区域限制 -->
+				<include refid="pageSql" />
+				<choose>
+					<when test="status != null and status == 0">
+						order by create_date
+					</when>
+					<when test="status != null and status == 1">
+						order by close_date desc
+					</when>
+					<otherwise>
+						order by create_date
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>
+				<!-- 按用户区域 -->
+				<choose>
+					<when test="regionFilterCount > 1">
+						select *
+						from (
+						<trim prefixOverrides="union all">
+							<if test="provinceList != null and provinceList.size >0">
+								<bind name="regionFilterType" value="'province'"/>
+								union all
+								<include refid="pageSql" />
+							</if>
+							<if test="cityList != null and cityList.size >0">
+								<bind name="regionFilterType" value="'city'"/>
+								union all
+								<include refid="pageSql" />
+							</if>
+							<if test="areaList != null and areaList.size >0">
+								<bind name="regionFilterType" value="'area'"/>
+								union all
+								<include refid="pageSql"/>
+							</if>
+						</trim>
+						) u
+						<choose>
+							<when test="status != null and status == 0">
+								order by u.create_date
+							</when>
+							<when test="status != null and status == 1">
+								order by u.close_date desc
+							</when>
+							<otherwise>
+								order by u.create_date
+							</otherwise>
+						</choose>
+					</when>
+					<otherwise>
+						<choose>
+							<when test="provinceList != null and provinceList.size >0">
+								<bind name="regionFilterType" value="'province'"/>
+							</when>
+							<when test="cityList != null and cityList.size >0">
+								<bind name="regionFilterType" value="'city'"/>
+							</when>
+							<when test="areaList != null and areaList.size >0">
+								<bind name="regionFilterType" value="'area'"/>
+							</when>
+							<otherwise></otherwise>
+						</choose>
+						<include refid="pageSql"/>
+						<choose>
+							<when test="status != null and status == 0">
+								order by create_date
+							</when>
+							<when test="status != null and status == 1">
+								order by close_date desc
+							</when>
+							<otherwise>
+								order by create_date
+							</otherwise>
+						</choose>
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+	</select>
+
+	<sql id="selectCrushColumns">
+		SELECT
+			c.id,
+			c.quarter,
+			c.order_id,
+			c.order_no,
+			c.product_category_id,
+			c.crush_no,
+			c.item_no,
+			c.status,
+		    c.user_name,
+		    c.user_phone,
+		    c.user_address,
+		    c.create_by as "createBy.id",
+		    c.create_name as "createBy.name",
+		    c.create_date,
+		    c.create_remark,
+		    c.close_by as "closeBy.id",
+		    c.close_name as "closeBy.name",
+		    c.close_date,
+		    c.close_remark
+		FROM sd_order_crush c
+	</sql>
+
+	<select id="findCrushListOfOrder" resultType="OrderCrush">
+		<include refid="selectCrushColumns"/>
+		<where>
+			<if test="quarter != null and quarter != ''.toString()">
+				AND c.quarter = #{quarter}
+			</if>
+			<if test="orderId != null and orderId != 0">
+				and c.order_id = #{orderId}
+			</if>
+			<if test="crushNo != null and crushNo != ''.toString()">
+				and c.crush_no = #{crushNo}
+			</if>
+		</where>
+		order by c.create_date
+	</select>
+
+	<update id="closeOrderCursh">
+		update sd_order_crush
+		<set>
+			status = #{status},
+			close_by = #{closeBy.id},
+			close_name = #{closeBy.name},
+			close_date = #{closeDate},
+			<if test="closeRemark !=null and closeRemark != ''.toString() ">
+				close_remark = #{closeRemark},
+			</if>
+		</set>
+		where
+		quarter = #{quarter}
+		and id = #{id}
+	</update>
+
+	<!-- 按订单关闭 -->
+	<update id="closeOrderCurshByOrderId">
+		update sd_order_crush
+		<set>
+			status = #{status},
+			close_by = #{closeBy.id},
+			close_name = #{closeBy.name},
+			close_date = #{closeDate},
+			<if test="closeRemark !=null and closeRemark != ''.toString() ">
+				close_remark = #{closeRemark},
+			</if>
+		</set>
+		where
+		quarter = #{quarter}
+		and order_id = #{orderId}
+		and status in (0,2)
+	</update>
+
+	<update id="updateOrderCrush">
+		update sd_order_crush
+		<set>
+			<if test="createRemark != null and createRemark != ''.toString() ">
+				create_remark = #{createRemark},
+			</if>
+			<if test="createBy != null and createBy.id != 0 ">
+				create_by = #{createBy.id},
+				create_name = #{createBy.name},
+			</if>
+			<if test="createDate != null">
+				create_date = #{createDate},
+			</if>
+			<if test="closeRemark != null and closeRemark != ''.toString() ">
+				close_remark = #{closeRemark},
+			</if>
+			<if test="closeBy != null and closeBy.id != 0 ">
+				close_by = #{closeBy.id},
+				close_name = #{closeBy.name},
+			</if>
+			<if test="closeDate != null">
+				close_date = #{closeDate},
+			</if>
+			<if test="status != null">
+				status = #{status},
+			</if>
+		</set>
+		where
+		quarter = #{quarter}
+		and id = #{id}
+	</update>
+
+	<update id="updateOrderCrushLastFlagToZero">
+		update
+			sd_order_crush
+		SET
+			last_flag = 0
+		WHERE quarter = #{quarter} AND order_id = #{orderId} AND <![CDATA[ status <> 2 ]]>
+		<if test="exceptId != null and exceptId > 0">
+			<![CDATA[  AND id <> #{exceptId} ]]>
+		</if>
+	</update>
+
+	<!-- 最大序号 -->
+	<select id="getMaxTimes" resultType="java.lang.Integer">
+      select
+        max(item_no)
+      from
+        sd_order_crush
+      where
+      	order_id = #{orderId}
+        and quarter = #{quarter}
+    </select>
+
+	<!-- 未完成突击单 -->
+	<select id="getOpenOrderCrushId" resultType="long">
+		select id
+		from sd_order_crush
+		where
+			quarter = #{quarter}
+			and order_id = #{orderId}
+			and status in (0,2)
+		limit 1
+	</select>
+
+	<select id="getTempSaveOrderCrush" resultType="OrderCrush">
+		select id,quarter,order_id,order_no,product_category_id,crush_no,item_no,status,data,
+		user_name,user_phone,user_address,
+		create_by as "createBy.id",create_name as "createBy.name",create_date,create_remark,
+		close_by as "closeBy.id",close_name as "closeBy.name",close_date,close_remark
+		from sd_order_crush
+		where
+			quarter = #{quarter}
+			and order_id = #{orderId}
+			and status = 2
+	</select>
+
+    <update id="updateAddress" parameterType="java.util.HashMap">
+        update sd_order_crush
+        <set>
+            <if test="userAddress!=null and userAddress!=''">
+                user_address = #{userAddress}
+            </if>
+        </set>
+        where
+        <if test="quarter != null and quarter != ''.toString()">quarter = #{quarter} and</if>
+        id = #{id}
+    </update>
+
+</mapper>

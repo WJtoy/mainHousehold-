@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.sd.dao.TmallServiceMonitorDao">
+    <sql id="TmallServiceMonitorColumns">
+        id,
+        order_id,
+        order_no,
+        monitor_id,
+        area_name,
+        level,
+        gmt_date,
+        status,
+        content,
+        replier_id,
+        quarter,
+        replier_name,
+        reply_date,
+        reply_content,
+        rule_id,
+        service_code,
+        create_date
+    </sql>
+
+    <select id="getListByOrderId" resultType="com.wolfking.jeesite.ms.tmall.sd.entity.TmallServiceMonitor">
+        SELECT
+        <include refid="TmallServiceMonitorColumns"/>
+        FROM sd_tmall_service_monitor
+        <where>
+            order_id = #{orderId}
+         <if test="quarter !=null and quarter !=''">
+            AND quarter = #{quarter}
+         </if>
+        </where>
+        ORDER BY status
+    </select>
+
+    <select id="get" resultType="com.wolfking.jeesite.ms.tmall.sd.entity.TmallServiceMonitor">
+        SELECT
+           <include refid="TmallServiceMonitorColumns" />
+        FROM
+           sd_tmall_service_monitor
+        WHERE
+           id = #{id}
+    </select>
+
+    <update id="update">
+        update sd_tmall_service_monitor
+        set
+          status        = #{status},
+          replier_id    = #{replierId},
+          replier_name  = #{replierName},
+          reply_date    = #{replyDate},
+          reply_content = #{replyContent}
+        where
+          id = #{id}
+    </update>
+
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into sd_tmall_service_monitor (
+            order_id,
+            order_no,
+            monitor_id,
+            area_id,
+            area_name,
+            level,
+            gmt_date,
+            status,
+            content,
+            replier_id,
+            quarter,
+            replier_name,
+            reply_date,
+            reply_content,
+            rule_id,
+            service_code,
+            can_rush,
+            customer_id,
+            product_category_id,
+            province_id,
+            city_id,
+            kefu_type,
+            create_date
+        ) values(
+            #{orderId},
+            #{orderNo},
+            #{monitorId},
+            #{areaId},
+            #{areaName},
+            #{level},
+            #{gmtDate},
+            #{status},
+            #{content},
+            #{replierId},
+            #{quarter},
+            #{replierName},
+            #{replyDate},
+            #{replyContent},
+            #{ruleId},
+            #{serviceCode},
+            #{canRush},
+            #{customerId},
+            #{productCategoryId},
+            #{provinceId},
+            #{cityId},
+            #{kefuType},
+            #{createDate}
+        )
+    </insert>
+
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.UserServicePointExploitDao">
+
+    <!-- 分页查询用户客服信息 -->
+    <select id="findList" resultType="com.wolfking.jeesite.modules.sys.entity.User">
+        SELECT
+        a.id,
+        a.office_id AS "office.id",
+        a.login_name,
+        a.name,
+        a.phone,
+        a.mobile,
+        a.qq,
+        a.user_type,
+        a.sub_flag,
+        a.status_flag,
+        a.manager_flag
+        FROM sys_user a
+        WHERE
+        a.user_type = #{user.userType}
+        and a.del_flag = #{user.DEL_FLAG_NORMAL}
+        and a.sub_flag = #{user.subFlag}
+        <!-- 如果不是超级管理员，则不显示超级管理员用户 -->
+        <if test="!user.currentUser.admin">
+            AND a.id != 1
+        </if>
+        <if test="user.loginName != null and user.loginName != ''.toString()">
+            AND a.login_name like CONCAT(#{user.loginName}, '%')
+        </if>
+        <if test="user.name != null and user.name != ''.toString()">
+            AND a.name like CONCAT(#{user.name}, '%')
+        </if>
+        <if test="user.statusFlag != null and user.statusFlag != -1">
+            AND a.status_flag = #{user.statusFlag}
+        </if>
+        <if test="roleIds != null and roleIds.size > 0">
+            and id  in  (
+            select user_id
+            from sys_user_role
+            where role_id in
+            <foreach collection="roleIds" item="roleId" open="(" close=")" separator=",">
+                ${roleId}
+            </foreach>
+            )
+        </if>
+        <!-- 数据范围过滤 -->
+        ${user.sqlMap.dsf}
+        <choose>
+            <when test="user.page !=null and user.page.orderBy != null and user.page.orderBy != ''.toString()">
+                ORDER BY ${user.page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.name
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

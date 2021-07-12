@@ -1,0 +1,36 @@
+<script id="tpl-tracking-row" type="text/x-dot-template">
+{{? it }}
+<tr>
+    <td>{{= it.idx}}</td>
+    <td>{{= it.createDate}}</td>
+    {{? it.statusFlag == 1 || it.statusFlag == 0}}
+    <td></td>
+    <td>{{= Utils.htmlDecode(it.actionComment)}}</td>
+    {{??}}
+    <td>{{= Utils.htmlDecode(it.actionComment)}}</td>
+    <td>{{= Utils.htmlDecode(it.remarks)}}</td>
+    {{?}}
+    <td>{{= it.createBy.name}}</td>
+</tr>
+{{?}}
+</script>
+
+
+<script id="tpl-tracking-load" type="text/x-dot-template">
+    {{? it.logs.length>0 }}
+    {{~it.logs :item:index}}
+    <tr>
+        <td></td>
+        <td>{{= item.createDate}}</td>
+        {{? item.statusFlag == 1 || item.statusFlag == 0}}
+        <td></td>
+        <td>{{= Utils.htmlDecode(item.actionComment)}}</td>
+        {{??}}
+        <td>{{= Utils.htmlDecode(item.actionComment)}}</td>
+        <td>{{= Utils.htmlDecode(item.remarks)}}</td>
+        {{?}}
+        <td>{{= item.createBy.name}}</td>
+    </tr>
+    {{~}}
+    {{?}}
+</script>

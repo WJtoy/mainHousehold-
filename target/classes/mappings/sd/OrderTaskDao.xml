@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderTaskDao">
+
+    <resultMap id="mapRepeateOrderVM" type="RepeateOrderVM">
+        <result property="customerId" column="customer_id" />
+        <result property="orderNo" column="order_no" />
+        <result property="orderId" column="order_id" />
+        <result property="phone" column="service_phone" />
+    </resultMap>
+
+    <!-- 定时处理将未即时自动对账的订单转为手动对账
+    <update id="updateToManualCharge" >
+        update
+            sd_order_condition
+        set
+            auto_charge_flag = 2
+        <where>
+            <if test="quarters != null and quarters.size > 0">
+                <choose>
+                  <when test="quarters.size == 1">
+                  quarter = #{quarters[0]}
+                  </when>
+                  <otherwise>
+                  quarter in <foreach collection="quarters" item="quarter" open="(" separator="," close=")">
+                              #{quarter}
+                              </foreach>
+                  </otherwise>
+                </choose>
+                and
+            </if>
+            auto_charge_flag = 3
+            and charge_flag = 0
+            <![CDATA[
+            and close_date < #{closeDate}
+            ]]>
+        </where>
+    </update>
+    -->
+
+    <!-- 定时处理将未即时自动对账的订单转为手动对账 -->
+    <update id="updateToManualCharge" >
+        update
+            sd_order_condition
+        set
+            auto_charge_flag = 2
+        <where>
+            close_date between #{beginDate} and #{endDate}
+            and status = 80
+            and auto_charge_flag = 3
+            and charge_flag = 0
+            and quarter = #{quarter}
+        </where>
+    </update>
+
+
+    <select id="getOrderCreateInfo" resultMap="mapRepeateOrderVM">
+        select o.customer_id,o.service_phone,o.order_no,o.order_id
+        from sd_order_condition o
+        inner join (
+        <choose>
+            <when test="quarter != null and quarter != ''.toString()">
+                select customer_id,service_phone,max(order_id) order_id
+                from sd_order_condition
+                where quarter = #{quarter}
+                <if test="beginDate != null and endDate != null">
+                    AND create_date BETWEEN #{beginDate} AND #{endDate}
+                </if>
+                and customer_id between #{minCustomerId} and #{maxCustomerId}
+                group by customer_id,service_phone
+            </when>
+            <when test="quarters != null and quarters.size > 0">
+                <foreach collection="quarters" item="quart" index="index" open="" close=" limit 500000" separator=" union ">
+                    select customer_id,service_phone,max(order_id) order_id
+                    from sd_order_condition
+                    where quarter = #{quart}
+                    <if test="beginDate != null and endDate != null">
+                        AND create_date BETWEEN #{beginDate} AND #{endDate}
+                    </if>
+                    and customer_id between #{minCustomerId} and #{maxCustomerId}
+                    group by customer_id,service_phone
+
+                </foreach>
+            </when>
+            <otherwise></otherwise>
+        </choose>
+        ) a on
+        <choose>
+            <when test="quarter != null and quarter != ''.toString()">
+                o.quarter = #{quarter} and
+            </when>
+            <when test="quarters != null and quarters.size > 0">
+                o.quarter in <foreach collection="quarters" item="quart" index="index" open="(" close=")" separator=",">${quart}</foreach> and
+            </when>
+            <otherwise></otherwise>
+        </choose>
+          o.order_id = a.order_id
+          and o.customer_id = a.customer_id
+        limit 500000
+    </select>
+
+    <!--
+    <select id="getOrderCreateInfo" resultMap="mapRepeateOrderVM">
+        select customer_id,service_phone,max(order_no) order_no
+        from sd_order_condition
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <choose>
+                <when test="quarter != null and quarter != ''.toString()">
+                    AND quarter = #{quarter}
+                </when>
+                <when test="quarters != null and quarters.size > 0">
+                    AND quarter in <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                </when>
+                <otherwise></otherwise>
+            </choose>
+            <if test="beginDate != null and endDate != null">
+                AND create_date BETWEEN #{beginDate} AND #{endDate}
+            </if>
+            and customer_id between #{minCustomerId} and #{maxCustomerId}
+        </trim>
+        group by customer_id,service_phone
+        limit 500000
+    </select>
+    -->
+</mapper>

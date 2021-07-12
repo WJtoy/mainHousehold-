@@ -1,0 +1,355 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp" %>
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>开发明细报表</title>
+    <meta name="decorator" content="default"/>
+    <%@ include file="/WEB-INF/views/include/head.jsp" %>
+    <link href="${ctxStatic}/jquery.darktooltip/darktooltip.min.css" type="text/css" rel="stylesheet"/>
+    <script src="${ctxStatic}/jquery.darktooltip/jquery.darktooltip.min.js" type="text/javascript"></script>
+<%--    <link href="${ctxStatic}/jquery.supertable/superTables.css" type="text/css" rel="stylesheet"/>--%>
+    <script src="${ctxStatic}/jquery.supertable/jquery.superTable.js" type="text/javascript"></script>
+    <script src="${ctxStatic}/area/AreaFourLevel.js" type="text/javascript"></script>
+    <%@ include file="/WEB-INF/views/include/pageSearch.jsp" %>
+    <style type="text/css">
+        .table thead th, .table tbody td {
+            text-align: center;
+            vertical-align: middle;
+            BackColor: Transparent;
+        }
+
+        .parent:after{
+            content:"";
+            height:0;
+            line-height:0;
+            display:block;
+            visibility:hidden;
+            clear:both;
+        }
+
+        .target{
+            display:none;
+            z-index: 4;
+        }
+
+        .triggle:hover + .target {
+            display: block;
+        }
+
+        .border{
+            display: none;
+            opacity: 0.8;
+            width: 0 !important;
+            border-bottom:solid 12px #1B1E24;
+            border-left:12px solid transparent;
+            border-right: 6px solid transparent;
+            boder-top: 0px solid transparent;
+        }
+    </style>
+    <script src="${ctxStatic}/common/moment.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function datePicker(startId, endId) {
+            $('#' + startId).unbind("click");
+            $('#' + startId).bind("click", function () {
+                WdatePicker({
+                    readOnly: true,
+                    dateFmt: 'yyyy-MM-dd',
+                    isShowClear: false | false,
+                    maxDate: '#F{$dp.$D(\'' + endId + '\')||\'%y-%M-%d\'}',
+                    minDate: '#F{$dp.$D(\'' + endId + '\',{M:-3,d:+1})}'
+                });
+            });
+
+            $('#' + endId).unbind("click");
+            $('#' + endId).bind("click", function () {
+                WdatePicker({
+                    dateFmt: 'yyyy-MM-dd',
+                    isShowClear: false | false,
+                    minDate: '#F{$dp.$D(\'' + startId + '\')||\'%y-%M-%d\'}',
+                    maxDate: '#F{$dp.$D(\'' + startId + '\',{M:3,d:-1})}'
+                });
+            });
+        }
+    </script>
+    <script type="text/javascript" language="javascript">
+
+        $(document).ready(function () {
+            $(".triggle").on('hover', function(){
+                $(".border").css({
+                    display:"block"
+                })
+            })
+            $(".triggle").on('mouseleave', function(){
+                $(".border").css({
+                    display:"none"
+                })
+            })
+            $("th").css({"text-align": "center", "vertical-align": "middle"});
+            $("td").css({"vertical-align": "middle"});
+            $('a[data-toggle=tooltip]').darkTooltip();
+            $('a[data-toggle=tooltipeast]').darkTooltip({gravity: 'east'});
+
+            $("#btnSubmit").click(function () {
+                top.$.jBox.tip('请稍候...', 'loading');
+                $("#pageNo").val(1);
+                $("#searchForm").attr("action", "${ctx}/rpt/provider/exploitDetail/exploitDetailReport");
+                $("#searchForm").submit();
+            });
+
+            $("#btnExport").click(function () {
+                top.$.jBox.tip('请稍候...', 'loading');
+                $("#btnExport").prop("disabled", true);
+                $.ajax({
+                    type: "POST",
+                    url: "${ctx}/rpt/provider/exploitDetail/checkExportTask?" + (new Date()).getTime(),
+                    data: $(searchForm).serialize(),
+                    success: function (data) {
+                        if (ajaxLogout(data)) {
+                            return false;
+                        }
+                        if (data && data.success == true) {
+                            top.$.jBox.closeTip();
+                            top.$.jBox.confirm("确认要导出数据吗？", "系统提示", function (v, h, f) {
+                                if (v == "ok") {
+                                    top.$.jBox.tip('请稍候...', 'loading');
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "${ctx}/rpt/provider/exploitDetail/export?" + (new Date()).getTime(),
+                                        data: $(searchForm).serialize(),
+                                        success: function (data) {
+                                            if (ajaxLogout(data)) {
+                                                return false;
+                                            }
+                                            if (data && data.success == true) {
+                                                top.$.jBox.closeTip();
+                                                top.$.jBox.tip(data.message, "success");
+                                                $('#btnExport').removeAttr('disabled');
+                                                return false;
+                                            }
+                                            else if (data && data.message) {
+                                                top.$.jBox.error(data.message, "导出错误");
+                                            }
+                                            else {
+                                                top.$.jBox.error("导出错误", "错误提示");
+                                            }
+                                            $('#btnExport').removeAttr('disabled');
+                                            top.$.jBox.closeTip();
+                                            return false;
+                                        },
+                                        error: function (e) {
+                                            $('#btnExport').removeAttr('disabled');
+                                            ajaxLogout(e.responseText, null, "导出错误，请重试!");
+                                            top.$.jBox.closeTip();
+                                        }
+                                    });
+                                }
+                            }, {buttonsFocus: 1});
+                            $('#btnExport').removeAttr('disabled');
+                            top.$.jBox.closeTip();
+                            return false;
+                        }
+                        else if (data && data.message) {
+                            top.$.jBox.error(data.message, "导出错误");
+                        }
+                        else {
+                            top.$.jBox.error("导出错误", "错误提示");
+                        }
+                        $('#btnExport').removeAttr('disabled');
+                        top.$.jBox.closeTip();
+                        return false;
+                    },
+                    error: function (e) {
+                        $('#btnExport').removeAttr('disabled');
+                        ajaxLogout(e.responseText, null, "导出错误，请重试!");
+                        top.$.jBox.closeTip();
+                    }
+                });
+                top.$('.jbox-body .jbox-icon').css('top', '55px');
+            });
+        });
+    </script>
+</head>
+<body>
+<ul class="nav nav-tabs">
+    <li class="active"><a href="javascript:void(0);">开发明细报表</a>
+    </li>
+</ul>
+<c:set var="currentuser" value="${fns:getUser()}"/>
+<form:form id="searchForm" modelAttribute="rptSearchCondition" method="post"
+           class="breadcrumb form-search">
+    <input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}"/>
+    <input id="pageSize" name="pageSize" type="hidden" value="${page.pageSize}"/>
+    <input id="searchType" name="searchType" type="hidden" value="processing"/>
+    <input id="repageFlag" name="repageFlag" type="hidden" value="false"/>
+    <div style="width: 90%">
+        <input type="hidden" name="isSearching" value="${rptSearchCondition.isSearchingYes}"/>
+        <label class="label-search">工单号：</label>&nbsp;
+        <input type=text class="input-small" id="orderNo" name="orderNo" value="${rptSearchCondition.orderNo}"
+               maxlength="20"/>
+        &nbsp;&nbsp;
+        <label>区域：</label>
+        <sys:areaSelectFourLevel id="areaId" name="areaId" value="${rptSearchCondition.areaId}" levelValue=""
+                                 labelValue="${rptSearchCondition.areaName}" labelName="areaName"
+                                 title="区域" mustSelectCounty="true" cssClass="required" showMaxLevel="3"> </sys:areaSelectFourLevel>
+        &nbsp;&nbsp;
+        <label>发单时间：</label>
+        <input id="beginPlanDate" name="beginPlanDate" type="text" readonly="readonly"
+               style="width:99px;margin-left:4px"
+               maxlength="20" class="input-small Wdate"
+               value="<fmt:formatDate value='${rptSearchCondition.beginPlanDate}' pattern='yyyy-MM-dd' type='date'/>"/>
+        <label>~</label>&nbsp;&nbsp;&nbsp;
+        <input id="endPlanDate" name="endPlanDate" type="text" readonly="readonly" style="width:98px" maxlength="20"
+               class="input-small Wdate"
+               value="<fmt:formatDate value='${rptSearchCondition.endPlanDate}' pattern='yyyy-MM-dd' type='date'/>"/>
+        &nbsp;&nbsp;
+        <label>用户电话：</label>
+        <form:input path="contactInfo" htmlEscape="false" maxlength="11" class="input-small"
+                    onkeyup="value=value.replace(/[^\d]/g,'')"/>
+        &nbsp;&nbsp;
+    </div>
+    &nbsp;&nbsp;
+    <div>
+        <label>完结时间：</label>
+        <input id="beginDate" name="beginDate" type="text" readonly="readonly" style="width:95px;"
+               maxlength="20" class="input-small Wdate"
+               value="${fns:formatDate(rptSearchCondition.beginDate,'yyyy-MM-dd')}"/>
+        <label>~</label>&nbsp;&nbsp;&nbsp;
+        <input id="endDate" name="endDate" type="text" readonly="readonly" style="width:95px" maxlength="20"
+               class="input-small Wdate" value="${fns:formatDate(rptSearchCondition.endDate,'yyyy-MM-dd')}"/>
+        &nbsp;&nbsp;
+        <label>服务品类：</label>
+        <select id="productCategory" name="productCategory" class="input-small" style="width:125px;">
+            <option value="0" <c:out value="${(empty rptSearchCondition.productCategory)?'selected=selected':''}"/>>所有
+            </option>
+            <c:forEach items="${productCategoryList}" var="dict">
+                <option value="${dict.id}" <c:out
+                        value="${(rptSearchCondition.productCategory eq dict.id)?'selected=selected':''}"/>>${dict.name}</option>
+            </c:forEach>
+        </select>
+        &nbsp;&nbsp;
+        <label>客户：</label>
+        <c:choose>
+            <c:when test="${currentuser.isCustomer()}">
+                <input type="text" readonly="true" id="customer.name" name="customer.name"
+                       value="${currentuser.customerAccountProfile.customer.name}"/>
+                <input type="hidden" readonly="true" id="customer.id" name="customer.id"
+                       value="${currentuser.customerAccountProfile.customer.id}"/>
+            </c:when>
+            <c:otherwise>
+                <select id="customerId" name="customerId" class="input-small" style="width:225px;">
+                    <option value="" <c:out value="${(empty rptSearchCondition.customerId)?'selected=selected':''}"/>>
+                        所有
+                    </option>
+                    <c:forEach items="${fns:getMyCustomerList()}" var="dict">
+                        <option value="${dict.id}" <c:out
+                                value="${(rptSearchCondition.customerId eq dict.id)?'selected=selected':''}"/>>${dict.name}</option>
+                    </c:forEach>
+                </select>
+            </c:otherwise>
+        </c:choose>
+        &nbsp;&nbsp;
+        <input id="btnSubmit" class="btn btn-primary" type="button" value="查询"/>
+        &nbsp;&nbsp;
+        <input id="btnExport" class="btn btn-primary" type="button" value="导出"/>
+    </div>
+
+    <div style="position: absolute;top: 54px;right:5px;width: 100px;height: 30px">
+        <div style="position: relative" class="parent">
+            <div style="color:#808695;font-size: 14px;float: right;" class="triggle triggle1">
+                报表说明 <img src="${ctxStatic}/images/rpt/interrogation.png">
+            </div>
+            <div style="text-align:right;position: absolute;width: 150px;height: 100px;right:1px;top:31px;" class="target">
+                <div style="text-align:left;background-color: #1B1E24;border-radius: 5px;opacity: 0.8;padding: 10px;font-size:14px;color:white;min-width:100px;max-width:400px;">
+                    数据时效：实时数据<br/>
+                    统计方式：突击完结时间
+                </div>
+            </div>
+            <div style="position:absolute;right: 4px;bottom: -10px " class="border border1">
+            </div>
+        </div>
+    </div>
+</form:form>
+<sys:message content="${message}"/>
+<div id="divGrid" style="overflow: auto;">
+    <table id="contentTable" class="table table-striped table-bordered table-condensed table-hover"
+           style="table-layout:fixed; margin-top: 0px;">
+        <thead>
+        <tr>
+            <th rowspan="2" width="60">序号</th>
+            <th rowspan="2" width="60">服务品类</th>
+            <th rowspan="2" width="120">工单号</th>
+            <th rowspan="2" width="60">状态</th>
+            <th rowspan="2" width="120">客服发单人</th>
+            <th rowspan="2" width="100">发单时间</th>
+            <th rowspan="2" width="120">突击单完结人</th>
+            <th rowspan="2" width="100">完结时间</th>
+            <th rowspan="2" width="60">服务类型</th>
+            <th rowspan="2" width="100">用户名</th>
+            <th rowspan="2" width="120">用户电话</th>
+            <th rowspan="2" width="150">省市区</th>
+            <th rowspan="2" width="150">地址</th>
+            <th rowspan="2" width="80">突击次数</th>
+            <th rowspan="2" width="100">完成时效</th>
+            <th colspan="2" width="160">加费用</th>
+
+        </tr>
+        <tr>
+            <th>远程</th>
+            <th>其他</th>
+        </tr>
+        </thead>
+        <tbody>
+
+
+        <c:set var="engineerTravelCharge" value="0.0"/>
+        <c:set var="engineerOtherCharge" value="0.0"/>
+
+
+        <c:set var="rowIndex" value="0"/>
+        <c:forEach items="${page.list}" var="item">
+            <tr>
+                <c:set var="rowIndex" value="${rowIndex+1}"/>
+                <td>${rowIndex}</td>
+                <td>${item.productCategoryName}</td>
+                <td>${item.orderNo}</td>
+                <td><span class="label status_${item.orderStatus.value}">${item.orderStatus.label}</span></td>
+                <td>${item.createName}</td>
+                <td><fmt:formatDate value="${item.createDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+                <td>${item.closeName}</td>
+                <td><fmt:formatDate value="${item.closeDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+                <td>${item.serviceType.name}</td>
+                <td>${item.userName}</td>
+                <td>${item.userPhone}</td>
+                <td>${item.areaName}</td>
+                <td class="autocut"><a href="javascript:" data-toggle="tooltip"
+                                       data-tooltip="${item.userAddress}">${fns:abbr(item.userAddress,40)}</a></td>
+                <td>第${item.itemNo}次突击</td>
+                <td>${item.timeLinessLabel}</td>
+                <td>${item.engineerTravelCharge}</td>
+                <td>${item.engineerOtherCharge}</td>
+                <c:set var="engineerTravelCharge" value="${engineerTravelCharge+item.engineerTravelCharge}"/>
+                <c:set var="engineerOtherCharge" value="${engineerOtherCharge+item.engineerOtherCharge}"/>
+            </tr>
+        </c:forEach>
+
+        <c:if test="${page.list.size()>0}">
+            <tr>
+                <td colspan="15"><B>合计</B></td>
+                <td><fmt:formatNumber value="${engineerTravelCharge}" pattern="0.00"/></td>
+                <td><fmt:formatNumber value="${engineerOtherCharge}" pattern="0.00"/></td>
+
+            </tr>
+        </c:if>
+        </tbody>
+    </table>
+</div>
+
+<div class="pagination">${page}</div>
+<script type="text/javascript">
+    datePicker('beginDate', 'endDate');
+    datePicker('beginPlanDate', 'endPlanDate');
+</script>
+</body>
+</html>

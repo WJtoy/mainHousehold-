@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.td.dao.MessageDao">
+    <sql id="messageColumns">
+        a.id,
+        a.mobile, 
+        a.content, 
+        a.send_time,
+        a.type, 
+        a.extno,
+        a.status,
+        a.trigger_by,
+        a.trigger_date,
+        a.create_date,
+        a.update_date,
+        a.retry_times,
+        a.remarks
+    </sql>
+
+    <!-- 待重送记录 -->
+    <select id="getResendList" resultType="com.wolfking.jeesite.modules.td.entity.Message">
+        select <include refid="messageColumns" />
+        from mq_message a
+        where a.status in(10,40)
+        <![CDATA[ AND a.retry_times < 3 ]]>
+        order by a.trigger_date
+        <if test="num != null and num>0">
+            limit #{num}
+        </if>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO mq_message
+        (
+          mobile,content,send_time,type,extno,
+          trigger_by,trigger_date,create_date,remarks,
+          status,retry_times
+        )
+        VALUES
+        (
+          #{mobile}, #{content}, #{sendTime},#{type}, #{extno},
+          #{triggerBy},#{triggerDate},#{createDate},#{remarks},
+          #{status},#{retryTimes}
+        )
+    </insert>
+
+    <update id="update">
+        update mq_message
+        set
+          <if test="retryTimes != null and retryTimes>0">
+          retry_times = retry_times + 1,
+          </if>
+          status = #{status},
+          remarks = #{remarks}
+          update_date = now()
+        where id = #{id}
+    </update>
+
+</mapper>

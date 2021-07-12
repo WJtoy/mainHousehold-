@@ -1,0 +1,70 @@
+package com.wolfking.jeesite.ms.tmall.rpt.web;
+
+import com.google.common.collect.Lists;
+import com.kkl.kklplus.entity.b2b.order.B2BWorkcardQtyDaily;
+import com.kkl.kklplus.entity.b2b.rpt.B2BProcesslog;
+import com.kkl.kklplus.entity.b2b.rpt.ProcesslogSearchModel;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.common.utils.DateUtils;
+import com.wolfking.jeesite.common.web.BaseController;
+import com.wolfking.jeesite.modules.rpt.entity.RptSearchCondition;
+import com.wolfking.jeesite.ms.tmall.rpt.entity.WorkcardDailySearch;
+import com.wolfking.jeesite.ms.tmall.rpt.service.B2BOrderDailyQtyService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
+import java.util.List;
+
+@Controller
+@RequestMapping(value = "${adminPath}/tmall/rpt/tmallorder/")
+public class B2BOrderDailyQtyController extends BaseController{
+
+    @Autowired
+    private B2BOrderDailyQtyService b2BOrderDailyQtyService;
+
+    /**
+     * 获取报表的查询条件
+     * @param
+     * @return
+     */
+    @ModelAttribute("workcardDailySearch")
+    public WorkcardDailySearch get(@ModelAttribute("workcardDailySearch") WorkcardDailySearch workcardDailySearch) {
+        if (workcardDailySearch == null) {
+            workcardDailySearch = new WorkcardDailySearch();
+        }
+
+        Date now = new Date(); //默认使用当天作为查询条件
+        if (workcardDailySearch.getSelectedYear() == null) {
+            workcardDailySearch.setSelectedYear(DateUtils.getYear(now));
+        }
+        if (workcardDailySearch.getSelectedMonth() == null) {
+            workcardDailySearch.setSelectedMonth(DateUtils.getMonth(now));
+        }
+
+        return workcardDailySearch;
+    }
+
+    //工单
+    @RequestMapping(value = "workcardDailyQty")
+    public String workcardDailyQty(WorkcardDailySearch workcardDailySearch, Model model) {
+        List<B2BWorkcardQtyDaily> list = Lists.newArrayList();
+        if (workcardDailySearch.isSearching()){
+            list = b2BOrderDailyQtyService.getB2BWorkcardQtyDaily(workcardDailySearch.getSelectedYear(),workcardDailySearch.getSelectedMonth(),
+                    workcardDailySearch.getDataSource(),workcardDailySearch.getStatisticType()
+                    );
+        }
+
+        int days = DateUtils.getDaysOfMonth(DateUtils.parseDate(workcardDailySearch.getSelectedYear() + "-" + workcardDailySearch.getSelectedMonth() + "-01"));
+
+        workcardDailySearch.setList(list);
+        workcardDailySearch.setDays(days);
+        return "modules/tmall/rpt/workcardDailyQty";
+    }
+
+}
