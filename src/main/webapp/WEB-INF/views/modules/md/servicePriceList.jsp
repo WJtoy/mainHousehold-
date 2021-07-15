@@ -135,7 +135,7 @@
 							<td>无</td>
 					</c:when>
 					<c:otherwise>
-						<td><label onclick="selectPrice('${servicepoint.id}','${servicepoint.servicePointNo}','${servicepoint.name}', '${servicepoint.primary.name}', '${servicepoint.contactInfo1}', '${servicepoint.customizePriceFlag}', '${servicepoint.useDefaultPrice}','${servicepoint.degree}',1,'${servicepoint.remotePriceFlag}','${servicepoint.remotePriceType}')" style="color: #0096DA;">${servicepoint.remotePriceFlag == 0 ? '标准价' : "自定义"}</label></td>
+						<td><label onclick="selectPrice('${servicepoint.id}','${servicepoint.servicePointNo}','${servicepoint.name}', '${servicepoint.primary.name}', '${servicepoint.contactInfo1}', '${servicepoint.customizePriceFlag}', '${servicepoint.useDefaultPrice}','${servicepoint.degree}',1,'${servicepoint.remotePriceFlag}','${servicepoint.remotePriceType}')" style="color: #0096DA;">查看</label></td>
 					</c:otherwise>
 				</c:choose>
 

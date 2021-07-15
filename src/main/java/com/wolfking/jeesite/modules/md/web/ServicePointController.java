@@ -1739,6 +1739,10 @@ public class ServicePointController extends BaseController {
         String viewForm = "modules/md/servicePointSelectForDeposit";
         Page<ServicePoint> page = new Page<>(request, response);
         page.setPageSize(12);
+        if(servicePointModel==null || (StringUtils.isBlank(servicePointModel.getName()) && StringUtils.isBlank(servicePointModel.getServicePointNo()) &&
+           StringUtils.isBlank(servicePointModel.getContactInfo1()))){
+            return selectServicePointResult("请至少根据网点名称,网点编号,网点电话中的一项查询",servicePointModel, model, viewForm, page);
+        }
         ServicePoint servicePoint = new ServicePoint();
         BeanUtils.copyProperties(servicePointModel, servicePoint);
         page = servicePointService.findServicePointListForDeposit(page, servicePoint);

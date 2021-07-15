@@ -1337,30 +1337,10 @@ public class KefuOrderListService extends OrderRegionService {
             if (detail.getServicePoint() == null || detail.getServicePoint().getId() == null || detail.getServicePoint().getId() <= 0) {
                 detail.setServicePoint(condition.getServicePoint());
             }
-            //2021-05-19 偏远区域处理
-            RestResult<Boolean> remoteCheckResult = orderService.checkServicePointRemoteArea(condition);
-            if(remoteCheckResult.getCode() != ErrorCode.NO_ERROR.code){
-                throw new OrderException(new StringJoiner("").add("判断区域是否为偏远区域错误:").add(remoteCheckResult.getMsg()).toString());
-            }
             ServicePrice eprice = null;
-            Boolean isRemoteArea = (Boolean)remoteCheckResult.getData();
-            if(isRemoteArea) {
-                // 偏远区域
-                List<com.kkl.kklplus.entity.common.NameValuePair<Long, Long>> nameValuePairs = Lists.newArrayList(new com.kkl.kklplus.entity.common.NameValuePair<Long,Long>(product.getId(),detail.getServiceType().getId()));
-                Map<String, ServicePrice> priceMap = servicePointService.getRemotePriceMapByProductsFromCache(servicePointId, nameValuePairs);
-                if (priceMap == null) {
-                    throw new OrderException("网点[偏远区域]价格读取失败，请重试");
-                }
-                if (CollectionUtils.isEmpty(priceMap)) {
-                    throw new OrderException("网点[偏远区域]价格读取失败，未维护网点价格");
-                }
-                eprice = priceMap.get(new StringJoiner(":").add(product.getId().toString()).add(detail.getServiceType().getId().toString()).toString());
-            }else{
-                //标准价格
-                eprice = servicePointService.getPriceByProductAndServiceTypeFromCache(servicePointId,product.getId(),detail.getServiceType().getId());
-            }
+            eprice = orderService.getPriceByProductAndServiceTypeFromCacheNew(condition,servicePointId,product.getId(),detail.getServiceType().getId());
             if (eprice == null) {
-                throw new OrderException(String.format("未定义%s服务价格；网点：%s[%s] 产品:%s 服务：%s。", isRemoteArea?"[远程]":"",condition.getServicePoint().getServicePointNo(),condition.getServicePoint().getName(), product.getName(), detail.getServiceType().getName()));
+                throw new OrderException(String.format("未定义%s服务价格；网点：%s[%s] 产品:%s 服务：%s。",condition.getServicePoint().getServicePointNo(),condition.getServicePoint().getName(), product.getName(), detail.getServiceType().getName()));
             }
             //网点费用表
             OrderServicePointFee orderServicePointFee = orderService.getOrderServicePointFee(order.getId(), order.getQuarter(), servicePointId);
@@ -1811,7 +1791,8 @@ public class KefuOrderListService extends OrderRegionService {
             //ServicePoint Price
             Long servicePointId = condition.getServicePoint().getId();
             //使用新的网点价格读取方法 2020-03-07
-            ServicePrice eprice = servicePointService.getPriceByProductAndServiceTypeFromCache(servicePointId,product.getId(),detail.getServiceType().getId());
+            //ServicePrice eprice = servicePointService.getPriceByProductAndServiceTypeFromCache(servicePointId,product.getId(),detail.getServiceType().getId());
+            ServicePrice eprice = orderService.getPriceByProductAndServiceTypeFromCacheNew(condition,servicePointId,product.getId(),detail.getServiceType().getId());
             if (eprice == null) {
                 throw new OrderException(String.format("未定义服务价格；网点：%s[%s] 产品:%s 服务：%s。", condition.getServicePoint().getServicePointNo(),condition.getServicePoint().getName(), product.getName(), detail.getServiceType().getName()));
             }
@@ -2274,24 +2255,14 @@ public class KefuOrderListService extends OrderRegionService {
             }
             //ServicePoint Price
             Map<String, ServicePrice> priceMap = null;
-            RestResult<Boolean> remoteCheckResult = orderService.checkServicePointRemoteArea(condition);
-            if(remoteCheckResult.getCode() != ErrorCode.NO_ERROR.code){
-                throw new OrderException(new StringJoiner("").add("判断区域是否为远程区域错误:").add(remoteCheckResult.getMsg()).toString());
-            }
             List<NameValuePair<Long,Long>> nameValuePairs = getItemProductAndServiceTypePairs(o.getItems());
             if(CollectionUtils.isEmpty(nameValuePairs)){
                 throw new OrderException("确认订单服务项目失败");
             }
-            Boolean isRemoteArea = (Boolean)remoteCheckResult.getData();
-            if(isRemoteArea) {
-                priceMap = servicePointService.getRemotePriceMapByProductsFromCache(servicePointId, nameValuePairs);
-            }else{
-                priceMap = servicePointService.getPriceMapByProductsFromCache(servicePointId, nameValuePairs);
-            }
+            priceMap = orderService.getServicePriceFromCacheNew(condition,servicePointId,nameValuePairs);
             if (CollectionUtils.isEmpty(priceMap)) {
-                throw new OrderException(new StringJoiner("").add("读取安维网点:").add(condition.getServicePoint().getName()).add(isRemoteArea?"[远程]":"").add("价格失败,请检查该网点是否维护了服务价格").toString());
+                throw new OrderException(new StringJoiner("").add("读取安维网点:").add(condition.getServicePoint().getName()).add("价格失败,请检查该网点是否维护了服务价格").toString());
             }
-
             //配件，只读取单头
             List<MaterialMaster> materials = orderMaterialService.findMaterialMasterHeadsByOrderId(orderId, o.getQuarter());
             if (materials == null) {

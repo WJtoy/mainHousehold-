@@ -323,12 +323,12 @@ public class OrderAutoPlanMessageService {
                 return;
             }
             //2021/05/18 偏远区域判断是否维护网点服务价格
-            RestResult<Object> remoteCheckResult = orderService.checkServicePointRemoteAreaAndPrice(servicePoint.getId(), order.getOrderCondition(), order.getItems());
+            /*RestResult<Object> remoteCheckResult = orderService.checkServicePointRemoteAreaAndPrice(servicePoint.getId(), order.getOrderCondition(), order.getItems());
             if(remoteCheckResult.getCode() != ErrorCode.NO_ERROR.code){
                 msg.append(MessageFormat.format("订单:{0} 自动派单失败：网点:{1}({2}) {3}",message.getOrderNo(),servicePoint.getServicePointNo(),servicePoint.getName(),remoteCheckResult.getMsg()));
                 LogUtils.saveLog("自动派单失败","OrderAutoPlanMessageService",message.getOrderNo(),new RuntimeException(msg.toString()),null, SysLog.TYPE_EXCEPTION);
                 return;
-            }
+            }*/
             servicePoint.setPrimary(engineer);
             try {
                 orderCondition.setServicePoint(servicePoint);

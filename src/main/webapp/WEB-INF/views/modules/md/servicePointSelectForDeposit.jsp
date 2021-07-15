@@ -71,7 +71,7 @@
 					<th width="45">序号</th>
 					<th width="280">网点</th>
 					<th width="100">主帐号</th>
-					<th width="100">网点电话</th>
+					<%--<th width="100">网点电话</th>--%>
 					<th width="80">质保等级</th>
 					<th>应缴金额(元)</th>
 					<th>已缴金额(元)</th>
@@ -90,7 +90,7 @@
 							</a>
 						</td>
 						<td>${entity.primary.name}</td>
-						<td>${entity.contactInfo1}</td>
+						<%--<td>${entity.contactInfo1}</td>--%>
 						<td>${entity.mdDepositLevel.name}</td>
 						<td><fmt:formatNumber pattern="0.0">${entity.deposit}</fmt:formatNumber> </td>
 						<td>

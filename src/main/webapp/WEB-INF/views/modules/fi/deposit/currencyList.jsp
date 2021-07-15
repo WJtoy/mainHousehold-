@@ -115,7 +115,7 @@
             <tr id="${depositCurrency.servicePoint.id}" pId="">
                 <td style="text-align: left;padding-left: 10px" colspan="8">
                     <span class="servicepoint_span">网点: ${depositCurrency.servicePoint.servicePointNo}
-                    ，${depositCurrency.servicePoint.name}，主账号：${depositCurrency.servicePoint.primary.name}，网点电话：${depositCurrency.servicePoint.contactInfo1}
+                    ，${depositCurrency.servicePoint.name}，主账号：${depositCurrency.servicePoint.primary.name}
                     <c:if test="${depositCurrency.servicePoint.mdDepositLevel.id != null}">
                         <c:set var="depositStatus" value="未缴费"/>
                         <c:set var="depositStatusClass" value="label-notPay"/>

@@ -196,6 +196,9 @@ public class B2BOrderUtils {
             if (dataSourceId == B2BDataSourceEnum.LB.id && microServicesProperties.getLb().getEnabled() && microServicesProperties.getLb().getCanModifyKKLOrder()) {
                 return true;
             }
+            if (dataSourceId == B2BDataSourceEnum.SUPOR.id && microServicesProperties.getSupor().getEnabled() && microServicesProperties.getSupor().getCanModifyKKLOrder()) {
+                return true;
+            }
         }
         return false;
     }

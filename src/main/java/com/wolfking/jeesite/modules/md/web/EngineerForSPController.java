@@ -386,7 +386,7 @@ public class EngineerForSPController extends BaseController {
         if(engineer == null){
             ajaxJsonEntity.setSuccess(false);
             ajaxJsonEntity.setMessage("该安维人员不存在");
-        }else if(engineer.getDelFlag() == Engineer.DEL_FLAG_NORMAL){
+        }else if(engineer.getDelFlag().equals(Engineer.DEL_FLAG_NORMAL)){
             ajaxJsonEntity.setSuccess(false);
             ajaxJsonEntity.setMessage("该安维人员已启用");
         }else if(servicePointService.checkEngineerMobile(id, contactInfo.trim()).equalsIgnoreCase("false")){

@@ -1631,10 +1631,10 @@ public class OrderController extends BaseController
 				}
 			}
 			//2021/05/18 偏远区域判断是否维护网点服务价格
-			RestResult<Object> remoteCheckResult = orderService.checkServicePointRemoteAreaAndPrice(servicePoint.getId(), o.getOrderCondition(), o.getItems());
+			/*RestResult<Object> remoteCheckResult = orderService.checkServicePointRemoteAreaAndPrice(servicePoint.getId(), o.getOrderCondition(), o.getItems());
 			if(remoteCheckResult.getCode() != ErrorCode.NO_ERROR.code){
 				return AjaxJsonEntity.fail(remoteCheckResult.getMsg(),null);
-			}
+			}*/
 			//远程费+其他费用总费用受控品类
 			//合计费用超过设定金额，不允许派单
 			//费用不超过设定金额，应收为0
@@ -1666,7 +1666,7 @@ public class OrderController extends BaseController
 			}
 			planActionEntity.setOrderInsurance(Optional.ofNullable(msResponse.getData()).map(t->(OrderInsurance)t).orElse(null));
 			//派单记录
-			msResponse = generateOrderPlanRecord(order,user,date);
+			msResponse = generateOrderPlanRecord(order,user,date,o.getOrderCondition());
 			if(!MSResponse.isSuccessCode(msResponse)){
 				result.setSuccess(false);
 				result.setMessage(msResponse.getMsg());
@@ -1796,7 +1796,7 @@ public class OrderController extends BaseController
 	 * 无派单记录，产生新记录
 	 * 有：更新派单次序
 	 */
-	private MSResponse<Object> generateOrderPlanRecord(Order order,User user,Date date){
+	private MSResponse<Object> generateOrderPlanRecord(Order order,User user,Date date,OrderCondition orderCondition){
 		ServicePoint servicePoint = order.getOrderCondition().getServicePoint();
 		Engineer engineer = servicePoint.getPrimary();
 		Integer nextPlanTimes = orderService.getOrderPlanMaxTimes(order.getId(), order.getQuarter());
@@ -1812,7 +1812,7 @@ public class OrderController extends BaseController
 			orderPlan.setEstimatedOtherCost(order.getOrderFee().getPlanOtherCharge());//其它费用
 			orderPlan.setEstimatedDistance(order.getOrderFee().getPlanDistance());//距离
 			orderPlan.setEstimatedTravelCost(order.getOrderFee().getPlanTravelCharge());//远程费
-			Double amount = orderService.calcServicePointCost(servicePoint, order.getItems());//服务费
+			Double amount = orderService.calcServicePointCost(orderCondition,servicePoint, order.getItems());//服务费
 			orderPlan.setEstimatedServiceCost(amount);
 			orderPlan.setUpdateBy(user);
 			orderPlan.setUpdateDate(date);
@@ -1833,7 +1833,7 @@ public class OrderController extends BaseController
 			orderPlan.setEstimatedOtherCost(order.getOrderFee().getPlanOtherCharge());//其它费用
 			orderPlan.setEstimatedDistance(order.getOrderFee().getPlanDistance());//距离
 			orderPlan.setEstimatedTravelCost(order.getOrderFee().getPlanTravelCharge());//远程费
-			Double amount = orderService.calcServicePointCost(servicePoint, order.getItems());//服务费
+			Double amount = orderService.calcServicePointCost(orderCondition,servicePoint, order.getItems());//服务费
 			orderPlan.setEstimatedServiceCost(amount);
 			return new MSResponse<>(orderPlan);
 		}catch (Exception e){

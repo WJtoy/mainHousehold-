@@ -4,6 +4,7 @@ import com.kkl.kklplus.entity.common.NameValuePair;
 import com.wolfking.jeesite.modules.api.util.RestResult;
 import com.wolfking.jeesite.modules.md.entity.Customer;
 import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.md.entity.ServicePrice;
 import com.wolfking.jeesite.modules.sd.entity.*;
 import com.wolfking.jeesite.modules.sd.service.OrderService;
 import com.wolfking.jeesite.modules.sys.entity.User;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -109,8 +111,8 @@ public class SpOrderService {
      * 派单及接单时，计算网点预估服务费用
      * 循环计价，取最低价
      */
-    public Double calcServicePointCost(ServicePoint servicePoint, List<OrderItem> list) {
-        return orderService.calcServicePointCost(servicePoint, list);
+    public Double calcServicePointCost(OrderCondition orderCondition,ServicePoint servicePoint, List<OrderItem> list) {
+        return orderService.calcServicePointCost(orderCondition,servicePoint, list);
     }
 
     /**
@@ -135,5 +137,16 @@ public class SpOrderService {
      */
     public RestResult<Boolean> checkServicePointRemoteArea(OrderCondition orderCondition){
         return orderService.checkServicePointRemoteArea(orderCondition);
+    }
+
+    /**
+     * 批量获取网点价格(偏远价格或服务价格)
+     * @param orderCondition    订单信息表
+     * @param servicePointId     网点
+     * @param products           产品id和服务类型id键值对
+     * @return  d
+     */
+    public Map<String, ServicePrice> getServicePriceFromCacheNew(OrderCondition orderCondition, Long servicePointId, List<NameValuePair<Long,Long>> products){
+        return orderService.getServicePriceFromCacheNew(orderCondition,servicePointId,products);
     }
 }

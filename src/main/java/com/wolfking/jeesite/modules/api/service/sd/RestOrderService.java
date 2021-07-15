@@ -1058,7 +1058,8 @@ public class RestOrderService {
             //ServicePoint Price
             Long servicePointId = condition.getServicePoint().getId();
             //使用新的网点价格读取方法 2020-03-07
-            ServicePrice eprice = servicePointService.getPriceByProductAndServiceTypeFromCache(servicePointId,product.getId(),detail.getServiceType().getId());
+            //ServicePrice eprice = servicePointService.getPriceByProductAndServiceTypeFromCache(servicePointId,product.getId(),detail.getServiceType().getId());
+            ServicePrice eprice = orderService.getPriceByProductAndServiceTypeFromCacheNew(condition,servicePointId,product.getId(),detail.getServiceType().getId());
             /* comment at 2020-03-07 Ryan
             List<ServicePrice> engineerPrices = servicePointService.getPricesFromCache(servicePointId);
             if (engineerPrices == null || engineerPrices.size() == 0) {

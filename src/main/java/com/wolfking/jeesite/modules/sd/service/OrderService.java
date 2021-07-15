@@ -1203,7 +1203,7 @@ public class OrderService extends LongIDBaseService {
             if(engineerId>0){
                 OrderPlan orderPlan = dao.getOrderPlan(order.getId(), order.getQuarter(), servicePointId, engineerId);
                 if(orderPlan != null) {
-                    double estimatedServiceCost = calcServicePointCost(norder.getOrderCondition().getServicePoint(), order.getItems());
+                    double estimatedServiceCost = calcServicePointCost(condition,norder.getOrderCondition().getServicePoint(), order.getItems());
                     HashMap<String, Object> planMaps = Maps.newHashMapWithExpectedSize(5);
                     planMaps.put("id", orderPlan.getId());
                     planMaps.put("estimatedServiceCost", estimatedServiceCost);//预估服务费用
@@ -2097,7 +2097,7 @@ public class OrderService extends LongIDBaseService {
                 orderPlan.setEstimatedOtherCost(order.getOrderFee().getPlanOtherCharge());//其它费用
                 orderPlan.setEstimatedDistance(order.getOrderFee().getPlanDistance());//距离
                 orderPlan.setEstimatedTravelCost(order.getOrderFee().getPlanTravelCharge());//远程费
-                Double amount = calcServicePointCost(servicePoint, order.getItems());//服务费
+                Double amount = calcServicePointCost(condition,servicePoint, order.getItems());//服务费
                 orderPlan.setEstimatedServiceCost(amount);
                 dao.insertOrderPlan(orderPlan);
 
@@ -4087,12 +4087,12 @@ public class OrderService extends LongIDBaseService {
                 detail.setServicePoint(condition.getServicePoint());
             }
             //2021-05-19 偏远区域
-            RestResult<Boolean> remoteCheckResult = checkServicePointRemoteArea(condition);
+            /*RestResult<Boolean> remoteCheckResult = checkServicePointRemoteArea(condition);
             if(remoteCheckResult.getCode() != ErrorCode.NO_ERROR.code){
                 throw new OrderException(new StringJoiner("").add("判断区域是否为偏远区域错误:").add(remoteCheckResult.getMsg()).toString());
-            }
+            }*/
             ServicePrice eprice = null;
-            Boolean isRemoteArea = (Boolean)remoteCheckResult.getData();
+           /* Boolean isRemoteArea = (Boolean)remoteCheckResult.getData();
             if(isRemoteArea) {
                 // 偏远区域
                 List<com.kkl.kklplus.entity.common.NameValuePair<Long, Long>> nameValuePairs = Lists.newArrayList(new com.kkl.kklplus.entity.common.NameValuePair<Long,Long>(product.getId(),detail.getServiceType().getId()));
@@ -4107,10 +4107,10 @@ public class OrderService extends LongIDBaseService {
             }else{
                 //标准价格
                 eprice = servicePointService.getPriceByProductAndServiceTypeFromCache(servicePointId,product.getId(),detail.getServiceType().getId());
-            }
-
+            }*/
+            eprice = getPriceByProductAndServiceTypeFromCacheNew(condition,servicePointId,product.getId(),detail.getServiceType().getId());
             if (eprice == null) {
-                throw new OrderException(String.format("未定义%s服务价格；网点：%s[%s] 产品:%s 服务：%s。", isRemoteArea?"[偏远区域]":"",condition.getServicePoint().getServicePointNo(),condition.getServicePoint().getName(), product.getName(), detail.getServiceType().getName()));
+                throw new OrderException(String.format("未定义%s服务价格；网点：%s[%s] 产品:%s 服务：%s。",condition.getServicePoint().getServicePointNo(),condition.getServicePoint().getName(), product.getName(), detail.getServiceType().getName()));
             }
             //网点费用表
             OrderServicePointFee orderServicePointFee = getOrderServicePointFee(order.getId(), order.getQuarter(), servicePointId);
@@ -4621,7 +4621,7 @@ public class OrderService extends LongIDBaseService {
      * 派单及接单时，计算网点预估服务费用
      * 循环计价，取最低价
      */
-    public Double calcServicePointCost(ServicePoint servicePoint, List<OrderItem> list) {
+    public Double calcServicePointCost(OrderCondition orderCondition,ServicePoint servicePoint, List<OrderItem> list) {
         if (list == null || list.size() == 0) {
             return 0.0d;
         }
@@ -4632,7 +4632,9 @@ public class OrderService extends LongIDBaseService {
         if(CollectionUtils.isEmpty(nameValuePairs)){
             throw new OrderException("确认订单服务项目失败");
         }
-        Map<String,ServicePrice> priceMap = servicePointService.getPriceMapByProductsFromCache(servicePointId,nameValuePairs);
+        //Map<String,ServicePrice> priceMap = servicePointService.getPriceMapByProductsFromCache(servicePointId,nameValuePairs);
+        Map<String,ServicePrice> priceMap = getServicePriceFromCacheNew(orderCondition,servicePointId,nameValuePairs);
+
         if(priceMap==null){
             throw new OrderException("网点价格读取失败，请重试");
         }
@@ -4852,21 +4854,12 @@ public class OrderService extends LongIDBaseService {
                 throw new OrderException("确认订单服务项目失败");
             }
             Map<String, ServicePrice> priceMap = null;
-            RestResult<Boolean> remoteCheckResult = checkServicePointRemoteArea(condition);
-            if(remoteCheckResult.getCode() != ErrorCode.NO_ERROR.code){
-                throw new OrderException(new StringJoiner("").add("判断区域是否为偏远区域错误:").add(remoteCheckResult.getMsg()).toString());
-            }
-            Boolean isRemoteArea = (Boolean)remoteCheckResult.getData();
-            if(isRemoteArea) {
-                priceMap = servicePointService.getRemotePriceMapByProductsFromCache(servicePointId, nameValuePairs);
-            }else{
-                priceMap = servicePointService.getPriceMapByProductsFromCache(servicePointId, nameValuePairs);
-            }
+            priceMap = getServicePriceFromCacheNew(condition,servicePointId,nameValuePairs);
             if (priceMap == null) {
-                throw new OrderException(new StringJoiner("").add("网点").add(isRemoteArea?"[偏远区域]":"").add("价格读取失败，请重试").toString());
+                throw new OrderException(new StringJoiner("").add("网点").add("价格读取失败，请重试").toString());
             }
             if (CollectionUtils.isEmpty(priceMap)) {
-                throw new OrderException(new StringJoiner("").add("网点").add(isRemoteArea?"[偏远区域]":"").add("价格读取失败，未维护网点价格").toString());
+                throw new OrderException(new StringJoiner("").add("网点").add("价格读取失败，未维护网点价格").toString());
             }
 
             //配件
@@ -10173,7 +10166,7 @@ public class OrderService extends LongIDBaseService {
             Double serviceCost = 0.0;
             if (preOrderPlan == null) {
                 //throw new RuntimeException("读取派单记录错误，请重试");
-                serviceCost = calcServicePointCost(order.getOrderCondition().getServicePoint(), o.getItems());
+                serviceCost = calcServicePointCost(rediscondition,order.getOrderCondition().getServicePoint(), o.getItems());
             } else {
                 serviceCost = preOrderPlan.getEstimatedServiceCost();
             }
@@ -10550,7 +10543,7 @@ public class OrderService extends LongIDBaseService {
                 //距离
                 orderPlan.setEstimatedDistance(0.00d);
                 //服务费
-                Double amount = calcServicePointCost(servicePoint, order.getItems());
+                Double amount = calcServicePointCost(condition,servicePoint, order.getItems());
                 orderPlan.setEstimatedServiceCost(amount);
                 dao.insertOrderPlan(orderPlan);
 //                if (servicePoint.getInsuranceFlag() == 1 && insuranceAmount > 0) {
@@ -12668,6 +12661,87 @@ public class OrderService extends LongIDBaseService {
      */
     public Order getB2BInfoById(Long orderId,String quarter){
           return dao.getB2BInfoById(orderId,quarter);
+    }
+
+    /**
+     * 批量获取网点价格(偏远价格或服务价格)
+     * @param orderCondition    订单信息表
+     * @param servicePointId     网点
+     * @param products           产品id和服务类型id键值对
+     * @return  d
+     */
+    public Map<String,ServicePrice> getServicePriceFromCacheNew(OrderCondition orderCondition,Long servicePointId,List<com.kkl.kklplus.entity.common.NameValuePair<Long,Long>> products){
+        long categroyId= Optional.ofNullable(orderCondition.getProductCategoryId()).orElse(0L);
+        long areaId = Optional.ofNullable(orderCondition.getArea()).map(t->t.getId()).orElse(0L);
+        long subAreaId = Optional.ofNullable(orderCondition.getSubArea()).map(t->t.getId()).orElse(0L);
+        if(categroyId <=0){
+            //return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code,"品类参数无值");
+             throw new RuntimeException("品类参数无值");
+        }
+        long cityId = 0;
+        Area area = areaService.getFromCache(areaId);
+        if (area != null) {
+            List<String> ids = Splitter.onPattern(",")
+                    .omitEmptyStrings()
+                    .trimResults()
+                    .splitToList(area.getParentIds());
+            if (ids.size() >= 2) {
+                cityId = Long.valueOf(ids.get(ids.size() - 1));
+            }
+        }
+        if(cityId <= 0){
+            //return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code,"区域参数无值");
+            throw new RuntimeException("区域参数无值");
+        }
+        List<ServicePrice> prices = msServicePointPriceService.findListByCategoryAndAreaAndServiceTypeAndProductFromCacheForSD(products, categroyId, cityId,  subAreaId, servicePointId);
+        if(prices==null){
+            return null;
+        }
+        if(CollectionUtils.isEmpty(prices)){
+            return Maps.newHashMapWithExpectedSize(0);
+        }
+        return prices.stream().collect(Collectors.toMap(
+                e-> String.format("%d:%d",e.getProduct().getId(),e.getServiceType().getId()),
+                e-> e
+        ));
+    }
+
+    /**
+     *  按需读取网点价格（偏远价格或服务价格）
+     * @param orderCondition    工单信息
+     * @param servicePointId    网点id
+     * @param productId         产品id
+     * @param serviceTypeId     服务项目id
+     * @return
+     */
+    public ServicePrice getPriceByProductAndServiceTypeFromCacheNew(OrderCondition orderCondition,long servicePointId,long productId,long serviceTypeId){
+        if(servicePointId <= 0 || productId <= 0 || serviceTypeId <= 0 ||orderCondition==null){
+            return null;
+        }
+        long categroyId= Optional.ofNullable(orderCondition.getProductCategoryId()).orElse(0L);
+        long areaId = Optional.ofNullable(orderCondition.getArea()).map(t->t.getId()).orElse(0L);
+        long subAreaId = Optional.ofNullable(orderCondition.getSubArea()).map(t->t.getId()).orElse(0L);
+        long cityId = 0;
+        Area area = areaService.getFromCache(areaId);
+        if (area != null) {
+            List<String> ids = Splitter.onPattern(",")
+                    .omitEmptyStrings()
+                    .trimResults()
+                    .splitToList(area.getParentIds());
+            if (ids.size() >= 2) {
+                cityId = Long.valueOf(ids.get(ids.size() - 1));
+            }
+        }
+        if(cityId <= 0){
+            //return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code,"区域参数无值");
+            throw new RuntimeException("区域参数无值");
+        }
+        List<ServicePrice> prices =  msServicePointPriceService.findListByCategoryAndAreaAndServiceTypeAndProductFromCacheForSD(Lists.newArrayList(new com.kkl.kklplus.entity.common.NameValuePair<Long,Long>(productId,serviceTypeId)),categroyId,
+                                                                                                                                 cityId,subAreaId,servicePointId);
+        if(CollectionUtils.isEmpty(prices)){
+            return null;
+        }
+        return prices.get(0);
     }
 
 }

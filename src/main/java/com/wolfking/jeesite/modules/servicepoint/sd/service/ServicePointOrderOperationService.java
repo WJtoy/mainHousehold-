@@ -267,7 +267,7 @@ public class ServicePointOrderOperationService extends LongIDBaseService {
             Double serviceCost = 0.0;
             if (preOrderPlan == null) {
                 //throw new RuntimeException("读取派单记录错误，请重试");
-                serviceCost = orderService.calcServicePointCost(order.getOrderCondition().getServicePoint(), o.getItems());
+                serviceCost = orderService.calcServicePointCost(rediscondition,order.getOrderCondition().getServicePoint(), o.getItems());
             } else {
                 serviceCost = preOrderPlan.getEstimatedServiceCost();
             }
@@ -621,25 +621,26 @@ public class ServicePointOrderOperationService extends LongIDBaseService {
             // ServicePoint Price
             // 2021-05-19 偏远区域处理
             Map<String, ServicePrice> priceMap = null;
-            RestResult<Boolean> remoteCheckResult = orderService.checkServicePointRemoteArea(condition);
+           /* RestResult<Boolean> remoteCheckResult = orderService.checkServicePointRemoteArea(condition);
             if(remoteCheckResult.getCode() != ErrorCode.NO_ERROR.code){
                 throw new OrderException(new StringJoiner("").add("判断区域是否为偏远区域错误:").add(remoteCheckResult.getMsg()).toString());
-            }
+            }*/
             List<NameValuePair<Long,Long>> nameValuePairs = getOrderItemProductAndServiceTypePairs(o.getItems());
             if(CollectionUtils.isEmpty(nameValuePairs)){
                 throw new OrderException("确认订单服务项目失败");
             }
-            Boolean isRemoteArea = (Boolean)remoteCheckResult.getData();
+            /*Boolean isRemoteArea = (Boolean)remoteCheckResult.getData();
             if(isRemoteArea) {
                 priceMap = servicePointService.getRemotePriceMapByProductsFromCache(servicePointId, nameValuePairs);
             }else{
                 priceMap = servicePointService.getPriceMapByProductsFromCache(servicePointId, nameValuePairs);
-            }
+            }*/
+            priceMap = orderService.getServicePriceFromCacheNew(condition,servicePointId, nameValuePairs);
             if (priceMap == null) {
-                throw new OrderException(new StringJoiner("").add("读取网点").add(isRemoteArea?"[偏远区域]":"").add("价格失败,请重试").toString());
+                throw new OrderException(new StringJoiner("").add("读取网点").add("价格失败,请重试").toString());
             }
             if (CollectionUtils.isEmpty(priceMap)) {
-                throw new OrderException(new StringJoiner("").add("读取网点").add(isRemoteArea?"[偏远区域]":"").add("价格失败,未维护网点价格").toString());
+                throw new OrderException(new StringJoiner("").add("读取网点").add("价格失败,未维护网点价格").toString());
             }
 
             //配件

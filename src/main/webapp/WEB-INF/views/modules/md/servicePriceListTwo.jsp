@@ -148,6 +148,58 @@
                 }
             });
 		}
+		function editRemotePriceProduct(sid, pid){
+			var serviceRemotePriceFlag = $("#serviceRemotePriceFlag").val();
+			var text = "师傅价格";
+			var url = "${ctx}/md/serviceprice/remotePriceProductForm?servicePoint.id="+sid+"&product.id="+pid +"&serviceRemotePriceFlag=" + serviceRemotePriceFlag;
+			top.layer.open({
+				type: 2,
+				id:"servicePointPrice",
+				zIndex:19891015,
+				title:text,
+				content: url,
+				area: ['898px', '800px'],
+				shade: 0.3,
+				maxmin: false,
+				success: function(layero,index){
+					// 获取子页面的iframe
+					var iframeWin = top[layero.find('iframe')[0]['name']];
+					var servicePointId = $("#servicePointId").val();
+					var servicePointNo = $("#servicePointNo").val();
+					var serviceName = $("#servicePointName").val();
+					var servicePointPrimaryName = $("#primaryName").val();
+					var contactInfo = $("#contactInfo").val();
+					var customizePriceFlag = $("#customizePriceFlag").val();
+					var useDefaultPrice = $("#useDefaultPrice").val();
+					var degree = $("#degree").val();
+					var serviceRemotePriceFlag = $("#serviceRemotePriceFlag").val();
+					var remotePriceFlag = $("#remotePriceFlag").val();
+					var remotePriceType = $("#remotePriceType").val();
+					var productCategoryId = $("#productCategoryId").val();
+					var productId = $("#productId").val();
+					if(iframeWin != null){
+						var json = {
+							servicePointId : servicePointId,
+							servicePointNo: servicePointNo,
+							serviceName: serviceName,
+							servicePointPrimaryName: servicePointPrimaryName,
+							contactInfo: contactInfo,
+							customizePriceFlag: customizePriceFlag,
+							useDefaultPrice: useDefaultPrice,
+							degree : degree,
+							serviceRemotePriceFlag : serviceRemotePriceFlag,
+							remotePriceFlag : remotePriceFlag,
+							remotePriceType : remotePriceType,
+							productCategoryId: productCategoryId,
+							productId: productId
+						};
+						iframeWin.child(json);
+					}
+				},
+				end:function(){
+				}
+			});
+		}
 
 		// 供子页面调用刷新
         function reloadPrice(servicePintId, servicePointNo, serviceName, servicePointPrimaryName, contactInfo1, customizePriceFlag,useDefaultPrice,degree,serviceRemotePriceFlag,remotePriceFlag,remotePriceType,productId, productCategoryId){
@@ -270,9 +322,9 @@
 					<c:when test="${serviceRemotePriceFlag == 0}">
 						价格属性：${customizePriceFlag == 0 ? '标准价' : "自定义"}，
 					</c:when>
-					<c:otherwise>
-						价格属性：${remotePriceFlag == 0 ? '标准价' : "自定义"}，
-					</c:otherwise>
+<%--					<c:otherwise>--%>
+<%--						价格属性：${remotePriceFlag == 0 ? '标准价' : "自定义"}，--%>
+<%--					</c:otherwise>--%>
 				</c:choose>
 
 				<c:if test="${serviceRemotePriceFlag == 0}">
@@ -289,13 +341,13 @@
                         </shiro:hasPermission>
                     </c:if>
                 </c:when>
-                <c:otherwise>
-                    <c:if test="${remotePriceFlag == 1}">
-                        <shiro:hasPermission name="md:serviceprice:edit">
-                            <input id="recover" class="btn btn-primary" type="submit" value="恢复标准价" onclick="recoverPrice('${fns:getDictLabelFromMS(remotePriceType,'PriceType','')}')"/>&nbsp;
-                        </shiro:hasPermission>
-                    </c:if>
-                </c:otherwise>
+<%--                <c:otherwise>--%>
+<%--                    <c:if test="${remotePriceFlag == 1}">--%>
+<%--                        <shiro:hasPermission name="md:serviceprice:edit">--%>
+<%--                            <input id="recover" class="btn btn-primary" type="submit" value="恢复标准价" onclick="recoverPrice('${fns:getDictLabelFromMS(remotePriceType,'PriceType','')}')"/>&nbsp;--%>
+<%--                        </shiro:hasPermission>--%>
+<%--                    </c:if>--%>
+<%--                </c:otherwise>--%>
             </c:choose>
 		</th>
 
@@ -309,14 +361,14 @@
 				<td style="text-align: center">
 					<c:choose>
 						<c:when test="${serviceRemotePriceFlag eq 1}">
-							<c:choose>
-								<c:when test="${remotePriceFlag eq 1}">
-									<label onclick="editPrice('${servicePoint.servicePointId}','${servicePointPrice.productId}')" style="color: #0096DA;">${servicePointPrice.productName}</label>
-								</c:when>
-								<c:otherwise>
-									<label>${servicePointPrice.productName}</label>
-								</c:otherwise>
-							</c:choose>
+<%--							<c:choose>--%>
+<%--								<c:when test="${remotePriceFlag eq 1}">--%>
+									<label onclick="editRemotePriceProduct('${servicePoint.servicePointId}','${servicePointPrice.productId}')" style="color: #0096DA;">${servicePointPrice.productName}</label>
+<%--								</c:when>--%>
+<%--								<c:otherwise>--%>
+<%--									<label>${servicePointPrice.productName}</label>--%>
+<%--								</c:otherwise>--%>
+<%--							</c:choose>--%>
 						</c:when>
 						<c:otherwise>
 							<c:choose>
@@ -363,32 +415,43 @@
 							</c:choose>
 						</c:when>
 						<c:otherwise>
+<%--							<c:choose>--%>
+<%--								&lt;%&ndash;标准价&ndash;%&gt;--%>
+<%--								<c:when test="${remotePriceFlag == 0}">--%>
+<%--									<td>${servicePrice.referPrice}</td>--%>
+<%--									<td>${servicePrice.referDiscountPrice}</td>--%>
+<%--								</c:when>--%>
+<%--								&lt;%&ndash;自定义价&ndash;%&gt;--%>
+<%--								<c:otherwise>--%>
+<%--									<c:choose>--%>
+<%--										<c:when test="${servicePrice.referPrice ne servicePrice.price}">--%>
+<%--											<td style="color: red">${servicePrice.price}</td>--%>
+<%--										</c:when>--%>
+<%--										<c:otherwise>--%>
+<%--											<td>${servicePrice.price}</td>--%>
+<%--										</c:otherwise>--%>
+<%--									</c:choose>--%>
+<%--									<c:choose>--%>
+<%--										<c:when test="${servicePrice.referDiscountPrice ne servicePrice.discountPrice}">--%>
+<%--											<td style="color: red">${servicePrice.discountPrice}</td>--%>
+<%--										</c:when>--%>
+<%--										<c:otherwise>--%>
+<%--											<td>${servicePrice.discountPrice}</td>--%>
+<%--										</c:otherwise>--%>
+<%--									</c:choose>--%>
+<%--								</c:otherwise>--%>
+<%--							</c:choose>--%>
 							<c:choose>
-								<%--标准价--%>
-								<c:when test="${remotePriceFlag == 0}">
-									<td>${servicePrice.referPrice}</td>
-									<td>${servicePrice.referDiscountPrice}</td>
+								<c:when test="${servicePrice.id == null}">
+									<td>-</td>
+									<td>-</td>
 								</c:when>
-								<%--自定义价--%>
 								<c:otherwise>
-									<c:choose>
-										<c:when test="${servicePrice.referPrice ne servicePrice.price}">
-											<td style="color: red">${servicePrice.price}</td>
-										</c:when>
-										<c:otherwise>
-											<td>${servicePrice.price}</td>
-										</c:otherwise>
-									</c:choose>
-									<c:choose>
-										<c:when test="${servicePrice.referDiscountPrice ne servicePrice.discountPrice}">
-											<td style="color: red">${servicePrice.discountPrice}</td>
-										</c:when>
-										<c:otherwise>
-											<td>${servicePrice.discountPrice}</td>
-										</c:otherwise>
-									</c:choose>
+									<td>${servicePrice.price}</td>
+									<td>${servicePrice.discountPrice}</td>
 								</c:otherwise>
 							</c:choose>
+
 						</c:otherwise>
 					</c:choose>
 

@@ -66,7 +66,7 @@
         <tr>
             <td style="text-align: left;padding-left: 10px" colspan="8">
                 <span class="servicepoint_span">网点: ${servicePoint.servicePointNo}
-                    ，${servicePoint.name}，主账号：${servicePoint.primary.name}，网点电话：${servicePoint.contactInfo1}
+                    ，${servicePoint.name}，主账号：${servicePoint.primary.name}
                     <c:if test="${servicePoint.mdDepositLevel.id != null}">
                         <c:set var="depositStatus" value="未缴费"/>
                         <c:set var="depositStatusClass" value="label-notPay"/>

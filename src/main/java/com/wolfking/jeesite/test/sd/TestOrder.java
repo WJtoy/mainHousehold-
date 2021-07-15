@@ -591,7 +591,7 @@ public class TestOrder {
             items.clear();
             OrderItem item = list.get(i);
             items.add(item);
-            amount = orderService.calcServicePointCost(servicePoint,items);
+            amount = orderService.calcServicePointCost(new OrderCondition(),servicePoint,items);
             System.out.println("1.单个服务");
             System.out.println("1."+ (i+1) +" " + item.getProduct().getName() + " " + item.getServiceType().getName());
 
@@ -609,7 +609,7 @@ public class TestOrder {
             if(subItems.get(0).getProduct().equals(subItems.get(1).getProduct())){
                 continue;
             }
-            amount = orderService.calcServicePointCost(servicePoint,subItems);
+            amount = orderService.calcServicePointCost(new OrderCondition(),servicePoint,subItems);
             idx=0;
             for(OrderItem item:subItems){
                 idx++;
@@ -622,7 +622,7 @@ public class TestOrder {
 
         //3个服务
         System.out.println("");
-        amount = orderService.calcServicePointCost(servicePoint,list);
+        amount = orderService.calcServicePointCost(new OrderCondition(),servicePoint,list);
 
         System.out.println("3.三个服务");
         idx=0;

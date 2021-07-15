@@ -653,6 +653,7 @@ public class ServicePointService extends LongIDCrudService<ServicePointDao, Serv
         }
         if(servicePoint.getRemotePriceEnabledFlag() == 1){
             servicePoint.setRemotePriceType(40);
+            servicePoint.setRemotePriceFlag(1);
         }else {
             servicePoint.setRemotePriceType(0);
             servicePoint.setRemotePriceFlag(0);
@@ -930,7 +931,13 @@ public class ServicePointService extends LongIDCrudService<ServicePointDao, Serv
         String lockkey = null;
         Boolean locked = false;
         ServicePoint cachedServicePoint = null;
-
+        if(servicePoint.getRemotePriceEnabledFlag() == 1){
+            servicePoint.setRemotePriceType(40);
+            servicePoint.setRemotePriceFlag(1);
+        }else {
+            servicePoint.setRemotePriceType(0);
+            servicePoint.setRemotePriceFlag(0);
+        }
         // add on 2020-6-1 begin
         int customizePriceFlag = 0;
         boolean serviceResetPrice = false;
@@ -1009,9 +1016,7 @@ public class ServicePointService extends LongIDCrudService<ServicePointDao, Serv
             updateInsuranceFlag(servicePoint.getId(),servicePoint.getInsuranceFlag());
             servicePoint.setTimeLinessFlag(0);
         }
-        if(servicePoint.getRemotePriceEnabledFlag() == 1){
-            servicePoint.setRemotePriceType(40);
-        }
+
         if (!isNew) {
             servicePointId = servicePoint.getId();
             cachedServicePoint = getFromCache(servicePointId);
@@ -1120,12 +1125,11 @@ public class ServicePointService extends LongIDCrudService<ServicePointDao, Serv
                         servicePointPriceMessage.setPriceTypeFlag(MDServicePointEnum.PriceTypeFlag.SERVICEPRICE.getValue());
                     }else if(servicePoint.getResetPrice() == 2){
                         servicePointPriceMessage.setPriceTypeFlag(MDServicePointEnum.PriceTypeFlag.REMOTEPRICE.getValue());
-                        servicePointPriceMessage.setPriceTypeReference(servicePoint.getRemotePriceReference());  // 指定偏远价格的参考价格是服务价格还是偏远价格的标准价
                     }else if(servicePoint.getResetPrice() == 3){
                         servicePointPriceMessage.setPriceTypeFlag(MDServicePointEnum.PriceTypeFlag.BOTH.getValue());
-                        servicePointPriceMessage.setPriceTypeReference(servicePoint.getRemotePriceReference());  // 指定偏远价格的参考价格是服务价格还是偏远价格的标准价
                     }
-                    servicePointPriceMessage.setUserId(UserUtils.getUser() != null && UserUtils.getUser().getId()!= null? UserUtils.getUser().getId(): 0L);
+                    UserUtils.getUser();
+                    servicePointPriceMessage.setUserId(UserUtils.getUser().getId() != null ? UserUtils.getUser().getId(): 0L);
                     servicePointPriceSender.send(servicePointPriceMessage.build());
                     //add on 2020-3-8 end
                 }
@@ -1226,6 +1230,10 @@ public class ServicePointService extends LongIDCrudService<ServicePointDao, Serv
         }
         if(servicePoint.getRemotePriceEnabledFlag() == 1){
             servicePoint.setRemotePriceType(40);
+            servicePoint.setRemotePriceFlag(1);
+        }else {
+            servicePoint.setRemotePriceType(0);
+            servicePoint.setRemotePriceFlag(0);
         }
         //end
         if (!isNew) {

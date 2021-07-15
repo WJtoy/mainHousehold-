@@ -982,17 +982,8 @@
             } else {
                 $("#remotePriceEnabledFlag").val(0);
             }
-            editRemotePriceEnabledFlag();
         }
 
-        function editRemotePriceEnabledFlag() {
-            var flag = $("#remotePriceEnabledFlag").val();
-            if(flag == 1){
-                $("#remotePriceName").show();
-            }else {
-                $("#remotePriceName").hide();
-            }
-        }
 
         function switchInsuranceFlag(obj) {
             var title;
@@ -2137,32 +2128,11 @@
                     <label class="control-label">偏远价格：</label>
                     <div class="controls">
                         <c:set value="${servicePoint.remotePriceEnabledFlag}" var="remotePriceEnabledFlag"/>
-                        <c:if test="${servicePoint.id == null}">
                         <span class="<c:out value="${remotePriceEnabledFlag == 1 ? 'switch-on' : 'switch-off'}"/>" style="zoom: 0.7"
                               onclick="switchRemotePriceEnabledFlag()"></span>
                             <input type="hidden" value="${remotePriceEnabledFlag}" class="remotePriceEnabledFlag" name="remotePriceEnabledFlag" id="remotePriceEnabledFlag">
-                            <input type="text" value="标准价格" id="remotePriceName" disabled="disabled" style="margin-left: 10px;width: 189px;margin-top: -15px;">
-                        </c:if>
-                        <c:if test="${servicePoint.id != null}">
-                            <span class="<c:out value="${remotePriceEnabledFlag == 1 ? 'switch-on' : 'switch-off'}"/> switch-disabled" style="zoom: 0.7"></span>
-                            <input type="hidden" value="${remotePriceEnabledFlag}" class="remotePriceEnabledFlag" name="remotePriceEnabledFlag" id="remotePriceEnabledFlag">
-                            <c:if test="${remotePriceEnabledFlag == 1}">
-                                <c:choose>
-                                    <c:when test="${servicePoint.remotePriceFlag == 1}">
-                                        <input type="text" value="自定义价格" id="remotePriceName" disabled="disabled" style="margin-left: 10px;width: 189px;margin-top: -15px;">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <input type="text" value="标准价格" id="remotePriceName" disabled="disabled" style="margin-left: 10px;width: 189px;margin-top: -15px;">
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:if>
-                        </c:if>
+
                     </div>
-                    <c:if test="${servicePoint.id != null}">
-                        <div style="padding-top:6px;margin-left: 89px;color: #aaaaaa;width: 295px;">
-                            修改偏远价格请联系管理员
-                        </div>
-                    </c:if>
                 </div>
             </div>
             <div class="flex-container">
@@ -2595,7 +2565,7 @@
         });
     });
     $("#useDefaultPrice").val($("#useDefaultPrice1").val());
-    editRemotePriceEnabledFlag();
+
 </script>
 </body>
 </html>

@@ -109,7 +109,6 @@
         <th>网点编号</th>
         <th>网点名称</th>
         <th>主账号</th>
-        <th>联系电话</th>
         <th>质保等级</th>
         <th>应缴金额(元)</th>
         <th>已缴金额(元)</th>
@@ -123,7 +122,6 @@
             <td>${entity.servicePointNo}</td>
             <td>${entity.name}</td>
             <td>${entity.primary.name}</td>
-            <td>${entity.contactInfo1}</td>
             <td>${entity.mdDepositLevel.name}</td>
             <td><fmt:formatNumber pattern="0.0">${entity.deposit}</fmt:formatNumber> </td>
             <td>

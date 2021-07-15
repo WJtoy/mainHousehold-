@@ -557,7 +557,8 @@
       <workItem from="1625017306573" duration="32328000" />
       <workItem from="1625534866578" duration="8576000" />
       <workItem from="1625713138284" duration="2028000" />
-      <workItem from="1625721262361" duration="18931000" />
+      <workItem from="1625721262361" duration="21461000" />
+      <workItem from="1626225488675" duration="14450000" />
     </task>
     <task id="LOCAL-00001">
       <created>1622687154938</created>
@@ -742,10 +743,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="640" y="344" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1625728180384" />
-    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1626056557736">
+    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1626333178258">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1626056557736" />
+    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1626333178258" />
     <state x="505" y="256" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1624242097731">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

@@ -53,33 +53,33 @@
                     var appFlag = $("[name='appFlag']:checked").val();
                     var primaryAppFlag = $("[name='primary.appFlag']:checked").val();
 
-                    /////
-                    var remotePriceEnabledFlag = $("#remotePriceEnabledFlag").val();
-                    var remotePriceFlag = $("[name=remotePriceFlag]:checked").val();
-                    var remotePriceReference = $("#remotePriceReference").val();
-                    var oldRemotePriceEnabledFlag = $("#oldRemotePriceEnabledFlag").val();
-                    var oldRemotePriceFlag = $("#oldRemotePriceFlag").val();
-                    var resetRemotePrice = $("#resetPrice_2").prop("checked");
-                    if (oldRemotePriceEnabledFlag == 0 && remotePriceEnabledFlag ==1) {
-                        if (oldRemotePriceFlag == 0 && remotePriceFlag == 1 && remotePriceReference == 0) {
-                            layerError("请为自定义偏远价格选择参考价格.", "错误提示");
-                            $("#btnSubmit").prop("disabled", false);
-                            return false;
-                        }
-                    }
-                    if (oldRemotePriceEnabledFlag == 1 && remotePriceEnabledFlag ==1) {
-                        if (oldRemotePriceFlag == 0 && remotePriceFlag == 1 && remotePriceReference == 0) {
-                            layerError("偏远价格由标准价变更为自定义价时，请选择参考价格.", "错误提示");
-                            $("#btnSubmit").prop("disabled", false);
-                            return false;
-                        }
-                        if (remotePriceFlag == 1 && remotePriceReference == 0 && resetRemotePrice == true) {
-                            layerError("重置偏远价格时,请为自定义偏远价格选择参考价格.", "错误提示");
-                            $("#btnSubmit").prop("disabled", false);
-                            return false;
-                        }
-                    }
-                    ///////
+                    // /////
+                    // var remotePriceEnabledFlag = $("#remotePriceEnabledFlag").val();
+                    // var remotePriceFlag = $("[name=remotePriceFlag]:checked").val();
+                    // var remotePriceReference = $("#remotePriceReference").val();
+                    // var oldRemotePriceEnabledFlag = $("#oldRemotePriceEnabledFlag").val();
+                    // var oldRemotePriceFlag = $("#oldRemotePriceFlag").val();
+                    // var resetRemotePrice = $("#resetPrice_2").prop("checked");
+                    // if (oldRemotePriceEnabledFlag == 0 && remotePriceEnabledFlag ==1) {
+                    //     if (oldRemotePriceFlag == 0 && remotePriceFlag == 1 && remotePriceReference == 0) {
+                    //         layerError("请为自定义偏远价格选择参考价格.", "错误提示");
+                    //         $("#btnSubmit").prop("disabled", false);
+                    //         return false;
+                    //     }
+                    // }
+                    // if (oldRemotePriceEnabledFlag == 1 && remotePriceEnabledFlag ==1) {
+                    //     if (oldRemotePriceFlag == 0 && remotePriceFlag == 1 && remotePriceReference == 0) {
+                    //         layerError("偏远价格由标准价变更为自定义价时，请选择参考价格.", "错误提示");
+                    //         $("#btnSubmit").prop("disabled", false);
+                    //         return false;
+                    //     }
+                    //     if (remotePriceFlag == 1 && remotePriceReference == 0 && resetRemotePrice == true) {
+                    //         layerError("重置偏远价格时,请为自定义偏远价格选择参考价格.", "错误提示");
+                    //         $("#btnSubmit").prop("disabled", false);
+                    //         return false;
+                    //     }
+                    // }
+                    // ///////
 
                     if($("input[type='checkbox'][name='resetPrices']:checked").length == 0){
                        $("#resetPrice").val(0);
@@ -215,10 +215,10 @@
             var flag = $("#remotePriceEnabledFlag").val();
             if(flag == 1){
                 $("[name=remotePriceFlag]").removeAttr("disabled");
-                $("#remotePriceReference").removeAttr("disabled");
+                // $("#remotePriceReference").removeAttr("disabled");
             }else {
                 $("[name=remotePriceFlag]").attr("disabled", true);
-                $("#remotePriceReference").attr("disabled", true);
+                // $("#remotePriceReference").attr("disabled", true);
             }
         }
 
@@ -731,68 +731,39 @@
                     </c:if>
                 </div>
             </div>
-            <div class="y_line">
-                <label class="control-label">偏远价格属性：</label>
-                <div class="controls">
-                    <shiro:hasPermission name="md:servicepoint:defaultpriceedit">
-                        <label><input name="remotePriceFlag" type="radio"
-                            <c:out value="${servicePoint.remotePriceFlag == 0?'checked':''}"/> value="0"
-                               class="required">
-                        标准价</label>&nbsp;&nbsp;
-                        <label><input name="remotePriceFlag" type="radio"
-                            <c:out value="${servicePoint.remotePriceFlag == 1?'checked':''}"/> value="1"
-                               class="required">
-                        自定义</label>
-                        <select id="remotePriceReference" name="remotePriceReference" class="required input-small">
-                            <option value="0" selected="selected">选择参考价格</option>
-                            <option value="1">服务价格</option>
-                            <option value="2">偏远价格</option>
-                        </select>
-                    </shiro:hasPermission>
-                    <shiro:lacksPermission name="md:servicepoint:defaultpriceedit">
-                        <label><input name="remotePriceFlag" type="radio" disabled="true"
-                            <c:out value="${servicePoint.remotePriceFlag == 0?'checked':''}"/> value="0"
-                               class="required" >
-                        标准价</label>&nbsp;&nbsp;
-                        <label><input name="remotePriceFlag" type="radio" disabled="true"
-                            <c:out value="${servicePoint.remotePriceFlag == 1?'checked':''}"/> value="1"
-                               class="required" >
-                        自定义</label>
-                    </shiro:lacksPermission>
-                </div>
-                <div style="padding-top:6px;margin-left: 62px;color: #aaaaaa;">
-                    价格属性为自定义时选择参考价格作为设置价格的参考数据
-                </div>
-            </div>
-
-
-        </div>
-        <div class="flex-container">
-            <div class="x_line">
-                <label class="control-label">重置价格：</label>
-                <div class="controls" style="margin-top: 3px">
-                    <shiro:hasPermission name="md:servicepoint:defaultpriceedit">
-                         <span>
-                             <label><input id="resetPrice_1" name="resetPrices" style="zoom: 1.4;" type="checkbox" value="1">服务价格</label>
-                         </span>
-                        <span>
-                            <label> <input id="resetPrice_2" name="resetPrices" style="zoom: 1.4;" type="checkbox" value="2">偏远价格</label>
-                         </span>
-                    </shiro:hasPermission>
-                    <shiro:lacksPermission name="md:servicepoint:defaultpriceedit">
-                         <span>
-                             <label><input id="resetPrice_1" name="resetPrices" disabled="disabled" style="zoom: 1.4;" type="checkbox" value="1">服务价格</label>
-                         </span>
-                        <span>
-                            <label> <input id="resetPrice_2" name="resetPrices" disabled="disabled" style="zoom: 1.4;" type="checkbox" value="2">偏远价格</label>
-                         </span>
-                    </shiro:lacksPermission>
-                    <input type="hidden" name="resetPrice" id="resetPrice" value="0">
-                </div>
-                <div style="padding-top:6px;margin-left: 89px;color: #aaaaaa;width: 350px;">
-                    若网点价格属性为自定义，重置后原价格数据清空
-                </div>
-            </div>
+<%--            <div class="y_line">--%>
+<%--                <label class="control-label">偏远价格属性：</label>--%>
+<%--                <div class="controls">--%>
+<%--                    <shiro:hasPermission name="md:servicepoint:defaultpriceedit">--%>
+<%--                        <label><input name="remotePriceFlag" type="radio"--%>
+<%--                            <c:out value="${servicePoint.remotePriceFlag == 0?'checked':''}"/> value="0"--%>
+<%--                               class="required">--%>
+<%--                        标准价</label>&nbsp;&nbsp;--%>
+<%--                        <label><input name="remotePriceFlag" type="radio"--%>
+<%--                            <c:out value="${servicePoint.remotePriceFlag == 1?'checked':''}"/> value="1"--%>
+<%--                               class="required">--%>
+<%--                        自定义</label>--%>
+<%--                        <select id="remotePriceReference" name="remotePriceReference" class="required input-small">--%>
+<%--                            <option value="0" selected="selected">选择参考价格</option>--%>
+<%--                            <option value="1">服务价格</option>--%>
+<%--                            <option value="2">偏远价格</option>--%>
+<%--                        </select>--%>
+<%--                    </shiro:hasPermission>--%>
+<%--                    <shiro:lacksPermission name="md:servicepoint:defaultpriceedit">--%>
+<%--                        <label><input name="remotePriceFlag" type="radio" disabled="true"--%>
+<%--                            <c:out value="${servicePoint.remotePriceFlag == 0?'checked':''}"/> value="0"--%>
+<%--                               class="required" >--%>
+<%--                        标准价</label>&nbsp;&nbsp;--%>
+<%--                        <label><input name="remotePriceFlag" type="radio" disabled="true"--%>
+<%--                            <c:out value="${servicePoint.remotePriceFlag == 1?'checked':''}"/> value="1"--%>
+<%--                               class="required" >--%>
+<%--                        自定义</label>--%>
+<%--                    </shiro:lacksPermission>--%>
+<%--                </div>--%>
+<%--                <div style="padding-top:6px;margin-left: 62px;color: #aaaaaa;">--%>
+<%--                    价格属性为自定义时选择参考价格作为设置价格的参考数据--%>
+<%--                </div>--%>
+<%--            </div>--%>
             <div class="y_line">
                 <label class="control-label"><span class=" red">*</span>扣&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点：</label>
                 <div class="controls">
@@ -807,6 +778,35 @@
                     </div>
                 </div>
             </div>
+
+        </div>
+        <div class="flex-container">
+            <div class="x_line">
+                <label class="control-label">重置价格：</label>
+                <div class="controls" style="margin-top: 3px">
+                    <shiro:hasPermission name="md:servicepoint:defaultpriceedit">
+                         <span>
+                             <label><input id="resetPrice_1" name="resetPrices" style="zoom: 1.4;" type="checkbox" value="1">服务价格</label>
+                         </span>
+<%--                        <span>--%>
+<%--                            <label> <input id="resetPrice_2" name="resetPrices" style="zoom: 1.4;" type="checkbox" value="2">偏远价格</label>--%>
+<%--                         </span>--%>
+                    </shiro:hasPermission>
+                    <shiro:lacksPermission name="md:servicepoint:defaultpriceedit">
+                         <span>
+                             <label><input id="resetPrice_1" name="resetPrices" disabled="disabled" style="zoom: 1.4;" type="checkbox" value="1">服务价格</label>
+                         </span>
+<%--                        <span>--%>
+<%--                            <label> <input id="resetPrice_2" name="resetPrices" disabled="disabled" style="zoom: 1.4;" type="checkbox" value="2">偏远价格</label>--%>
+<%--                         </span>--%>
+                    </shiro:lacksPermission>
+                    <input type="hidden" name="resetPrice" id="resetPrice" value="0">
+                </div>
+                <div style="padding-top:6px;margin-left: 89px;color: #aaaaaa;width: 350px;">
+                    若网点价格属性为自定义，重置后原价格数据清空
+                </div>
+            </div>
+
         </div>
 
     </div>

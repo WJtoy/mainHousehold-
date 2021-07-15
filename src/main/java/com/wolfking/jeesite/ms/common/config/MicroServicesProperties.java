@@ -233,6 +233,9 @@ public class MicroServicesProperties {
      * 苏泊尔微服务配置
      */
     public static class SuporProperties extends B2BCustomerProperties {
+        @Getter
+        @Setter
+        private Boolean canModifyKKLOrder = false;
     }
 
     /**

@@ -246,59 +246,63 @@ public class ServicePointPriceService {
                                 servicePriceList.add(price);
                             }
                         }else {
-                            if (entity.getServicePoint().getRemotePriceFlag() == 1) {
+
                                 //已有价格
                                 price = prices.stream()
                                         .filter(t -> Objects.equals(t.getProduct().getId(), productId)
                                                 && Objects.equals(t.getServiceType().getId(), serviceTypeId)
                                                 && Objects.equals(t.getServicePoint().getId(), spi))
                                         .findFirst().orElse(null);
-                                //标准价格
-                                productPrice = productPrices.stream().filter(t -> Objects.equals(t.getProduct().getId(), productId)
-                                        && Objects.equals(t.getServiceType().getId(), serviceTypeId)
-                                        && Objects.equals(t.getPriceType().getValue(), remotePriceType))
-                                        .findFirst().orElse(null);
-                                // 筛选的自定义价不为空跳出循环
-                                if (price != null) { //维护
-                                    price.setFlag(0);
-                                    price.setReferPrice(Optional.ofNullable(productPrice).map(ProductPrice :: getEngineerStandardPrice).orElse(0.0));
-                                    price.setReferDiscountPrice(Optional.ofNullable(productPrice).map(ProductPrice :: getEngineerDiscountPrice).orElse(0.0));
-                                    servicePriceList.add(price);
-                                    continue;
+//                                //标准价格
+//                                productPrice = productPrices.stream().filter(t -> Objects.equals(t.getProduct().getId(), productId)
+//                                        && Objects.equals(t.getServiceType().getId(), serviceTypeId)
+//                                        && Objects.equals(t.getPriceType().getValue(), remotePriceType))
+//                                        .findFirst().orElse(null);
+//                                // 筛选的自定义价不为空跳出循环
+//                                if (price != null) { //维护
+//                                    price.setFlag(0);
+//                                    price.setReferPrice(Optional.ofNullable(productPrice).map(ProductPrice :: getEngineerStandardPrice).orElse(0.0));
+//                                    price.setReferDiscountPrice(Optional.ofNullable(productPrice).map(ProductPrice :: getEngineerDiscountPrice).orElse(0.0));
+//                                    servicePriceList.add(price);
+//                                    continue;
+//                                }
+//
+//                                // 没有自定义价格则获取产品的标准价
+//                                if (productPrice != null) {
+//                                    price = new ServicePrice();
+//                                    price.setServiceType(serviceType);
+//                                    price.setReferPrice(Optional.ofNullable(productPrice.getEngineerStandardPrice()).orElse(0.0));
+//                                    price.setReferDiscountPrice(Optional.ofNullable(productPrice.getEngineerDiscountPrice()).orElse(0.0));
+//                                    price.setFlag(1);//有参考价格
+//                                } else {
+//                                    price = new ServicePrice();
+//                                    price.setServiceType(serviceType);
+//                                    price.setFlag(2);//无参考价格
+//                                }
+                                if(price == null){
+                                    price = new ServicePrice();
                                 }
+                                servicePriceList.add(price);
 
-                                // 没有自定义价格则获取产品的标准价
-                                if (productPrice != null) {
-                                    price = new ServicePrice();
-                                    price.setServiceType(serviceType);
-                                    price.setReferPrice(Optional.ofNullable(productPrice.getEngineerStandardPrice()).orElse(0.0));
-                                    price.setReferDiscountPrice(Optional.ofNullable(productPrice.getEngineerDiscountPrice()).orElse(0.0));
-                                    price.setFlag(1);//有参考价格
-                                } else {
-                                    price = new ServicePrice();
-                                    price.setServiceType(serviceType);
-                                    price.setFlag(2);//无参考价格
-                                }
-                                servicePriceList.add(price);
-                            } else {
-                                //标准价格
-                                productPrice = productPrices.stream().filter(t -> Objects.equals(t.getProduct().getId(), productId)
-                                        && Objects.equals(t.getServiceType().getId(), serviceTypeId)
-                                        && Objects.equals(t.getPriceType().getValue(), remotePriceType))
-                                        .findFirst().orElse(null);
-                                if (productPrice != null) {
-                                    price = new ServicePrice();
-                                    price.setServiceType(serviceType);
-                                    price.setReferPrice(Optional.ofNullable(productPrice.getEngineerStandardPrice()).orElse(0.0));
-                                    price.setReferDiscountPrice(Optional.ofNullable(productPrice.getEngineerDiscountPrice()).orElse(0.0));
-                                    price.setFlag(1);//有参考价格
-                                } else {
-                                    price = new ServicePrice();
-                                    price.setServiceType(serviceType);
-                                    price.setFlag(2);//无参考价格
-                                }
-                                servicePriceList.add(price);
-                            }
+//                            else {
+//                                //标准价格
+//                                productPrice = productPrices.stream().filter(t -> Objects.equals(t.getProduct().getId(), productId)
+//                                        && Objects.equals(t.getServiceType().getId(), serviceTypeId)
+//                                        && Objects.equals(t.getPriceType().getValue(), remotePriceType))
+//                                        .findFirst().orElse(null);
+//                                if (productPrice != null) {
+//                                    price = new ServicePrice();
+//                                    price.setServiceType(serviceType);
+//                                    price.setReferPrice(Optional.ofNullable(productPrice.getEngineerStandardPrice()).orElse(0.0));
+//                                    price.setReferDiscountPrice(Optional.ofNullable(productPrice.getEngineerDiscountPrice()).orElse(0.0));
+//                                    price.setFlag(1);//有参考价格
+//                                } else {
+//                                    price = new ServicePrice();
+//                                    price.setServiceType(serviceType);
+//                                    price.setFlag(2);//无参考价格
+//                                }
+//                                servicePriceList.add(price);
+//                            }
                         }
 
                 }
@@ -609,6 +613,56 @@ public class ServicePointPriceService {
         // add on 2019-12-20 end
         if(serviceRemotePriceFlag == 0){
             servicePointService.updateCustomizePriceFlag(customizePriceFlagAtLive, servicePoint.getId(),priceType);// add on 2020-4-24
+        }
+    }
+
+    /**
+     * 保存网点某产品的偏远价格（后台）
+     *
+     * @param servicePrices
+     */
+    public void saveRemotePrices(ServicePrices servicePrices) {
+        ServicePoint servicePoint = servicePrices.getServicePoint();
+        // add on 2020-3-12 begin
+        ServicePoint servicePointFromMS = msServicePointService.getSimpleById(servicePoint.getId());
+        if (servicePointFromMS == null) {
+            throw new RuntimeException("获取网点信息失败");
+        }
+        int priceType;
+        int priceTypeFlag;
+
+        priceType = servicePointFromMS.getRemotePriceType();
+        priceTypeFlag = MDServicePointEnum.PriceTypeFlag.REMOTEPRICE.getValue();
+
+
+        Dict priceTypeDict =   msDictService.getDictByValue(String.valueOf(priceType), "PriceType");     // add on 2020-6-3
+
+        // add on 2020-3-12 end
+
+
+
+        List<ServicePrice> saveServicePriceList = Lists.newArrayList();
+
+        List<ServicePrice> delServicePriceList = getPricesNew(servicePoint.getId(), servicePrices.getProduct().getId(), null,priceType);
+
+        for (ServicePrice p : servicePrices.getPrices()) {
+
+            delServicePriceList = delServicePriceList.stream().filter(t -> !t.getId().equals(p.getId())).collect(Collectors.toList());
+
+            p.setPriceType(priceTypeDict);
+            p.setProduct(servicePrices.getProduct());
+            p.setCreateBy(servicePrices.getCreateBy());
+            p.setCreateDate(servicePrices.getCreateDate());
+            p.setUpdateBy(servicePrices.getCreateBy());
+            p.setUpdateDate(servicePrices.getCreateDate());
+            p.setServicePoint(servicePoint);
+            saveServicePriceList.add(p);
+        }
+        if (!saveServicePriceList.isEmpty()) {
+            msServicePointPriceService.batchInsertOrUpdateThreeVer(saveServicePriceList,priceTypeFlag);
+        }
+        if (!delServicePriceList.isEmpty()) {
+            msServicePointPriceService.batchDelete(delServicePriceList);
         }
     }
 }

@@ -629,6 +629,113 @@ public class ServicePriceController extends BaseController {
 		return view;
 	}
 
+	@RequiresPermissions("md:serviceprice:edit")
+	@RequestMapping(value = "remotePriceProductForm")
+	public String remotePriceProductForm(ServicePrices servicePrices, String qServicePointId, String qServicePointName,
+								 String qProductCategoryId, String qProductCategoryName, String qProductId,
+								 String qProductName,Integer serviceRemotePriceFlag, Model model) {
+		Boolean canAction = true;
+		model.addAttribute("servicePointId", qServicePointId);
+		model.addAttribute("servicePointName", qServicePointName);
+		model.addAttribute("productCategoryId", qProductCategoryId);
+		model.addAttribute("productCategoryName", qProductCategoryName);
+		model.addAttribute("productId", qProductId);
+		model.addAttribute("productName", qProductName);
+		model.addAttribute("serviceRemotePriceFlag", serviceRemotePriceFlag);//价格类型  0服务价格 1远程价格
+		String view = "modules/md/remotePriceProductForm";
+
+		if(servicePrices.getServicePoint()==null || servicePrices.getServicePoint().getId()==null ||
+				servicePrices.getProduct()==null || servicePrices.getProduct().getId() == null){
+			addMessage(model,"参数：网点或产品错误.");
+			model.addAttribute("canAction",false);
+			return view;
+		}
+
+		Long sid = servicePrices.getServicePoint().getId();
+		ServicePoint servicePoint = pointService.getSimple(sid);
+		if(servicePoint == null){
+			addMessage(model,"读取网点信息失败，请关闭窗口，重新打开。");
+			model.addAttribute("canAction",false);
+			return view;
+		}
+
+		servicePrices.setServicePoint(servicePoint);
+
+		Long pid = servicePrices.getProduct().getId();
+		Product product = productService.getProductByIdFromCache(pid);
+		if(product == null){
+			addMessage(model,"读取产品信息失败，请关闭窗口，重新打开。");
+			model.addAttribute("canAction",false);
+			return view;
+		}
+		servicePrices.setProduct(product);
+		List<ServiceType> serviceTypes = serviceTypeService.findAllListIdsAndNames();
+		List<Long> allServiceTypeIdList = serviceTypes.stream().map(ServiceType::getId).distinct().collect(Collectors.toList());
+		// end
+		if(serviceTypes.size() == 0){
+			addMessage(model,"读取服务类型信息失败，请关闭窗口，重新打开。");
+			model.addAttribute("canAction",false);
+			return view;
+		}
+			//默认价格
+		List<ProductPrice> allPrices = productPriceService.findGroupList(Lists.newArrayList(pid), null, servicePoint.getUseDefaultPrice(), servicePoint.getId(), null);
+		if(allPrices == null || allPrices.size()==0){
+			addMessage(model,"产品参考价格为空，请先维护产品参考价格。");
+			model.addAttribute("canAction",false);
+			return view;
+		}
+		List<ServicePrice> prices;
+		List<ServicePrice> servicePriceList;
+		try{
+			prices = servicePointPriceService.getPricesNew(sid, product.getId(), null,servicePoint.getRemotePriceType());  // add on 2020-3-13
+			servicePriceList = servicePointPriceService.getPricesNew(sid, product.getId(), null,servicePoint.getUseDefaultPrice());  // add on 2020-3-13
+		}catch (Exception e){
+			log.error("[getPrices]读取网点价格错误:{}",sid,e);
+			addMessage(model,"读取网点已维护价格错误，请重试。");
+			model.addAttribute("canAction",false);
+			return view;
+		}
+
+		if (prices == null){
+			prices = Lists.newArrayList();
+		}
+		final List<ServicePrice> hasprices = prices.stream().filter(t->Objects.equals(t.getProduct().getId(), pid))
+				.collect(Collectors.toList());
+
+		final List<ServicePrice> hasSerivcePrices = servicePriceList.stream().filter(t->Objects.equals(t.getProduct().getId(), pid))
+				.collect(Collectors.toList());
+		List<ServicePrice> list = Lists.newArrayList();
+
+		allServiceTypeIdList.forEach(t->{
+			List<ProductPrice> pp = allPrices.stream().filter(p->Objects.equals(p.getServiceType().getId(),t)).collect(Collectors.toList());
+			ServiceType st = serviceTypes.stream().filter(m->Objects.equals(m.getId(),t)).findFirst().orElse(null);
+			if(st !=null) {
+				ServicePrice price = hasprices.stream().filter(s -> Objects.equals(s.getServiceType().getId(), t)).findFirst().orElse(null);
+				ServicePrice serPrice = hasSerivcePrices.stream().filter(s -> Objects.equals(s.getServiceType().getId(), t)).findFirst().orElse(null);
+				if (price == null) {
+					price = new ServicePrice();
+				}
+				if (serPrice == null) {
+					for(ProductPrice productPrice :pp){
+						price.setReferPrice(productPrice.getEngineerStandardPrice());
+						price.setReferDiscountPrice(productPrice.getEngineerDiscountPrice());
+					}
+				}else {
+					price.setReferPrice(serPrice.getPrice());
+					price.setReferDiscountPrice(serPrice.getDiscountPrice());
+				}
+				price.setServiceType(st);
+
+				list.add(price);
+			}
+		});
+
+		servicePrices.getPrices().addAll(list);
+
+		model.addAttribute("canAction",true);
+		model.addAttribute("servicePrices", servicePrices);
+		return view;
+	}
 	/**
 	 * 保存某网点下某产品的所有安维价格
 	 * 新增加：判断价格是否和默认价格一致，不一致要审核
@@ -673,12 +780,14 @@ public class ServicePriceController extends BaseController {
 
 	}*/
 
+
+
 	@RequiresPermissions("md:serviceprice:edit")
 	@RequestMapping(value = "saveProductPrices")
 	@ResponseBody
 	public AjaxJsonEntity saveProductPrices(ServicePrices entity, String qServicePointId, String qServicePointName,
-									String qProductCategoryId, String qProductCategoryName, String qProductId,
-									String qProductName,Integer serviceRemotePriceFlag, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
+											String qProductCategoryId, String qProductCategoryName, String qProductId,
+											String qProductName,Integer serviceRemotePriceFlag, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
 
 		AjaxJsonEntity ajaxJsonEntity = new AjaxJsonEntity(true);
 		if (!beanValidator(model, entity)) {
@@ -695,8 +804,6 @@ public class ServicePriceController extends BaseController {
 			ajaxJsonEntity.setSuccess(false);
 			if(serviceRemotePriceFlag == 0){
 				ajaxJsonEntity.setMessage("错误：请设定服务价格");
-			}else {
-				ajaxJsonEntity.setMessage("错误：请设定偏远价格");
 			}
 			productForm(entity, qServicePointId, qServicePointName, qProductCategoryId, qProductCategoryName, qProductId, qProductName, model);
 		}
@@ -707,6 +814,33 @@ public class ServicePriceController extends BaseController {
 		try {
 			//pointService.saveProductPrices(entity);  //mark on 2020-3-11
 			servicePointPriceService.saveProductPrices(entity,serviceRemotePriceFlag);	// add on 2020-3-11
+			model.addAttribute("servicePoint", entity.getServicePoint());
+			ajaxJsonEntity.setMessage("保存服务网点：" + entity.getServicePoint().getName() + " 价格成功");
+		} catch (Exception e) {
+			log.error("保存服务网点：" + entity.getServicePoint().getName() + " 价格失败:" + e.getMessage(), e);
+			ajaxJsonEntity.setSuccess(false);
+			ajaxJsonEntity.setMessage("保存服务网点：" + entity.getServicePoint().getName() + " 价格失败:" + e.getMessage());
+		}
+		return ajaxJsonEntity;
+	}
+
+
+	@RequiresPermissions("md:serviceprice:edit")
+	@RequestMapping(value = "saveRemotePrices")
+	@ResponseBody
+	public AjaxJsonEntity saveRemotePrices(ServicePrices entity, Model model) {
+
+		AjaxJsonEntity ajaxJsonEntity = new AjaxJsonEntity(true);
+
+
+		List<ServicePrice> prices = entity.getPrices().stream().filter(t->t.getServiceType()!=null).collect(Collectors.toList());
+
+		final User user = UserUtils.getUser();
+		entity.setCreateBy(user);
+		entity.setCreateDate(new Date());
+		entity.setPrices(prices);
+		try {
+			servicePointPriceService.saveRemotePrices(entity);	// add on 2020-3-11
 			model.addAttribute("servicePoint", entity.getServicePoint());
 			ajaxJsonEntity.setMessage("保存服务网点：" + entity.getServicePoint().getName() + " 价格成功");
 		} catch (Exception e) {
